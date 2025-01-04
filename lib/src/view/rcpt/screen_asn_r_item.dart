@@ -549,7 +549,7 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
                                           vertical: 8.0,
                                         ),
                                         child: Text(
-                                          'Submit',
+                                          'Submit', // Check what BAQ and Api are called
                                           style: TextStyles.getBold(
                                             16,
                                             color: AppColors.colorAssent,

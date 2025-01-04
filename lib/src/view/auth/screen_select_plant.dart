@@ -95,7 +95,7 @@ class _ScreenSelectPlantState extends State<ScreenSelectPlant> {
                             TextFormField(
                               controller: txtPlant,
                               decoration: InputDecoration(
-                                labelText: "",
+                                labelText: "Please select",
                                 labelStyle: TextStyles.getBold(
                                   16,
                                   color: AppColors.colorGray600,
@@ -211,6 +211,7 @@ class _ScreenSelectPlantState extends State<ScreenSelectPlant> {
     txtEmpid.text = payload['Calculated_EmployeeID'];
     plants.clear();
     plants = payload['Calculated_PlantList'].toString().split("~");
+    plants.sort();
     setState(() {
       isLoading = false;
     });

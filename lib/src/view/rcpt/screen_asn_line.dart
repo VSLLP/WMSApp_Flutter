@@ -189,8 +189,8 @@ class _ScreenAsnLineState extends State<ScreenAsnLine> {
       children: [
         tableCell('Line'),
         tableCell('Product'),
-        tableCell('Ord Qty'),
         tableCell('Rec Qty'),
+        tableCell('Ord Qty'),
       ],
     ));
     for (int i = 0; i < productItems.length; i++) {

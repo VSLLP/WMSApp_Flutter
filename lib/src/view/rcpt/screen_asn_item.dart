@@ -371,6 +371,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
         });
         var resA = await utilServices.getSerialMapping(item['Part_PartNum']);
         var bodyA = {"vPartNum": item["Part_PartNum"]};
+
         Response resB = await utilServices.generateLot(bodyA);
         var payloadA = json.decode(resB.body);
         productItems[itemIndex]['lotNum'] =

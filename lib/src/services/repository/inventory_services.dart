@@ -162,8 +162,8 @@ class InventoryDelegate {
     String company = await sharedPref.getString("userCompnay");
     String plant = await sharedPref.getString("userPlant");
 
-    Uri url =
-        Uri.parse("$apiUrl/BaqSvc/VSAPP_AssingedASN($company)?pr_Plant=$plant");
+    Uri url = Uri.parse(
+        "$apiUrl/BaqSvc/VSAPP_AssingedASN_V1($company)?pr_Plant=$plant");
     String basicAuth =
         'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
     Map<String, String> requestHeaders = {
@@ -187,7 +187,7 @@ class InventoryDelegate {
 
     String company = await sharedPref.getString("userCompnay");
 
-    Uri url = Uri.parse("$apiUrl/BaqSvc/VSAPP_AssingedASN($company)");
+    Uri url = Uri.parse("$apiUrl/BaqSvc/VSAPP_AssingedASN_V1($company)");
     String basicAuth =
         'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
     Map<String, String> requestHeaders = {

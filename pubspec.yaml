@@ -23,6 +23,7 @@ dependencies:
   skeletonizer: ^1.4.2
   flutter_svg: ^2.0.10+1
   calendar_date_picker2: ^1.1.7
+  giffy_dialog: ^2.3.0
 
 dev_dependencies:
   flutter_test:
