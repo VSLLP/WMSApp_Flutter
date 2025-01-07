@@ -90,7 +90,7 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
                         Align(
                           alignment: Alignment.center,
                           child: Text(
-                            'Receipt Details',
+                            'Receipt Details hh',
                             style: TextStyles.getBold(
                               22,
                               color: AppColors.colorWhite,

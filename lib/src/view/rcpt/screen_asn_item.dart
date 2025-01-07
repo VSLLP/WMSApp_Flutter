@@ -547,12 +547,12 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
     rows.add(TableRow(
       children: [
         tableCell('Generate'),
+        tableCell('Part'),
         tableCell('Our Qty'),
+        tableCell('Line'),
         tableCell('Inspection Req'),
         tableCell('Supplier Qty'),
         tableCell('Po Num'),
-        tableCell('Line'),
-        tableCell('Part'),
         tableCell('Warehouse'),
         tableCell('Bin num'),
       ],
@@ -596,6 +596,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
                 ),
               ),
             ),
+            tableCellRow(item["Part_PartNum"].toString()),
             TableCell(
               child: Container(
                 margin: const EdgeInsets.all(6),
@@ -634,6 +635,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
                 ),
               ),
             ),
+            tableCellRow(item["PODetail_POLine"].toString()),
             TableCell(
               child: Checkbox(
                 checkColor: AppColors.colorWhite,
@@ -655,8 +657,6 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
                   .toStringAsFixed(2),
             ),
             tableCellRow(item["PODetail_PONUM"].toString()),
-            tableCellRow(item["PODetail_POLine"].toString()),
-            tableCellRow(item["Part_PartNum"].toString()),
             TableCell(
               child: Container(
                 margin: const EdgeInsets.all(6),

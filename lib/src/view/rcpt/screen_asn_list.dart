@@ -1,10 +1,9 @@
 import 'package:epicor/core_packages.dart';
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
-import 'package:epicor/src/view/rcpt/bottom_sheet.dart';
-import 'package:epicor/src/view/rcpt/screen_asn_entry.dart';
 import 'package:epicor/src/view/rcpt/screen_asn_item.dart';
 import 'package:epicor/src/view/rcpt/screen_asn_r_item.dart';
+import 'package:epicor/src/view/rcpt/screen_rcpt_option.dart';
 import 'package:giffy_dialog/giffy_dialog.dart';
 import 'package:http/http.dart';
 
@@ -1219,7 +1218,14 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                     GestureDetector(
                       onTap: () {
                         Navigator.of(context).pop();
+                        // TODO : Forward To
+
                         submit(slip);
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const ScreenRcptOption()));
                       },
                       child: SizedBox(
                         child: Text(
