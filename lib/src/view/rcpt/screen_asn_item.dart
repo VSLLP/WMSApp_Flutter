@@ -132,7 +132,6 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
                                       scrollDirection: Axis.horizontal,
                                       child: Table(
                                         columnWidths: const {
-                                          // 0: FixedColumnWidth(120),
                                           0: FixedColumnWidth(120),
                                           1: FixedColumnWidth(100),
                                           2: FixedColumnWidth(50),
@@ -452,86 +451,12 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
           isLoading = false;
         });
         break;
-      // case "Serial":
-      //   setState(() {
-      //     isLoading = true;
-      //   });
-      //   var resA = await utilServices.getSerialMapping(item['Part_PartNum']);
-      //   var payload = resA['value'][0];
-      //   var bodyB = {
-      //     "ds": {
-      //       "SNFormat": [
-      //         {
-      //           "Company": company,
-      //           "Plant": plant,
-      //           "PartNum": item['Part_PartNum'],
-      //           "SNMask": payload['Part_SNMask'],
-      //           "SNBaseDataType": "MASK",
-      //           "HasSerialNumbers": true,
-      //           "PartPricePerCode": payload['Part_PricePerCode'],
-      //           "PartTrackLots": item['Part_TrackLots'],
-      //           "PartTrackSerialNum": item['Part_TrackSerialNum'],
-      //           "PartSalesUM": payload['Part_SalesUM'],
-      //           "PartIUM": payload['Part_IUM'],
-      //           "PartSellingFactor": payload['Part_SellingFactor'],
-      //           "PartPartDescription": payload['Part_PartDescription'],
-      //           "SerialMaskMaskType": payload['SerialMask_MaskType']
-      //         }
-      //       ]
-      //     },
-      //     "PartNum": item['Part_PartNum'],
-      //     "xrefPartNum": "",
-      //     "xrefPartType": "",
-      //     "xrefCustNum": 0,
-      //     "NumToAdd": itemQty[itemIndex].text,
-      //     "baseBeginNum": "TEMP00000103202",
-      //     "TransType": "PUR-STK",
-      //     "SourceRowID": item['RowIdent'],
-      //     "plantID": plant
-      //   };
-      //   Response res = await utilServices.genrateSerialNum(bodyB);
-      //   var payloadB = json.decode(res.body);
-      //   productItems[itemIndex]['lotNum'] = "";
-      //   productItems[itemIndex]['Part_SellingFactor'] =
-      //       payload['Part_SellingFactor'];
-      //   productItems[itemIndex]['Part_PricePerCode'] =
-      //       payload['Part_PricePerCode'];
-      //   productItems[itemIndex]['isSelect'] = true;
-      //   var payloadSN = payloadB["parameters"]["ds"]["SNFormat"][0];
-      //   var payloadSerail =
-      //       payloadB["parameters"]["ds"]["SelectedSerialNumbers"];
-      //   for (var srItem in payloadSerail) {
-      //     srItems.add({
-      //       "Company": company,
-      //       "SerialNumber": srItem["SerialNumber"],
-      //       "PartNum": srItem["PartNum"],
-      //       "SNBaseNumber": srItem["SNBaseNumber"],
-      //       "TransType": "PUR-STK",
-      //       "RawSerialNum": srItem["RawSerialNum"],
-      //       "SNMask": srItem["SNMask"],
-      //       "RowMod": "A"
-      //     });
-      //   }
-      //   snFormats.add({
-      //     "Plant": plant,
-      //     "PartNum": payloadSN['PartNum'],
-      //     "SNMask": payloadSN['SNMask'],
-      //     "SNBaseDataType": payloadSN['SNBaseDataType'],
-      //     "PartPricePerCode": payloadSN['PartPricePerCode'],
-      //     "PartSellingFactor": payloadSN['PartSellingFactor'],
-      //     "RowMod": "A"
-      //   });
-      //   setState(() {
-      //     isLoading = false;
-      //   });
-      //   break;
-      // Here's the fixed version of the Serial case with proper error handling and debugging
+
       case "Serial":
         setState(() {
           isLoading = true;
         });
         try {
-          // 1. Get Serial Mapping with error checking
           var resA = await utilServices.getSerialMapping(item['Part_PartNum']);
           if (resA == null ||
               !resA.containsKey('value') ||
@@ -541,9 +466,8 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
           }
 
           var payload = resA['value'][0];
-          print('Serial Mapping Response: $payload'); // Debug log
+          print('Serial Mapping Response: $payload');
 
-          // 2. Prepare request body with validated data
           var bodyB = {
             "ds": {
               "SNFormat": [
@@ -576,10 +500,8 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
             "plantID": plant
           };
 
-          print(
-              'Generate Serial Number Request: ${json.encode(bodyB)}'); // Debug log
+          print('Generate Serial Number Request: ${json.encode(bodyB)}');
 
-          // 3. Generate Serial Number
           Response res = await utilServices.genrateSerialNum(bodyB);
           if (res.statusCode != 200) {
             throw Exception(
@@ -587,7 +509,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
           }
 
           var payloadB = json.decode(res.body);
-          print('Generate Serial Number Response: $payloadB'); // Debug log
+          print('Generate Serial Number Response: $payloadB');
 
           if (!payloadB.containsKey("parameters") ||
               !payloadB["parameters"].containsKey("ds") ||
@@ -596,7 +518,6 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
                 'Invalid response format from generate serial number');
           }
 
-          // 4. Update product items
           productItems[itemIndex]['lotNum'] = "";
           productItems[itemIndex]['Part_SellingFactor'] =
               payload['Part_SellingFactor'];
@@ -608,7 +529,6 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
           var payloadSerail =
               payloadB["parameters"]["ds"]["SelectedSerialNumbers"];
 
-          // 5. Process serial numbers
           for (var srItem in payloadSerail) {
             srItems.add({
               "Company": company,
@@ -622,7 +542,6 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
             });
           }
 
-          // 6. Add to snFormats
           snFormats.add({
             "Plant": plant,
             "PartNum": payloadSN['PartNum'],
@@ -635,7 +554,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
         } catch (e, stackTrace) {
           print('Error in Serial case: $e');
           print('Stack trace: $stackTrace');
-          // Show error to user
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Failed to process serial number: ${e.toString()}'),
@@ -653,7 +572,6 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
           isLoading = true;
         });
         try {
-          // First API call with error checking
           var resA = await utilServices.getSerialMapping(item['Part_PartNum']);
           if (resA == null) {
             throw Exception('Failed to get serial mapping - response is null');
@@ -671,7 +589,6 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
             throw Exception('Serial mapping payload is null');
           }
 
-          // Construct body with null checks
           var bodyB = {
             "ds": {
               "SNFormat": [
@@ -704,7 +621,6 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
             "plantID": plant
           };
 
-          // Second API call with error checking
           Response res = await utilServices.genrateSerialNum(bodyB);
           if (res.statusCode != 200) {
             throw Exception(
@@ -717,7 +633,6 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
                 'Invalid response format from generate serial number');
           }
 
-          // Update product items with null checks
           productItems[itemIndex]['lotNum'] = "";
           productItems[itemIndex]['Part_SellingFactor'] =
               payload['Part_SellingFactor'] ?? '0';
@@ -757,7 +672,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
           }
         } catch (e) {
           print('Error in Serial case: $e');
-          // You might want to show an error dialog here
+
           showError('Error', 'Failed to process serial number: $e');
         } finally {
           setState(() {
@@ -796,7 +711,6 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
     List<TableRow> rows = [];
     rows.add(TableRow(
       children: [
-        // tableCell('Generate'),
         tableCell('Part'),
         tableCell('Our Qty'),
         tableCell('Line'),
@@ -812,40 +726,6 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
       rows.add(
         TableRow(
           children: [
-            // TableCell(
-            //   child: GestureDetector(
-            //     onTap: () {
-            //       if (itemQty[i].text.isNotEmpty) {
-            //         generateItemsCode(item, i);
-            //       }
-            //     },
-            //     child: Container(
-            //       height: 28,
-            //       width: 68,
-            //       margin: const EdgeInsets.all(6),
-            //       decoration: BoxDecoration(
-            //         color: itemQty[i].text != ""
-            //             ? AppColors.colorPrimary
-            //             : AppColors.colorAssent,
-            //         borderRadius: BorderRadius.circular(8),
-            //       ),
-            //       child: Center(
-            //         child: Padding(
-            //           padding: const EdgeInsets.symmetric(
-            //             vertical: 4.0,
-            //           ),
-            //           child: Text(
-            //             getType(item),
-            //             style: TextStyles.getBold(
-            //               16,
-            //               color: AppColors.colorWhite,
-            //             ),
-            //           ),
-            //         ),
-            //       ),
-            //     ),
-            //   ),
-            // ),
             tableCellRow(item["Part_PartNum"].toString()),
             TableCell(
               child: Container(
@@ -1397,7 +1277,6 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
   void printLargeString(String text) {
     const int chunkSize = 800;
     for (int i = 0; i < text.length; i += chunkSize) {
-      // Print the string in chunks
       debugPrint(text.substring(
           i, i + chunkSize > text.length ? text.length : i + chunkSize));
     }

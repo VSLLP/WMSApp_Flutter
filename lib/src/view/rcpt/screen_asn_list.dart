@@ -42,7 +42,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
   @override
   void initState() {
     super.initState();
-    // loadData();
+
     loadOpenPo();
   }
 
@@ -143,13 +143,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                         itemBuilder: (BuildContext context, int index) {
                           return GestureDetector(
                             onTap: () {
-                              // gotoEntryPage(items[index]);
                               getTTTTT(items[index]);
-                              // Navigator.push(
-                              //     context,
-                              //     MaterialPageRoute(
-                              //         builder: (context) =>
-                              //             const BottomDaiSheet()));
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -253,10 +247,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
         (i) => i["POHeader_PONum"] == item["POHeader_PONum"],
       );
       if (item["RcvHead_PackSlip"] == null) {
-        // print("Noting");
-      } else {
-        // print(item["RcvHead_PackSlip"].toString());
-      }
+      } else {}
       if (isProductExist == -1) {
         items.add(
           {
@@ -286,7 +277,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
 
   loadOpenPo() async {
     setState(() {
-      isLoading = true; // Set loading to true when function starts
+      isLoading = true;
     });
     var response = await inventoryServices.getAssignedASNList();
     items.clear();
@@ -295,11 +286,6 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
         (i) => i["POHeader_PONum"] == item["POHeader_PONum"],
       );
       if (item["RcvHead_PackSlip"] == null) {
-        //   print("Noting");
-        // } else {
-        //   print(item["RcvHead_PackSlip"].toString());
-        // }
-        // print("load po");
         if (isProductExist == -1) {
           items.add(
             {
@@ -330,7 +316,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
 
   loadReceipt() async {
     setState(() {
-      isLoading = true; // Set loading to true when function starts
+      isLoading = true;
     });
     var response = await inventoryServices.getAssignedASNList();
     items.clear();
@@ -339,10 +325,6 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
         (i) => i["POHeader_PONum"] == item["POHeader_PONum"],
       );
       if (item["RcvHead_PackSlip"] != null) {
-        //   print("Noting");
-        // } else {
-        //   print(item["RcvHead_PackSlip"].toString());
-        // }
         if (isProductExist == -1) {
           items.add(
             {
@@ -371,18 +353,6 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
     });
   }
 
-  // gotoEntryPage(item) async {
-  //   await Navigator.of(context).push(
-  //     MaterialPageRoute(
-  //       builder: (context) => ScreenAsnEntry(
-  //         type: widget.type,
-  //         item: item,
-  //       ),
-  //     ),
-  //   );
-  //   loadData();
-  // }
-
   Future<void> getTTTTT(item) async {
     setState(() {
       isLoading = true;
@@ -405,21 +375,12 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
             height: 200,
             fit: BoxFit.cover,
           ),
-          // title: Text(
-          //   '',
-          //   textAlign: TextAlign.center,
-          // ),
-          // content: Text(
-          //   'This is a image animation bottom sheet. This library helps you easily create fancy giffy bottom sheet.',
-          //   textAlign: TextAlign.center,
-          // ),
           actions: [
             TextButton(
               onPressed: () {
                 if (!isSubmit) {
                   choseSlipOptions();
                 }
-                // Navigator.pop(context, 'CANCEL');
               },
               child: const Text('Submit GRN'),
             ),
@@ -428,7 +389,6 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                 if (!isSubmit) {
                   choseOptions();
                 }
-                // Navigator.pop(context, 'Proceed');
               },
               child: const Text('Processed'),
             ),
@@ -440,8 +400,6 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
       isLoading = false;
     });
   }
-
-  // TODO: Function for
 
   loadAsnData(item) async {
     plant = await sharedPref.getString("userPlant");
@@ -1218,18 +1176,10 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                     GestureDetector(
                       onTap: () {
                         Navigator.of(context).pop();
-                        // TODO : Forward To
 
                         submit(slip);
                         Navigator.of(context).pop();
                         Navigator.of(context).pop();
-                        // Navigator.of(context).pop();
-
-                        // Navigator.push(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //         builder: (context) =>
-                        //             const ScreenRcptOption()));
                       },
                       child: SizedBox(
                         child: Text(
