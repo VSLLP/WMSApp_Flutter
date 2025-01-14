@@ -1221,11 +1221,15 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                         // TODO : Forward To
 
                         submit(slip);
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    const ScreenRcptOption()));
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
+
+                        // Navigator.push(
+                        //     context,
+                        //     MaterialPageRoute(
+                        //         builder: (context) =>
+                        //             const ScreenRcptOption()));
                       },
                       child: SizedBox(
                         child: Text(

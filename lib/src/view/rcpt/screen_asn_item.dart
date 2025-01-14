@@ -132,15 +132,15 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
                                       scrollDirection: Axis.horizontal,
                                       child: Table(
                                         columnWidths: const {
+                                          // 0: FixedColumnWidth(120),
                                           0: FixedColumnWidth(120),
                                           1: FixedColumnWidth(100),
-                                          2: FixedColumnWidth(100),
-                                          3: FixedColumnWidth(150),
+                                          2: FixedColumnWidth(50),
+                                          3: FixedColumnWidth(100),
                                           4: FixedColumnWidth(100),
                                           5: FixedColumnWidth(100),
-                                          6: FixedColumnWidth(160),
-                                          7: FixedColumnWidth(120),
-                                          8: FixedColumnWidth(80),
+                                          6: FixedColumnWidth(120),
+                                          7: FixedColumnWidth(80),
                                         },
                                         border: const TableBorder.symmetric(
                                           inside: BorderSide(
@@ -202,14 +202,20 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
                             GestureDetector(
                               onTap: () {
                                 if (!isLoading) {
-                                  submit();
+                                  itemQty.any((controller) =>
+                                          controller.text.isNotEmpty)
+                                      ? submit()
+                                      : {};
                                 }
                               },
                               child: Container(
                                 height: 38,
                                 width: 100,
                                 decoration: BoxDecoration(
-                                  color: AppColors.colorWhite,
+                                  color: itemQty.any((controller) =>
+                                          controller.text.isNotEmpty)
+                                      ? AppColors.colorWhite
+                                      : AppColors.colorGray300,
                                   borderRadius: BorderRadius.circular(8),
                                   boxShadow: [
                                     BoxShadow(
@@ -220,7 +226,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
                                   ],
                                 ),
                                 child: Center(
-                                  child: Padding(
+                                  child: Container(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 8.0,
                                     ),
@@ -228,7 +234,10 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
                                       'Submit',
                                       style: TextStyles.getBold(
                                         16,
-                                        color: AppColors.colorAssent,
+                                        color: itemQty.any((controller) =>
+                                                controller.text.isNotEmpty)
+                                            ? AppColors.colorAssent
+                                            : AppColors.colorWhite,
                                       ),
                                     ),
                                   ),
@@ -443,78 +452,195 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
           isLoading = false;
         });
         break;
+      // case "Serial":
+      //   setState(() {
+      //     isLoading = true;
+      //   });
+      //   var resA = await utilServices.getSerialMapping(item['Part_PartNum']);
+      //   var payload = resA['value'][0];
+      //   var bodyB = {
+      //     "ds": {
+      //       "SNFormat": [
+      //         {
+      //           "Company": company,
+      //           "Plant": plant,
+      //           "PartNum": item['Part_PartNum'],
+      //           "SNMask": payload['Part_SNMask'],
+      //           "SNBaseDataType": "MASK",
+      //           "HasSerialNumbers": true,
+      //           "PartPricePerCode": payload['Part_PricePerCode'],
+      //           "PartTrackLots": item['Part_TrackLots'],
+      //           "PartTrackSerialNum": item['Part_TrackSerialNum'],
+      //           "PartSalesUM": payload['Part_SalesUM'],
+      //           "PartIUM": payload['Part_IUM'],
+      //           "PartSellingFactor": payload['Part_SellingFactor'],
+      //           "PartPartDescription": payload['Part_PartDescription'],
+      //           "SerialMaskMaskType": payload['SerialMask_MaskType']
+      //         }
+      //       ]
+      //     },
+      //     "PartNum": item['Part_PartNum'],
+      //     "xrefPartNum": "",
+      //     "xrefPartType": "",
+      //     "xrefCustNum": 0,
+      //     "NumToAdd": itemQty[itemIndex].text,
+      //     "baseBeginNum": "TEMP00000103202",
+      //     "TransType": "PUR-STK",
+      //     "SourceRowID": item['RowIdent'],
+      //     "plantID": plant
+      //   };
+      //   Response res = await utilServices.genrateSerialNum(bodyB);
+      //   var payloadB = json.decode(res.body);
+      //   productItems[itemIndex]['lotNum'] = "";
+      //   productItems[itemIndex]['Part_SellingFactor'] =
+      //       payload['Part_SellingFactor'];
+      //   productItems[itemIndex]['Part_PricePerCode'] =
+      //       payload['Part_PricePerCode'];
+      //   productItems[itemIndex]['isSelect'] = true;
+      //   var payloadSN = payloadB["parameters"]["ds"]["SNFormat"][0];
+      //   var payloadSerail =
+      //       payloadB["parameters"]["ds"]["SelectedSerialNumbers"];
+      //   for (var srItem in payloadSerail) {
+      //     srItems.add({
+      //       "Company": company,
+      //       "SerialNumber": srItem["SerialNumber"],
+      //       "PartNum": srItem["PartNum"],
+      //       "SNBaseNumber": srItem["SNBaseNumber"],
+      //       "TransType": "PUR-STK",
+      //       "RawSerialNum": srItem["RawSerialNum"],
+      //       "SNMask": srItem["SNMask"],
+      //       "RowMod": "A"
+      //     });
+      //   }
+      //   snFormats.add({
+      //     "Plant": plant,
+      //     "PartNum": payloadSN['PartNum'],
+      //     "SNMask": payloadSN['SNMask'],
+      //     "SNBaseDataType": payloadSN['SNBaseDataType'],
+      //     "PartPricePerCode": payloadSN['PartPricePerCode'],
+      //     "PartSellingFactor": payloadSN['PartSellingFactor'],
+      //     "RowMod": "A"
+      //   });
+      //   setState(() {
+      //     isLoading = false;
+      //   });
+      //   break;
       case "Serial":
         setState(() {
           isLoading = true;
         });
-        var resA = await utilServices.getSerialMapping(item['Part_PartNum']);
-        var payload = resA['value'][0];
-        var bodyB = {
-          "ds": {
-            "SNFormat": [
-              {
-                "Company": company,
-                "Plant": plant,
-                "PartNum": item['Part_PartNum'],
-                "SNMask": payload['Part_SNMask'],
-                "SNBaseDataType": "MASK",
-                "HasSerialNumbers": true,
-                "PartPricePerCode": payload['Part_PricePerCode'],
-                "PartTrackLots": item['Part_TrackLots'],
-                "PartTrackSerialNum": item['Part_TrackSerialNum'],
-                "PartSalesUM": payload['Part_SalesUM'],
-                "PartIUM": payload['Part_IUM'],
-                "PartSellingFactor": payload['Part_SellingFactor'],
-                "PartPartDescription": payload['Part_PartDescription'],
-                "SerialMaskMaskType": payload['SerialMask_MaskType']
-              }
-            ]
-          },
-          "PartNum": item['Part_PartNum'],
-          "xrefPartNum": "",
-          "xrefPartType": "",
-          "xrefCustNum": 0,
-          "NumToAdd": itemQty[itemIndex].text,
-          "baseBeginNum": "TEMP00000103202",
-          "TransType": "PUR-STK",
-          "SourceRowID": item['RowIdent'],
-          "plantID": plant
-        };
-        Response res = await utilServices.genrateSerialNum(bodyB);
-        var payloadB = json.decode(res.body);
-        productItems[itemIndex]['lotNum'] = "";
-        productItems[itemIndex]['Part_SellingFactor'] =
-            payload['Part_SellingFactor'];
-        productItems[itemIndex]['Part_PricePerCode'] =
-            payload['Part_PricePerCode'];
-        productItems[itemIndex]['isSelect'] = true;
-        var payloadSN = payloadB["parameters"]["ds"]["SNFormat"][0];
-        var payloadSerail =
-            payloadB["parameters"]["ds"]["SelectedSerialNumbers"];
-        for (var srItem in payloadSerail) {
-          srItems.add({
-            "Company": company,
-            "SerialNumber": srItem["SerialNumber"],
-            "PartNum": srItem["PartNum"],
-            "SNBaseNumber": srItem["SNBaseNumber"],
+        try {
+          // First API call with error checking
+          var resA = await utilServices.getSerialMapping(item['Part_PartNum']);
+          if (resA == null) {
+            throw Exception('Failed to get serial mapping - response is null');
+          }
+
+          if (!resA.containsKey('value') ||
+              resA['value'] == null ||
+              resA['value'].isEmpty) {
+            throw Exception(
+                'Invalid serial mapping response structure: ${resA.toString()}');
+          }
+
+          var payload = resA['value'][0];
+          if (payload == null) {
+            throw Exception('Serial mapping payload is null');
+          }
+
+          // Construct body with null checks
+          var bodyB = {
+            "ds": {
+              "SNFormat": [
+                {
+                  "Company": company,
+                  "Plant": plant,
+                  "PartNum": item['Part_PartNum'] ?? '',
+                  "SNMask": payload['Part_SNMask'] ?? '',
+                  "SNBaseDataType": "MASK",
+                  "HasSerialNumbers": true,
+                  "PartPricePerCode": payload['Part_PricePerCode'] ?? '',
+                  "PartTrackLots": item['Part_TrackLots'] ?? false,
+                  "PartTrackSerialNum": item['Part_TrackSerialNum'] ?? false,
+                  "PartSalesUM": payload['Part_SalesUM'] ?? '',
+                  "PartIUM": payload['Part_IUM'] ?? '',
+                  "PartSellingFactor": payload['Part_SellingFactor'] ?? '0',
+                  "PartPartDescription": payload['Part_PartDescription'] ?? '',
+                  "SerialMaskMaskType": payload['SerialMask_MaskType'] ?? ''
+                }
+              ]
+            },
+            "PartNum": item['Part_PartNum'] ?? '',
+            "xrefPartNum": "",
+            "xrefPartType": "",
+            "xrefCustNum": 0,
+            "NumToAdd": itemQty[itemIndex].text ?? '0',
+            "baseBeginNum": "TEMP00000103202",
             "TransType": "PUR-STK",
-            "RawSerialNum": srItem["RawSerialNum"],
-            "SNMask": srItem["SNMask"],
-            "RowMod": "A"
+            "SourceRowID": item['RowIdent'] ?? '',
+            "plantID": plant
+          };
+
+          // Second API call with error checking
+          Response res = await utilServices.genrateSerialNum(bodyB);
+          if (res.statusCode != 200) {
+            throw Exception(
+                'Failed to generate serial number - Status code: ${res.statusCode}');
+          }
+
+          var payloadB = json.decode(res.body);
+          if (payloadB == null || !payloadB.containsKey("parameters")) {
+            throw Exception(
+                'Invalid response format from generate serial number');
+          }
+
+          // Update product items with null checks
+          productItems[itemIndex]['lotNum'] = "";
+          productItems[itemIndex]['Part_SellingFactor'] =
+              payload['Part_SellingFactor'] ?? '0';
+          productItems[itemIndex]['Part_PricePerCode'] =
+              payload['Part_PricePerCode'] ?? '';
+          productItems[itemIndex]['isSelect'] = true;
+
+          var payloadSN = payloadB["parameters"]["ds"]["SNFormat"][0];
+          var payloadSerial =
+              payloadB["parameters"]["ds"]["SelectedSerialNumbers"];
+
+          if (payloadSerial != null) {
+            for (var srItem in payloadSerial) {
+              srItems.add({
+                "Company": company,
+                "SerialNumber": srItem["SerialNumber"] ?? '',
+                "PartNum": srItem["PartNum"] ?? '',
+                "SNBaseNumber": srItem["SNBaseNumber"] ?? '',
+                "TransType": "PUR-STK",
+                "RawSerialNum": srItem["RawSerialNum"] ?? '',
+                "SNMask": srItem["SNMask"] ?? '',
+                "RowMod": "A"
+              });
+            }
+          }
+
+          if (payloadSN != null) {
+            snFormats.add({
+              "Plant": plant,
+              "PartNum": payloadSN['PartNum'] ?? '',
+              "SNMask": payloadSN['SNMask'] ?? '',
+              "SNBaseDataType": payloadSN['SNBaseDataType'] ?? '',
+              "PartPricePerCode": payloadSN['PartPricePerCode'] ?? '',
+              "PartSellingFactor": payloadSN['PartSellingFactor'] ?? '0',
+              "RowMod": "A"
+            });
+          }
+        } catch (e) {
+          print('Error in Serial case: $e');
+          // You might want to show an error dialog here
+          showError('Error', 'Failed to process serial number: $e');
+        } finally {
+          setState(() {
+            isLoading = false;
           });
         }
-        snFormats.add({
-          "Plant": plant,
-          "PartNum": payloadSN['PartNum'],
-          "SNMask": payloadSN['SNMask'],
-          "SNBaseDataType": payloadSN['SNBaseDataType'],
-          "PartPricePerCode": payloadSN['PartPricePerCode'],
-          "PartSellingFactor": payloadSN['PartSellingFactor'],
-          "RowMod": "A"
-        });
-        setState(() {
-          isLoading = false;
-        });
         break;
       case "Lot":
         setState(() {
@@ -523,6 +649,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
         var bodyA = {"vPartNum": item["Part_PartNum"]};
         Response res = await utilServices.generateLot(bodyA);
         var payloadB = json.decode(res.body);
+        print(payloadB);
         productItems[itemIndex]['lotNum'] =
             payloadB['parameters']['vNewLotNum'];
         productItems[itemIndex]['isSelect'] = true;
@@ -546,7 +673,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
     List<TableRow> rows = [];
     rows.add(TableRow(
       children: [
-        tableCell('Generate'),
+        // tableCell('Generate'),
         tableCell('Part'),
         tableCell('Our Qty'),
         tableCell('Line'),
@@ -562,40 +689,40 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
       rows.add(
         TableRow(
           children: [
-            TableCell(
-              child: GestureDetector(
-                onTap: () {
-                  if (itemQty[i].text.isNotEmpty) {
-                    generateItemsCode(item, i);
-                  }
-                },
-                child: Container(
-                  height: 28,
-                  width: 68,
-                  margin: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: itemQty[i].text != ""
-                        ? AppColors.colorPrimary
-                        : AppColors.colorAssent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 4.0,
-                      ),
-                      child: Text(
-                        getType(item),
-                        style: TextStyles.getBold(
-                          16,
-                          color: AppColors.colorWhite,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            // TableCell(
+            //   child: GestureDetector(
+            //     onTap: () {
+            //       if (itemQty[i].text.isNotEmpty) {
+            //         generateItemsCode(item, i);
+            //       }
+            //     },
+            //     child: Container(
+            //       height: 28,
+            //       width: 68,
+            //       margin: const EdgeInsets.all(6),
+            //       decoration: BoxDecoration(
+            //         color: itemQty[i].text != ""
+            //             ? AppColors.colorPrimary
+            //             : AppColors.colorAssent,
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //       child: Center(
+            //         child: Padding(
+            //           padding: const EdgeInsets.symmetric(
+            //             vertical: 4.0,
+            //           ),
+            //           child: Text(
+            //             getType(item),
+            //             style: TextStyles.getBold(
+            //               16,
+            //               color: AppColors.colorWhite,
+            //             ),
+            //           ),
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ),
             tableCellRow(item["Part_PartNum"].toString()),
             TableCell(
               child: Container(
@@ -978,6 +1105,13 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
       setState(() {
         isLoading = true;
       });
+
+      for (int i = 0; i < productItems.length; i++) {
+        if (itemQty[i].text.isNotEmpty) {
+          await generateItemsCode(productItems[i], i);
+        }
+      }
+
       DateTime customDate = DateTime.now();
       String formattedDate = "${customDate.year.toString().padLeft(4, '0')}-"
           "${customDate.month.toString().padLeft(2, '0')}-"
@@ -1071,7 +1205,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
         resetItems();
       }
     } catch (ex) {
-      showError('Error', "Server error occurred!");
+      showError('Error', "Server error occurred!" + ex.toString());
       setState(() {
         isLoading = false;
       });
@@ -1113,6 +1247,8 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
                     Expanded(child: Container()),
                     GestureDetector(
                       onTap: () {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
                         Navigator.of(context).pop();
                       },
                       child: SizedBox(
