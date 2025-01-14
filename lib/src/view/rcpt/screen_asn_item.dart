@@ -525,7 +525,130 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
       //     isLoading = false;
       //   });
       //   break;
+      // Here's the fixed version of the Serial case with proper error handling and debugging
       case "Serial":
+        setState(() {
+          isLoading = true;
+        });
+        try {
+          // 1. Get Serial Mapping with error checking
+          var resA = await utilServices.getSerialMapping(item['Part_PartNum']);
+          if (resA == null ||
+              !resA.containsKey('value') ||
+              resA['value'].isEmpty) {
+            throw Exception(
+                'Invalid serial mapping response: ${resA.toString()}');
+          }
+
+          var payload = resA['value'][0];
+          print('Serial Mapping Response: $payload'); // Debug log
+
+          // 2. Prepare request body with validated data
+          var bodyB = {
+            "ds": {
+              "SNFormat": [
+                {
+                  "Company": company,
+                  "Plant": plant,
+                  "PartNum": item['Part_PartNum'],
+                  "SNMask": payload['Part_SNMask'] ?? '',
+                  "SNBaseDataType": "MASK",
+                  "HasSerialNumbers": true,
+                  "PartPricePerCode": payload['Part_PricePerCode'] ?? '',
+                  "PartTrackLots": item['Part_TrackLots'] ?? false,
+                  "PartTrackSerialNum": item['Part_TrackSerialNum'] ?? false,
+                  "PartSalesUM": payload['Part_SalesUM'] ?? '',
+                  "PartIUM": payload['Part_IUM'] ?? '',
+                  "PartSellingFactor": payload['Part_SellingFactor'] ?? '0',
+                  "PartPartDescription": payload['Part_PartDescription'] ?? '',
+                  "SerialMaskMaskType": payload['SerialMask_MaskType'] ?? ''
+                }
+              ]
+            },
+            "PartNum": item['Part_PartNum'],
+            "xrefPartNum": "",
+            "xrefPartType": "",
+            "xrefCustNum": 0,
+            "NumToAdd": itemQty[itemIndex].text,
+            "baseBeginNum": "TEMP00000103202",
+            "TransType": "PUR-STK",
+            "SourceRowID": item['RowIdent'],
+            "plantID": plant
+          };
+
+          print(
+              'Generate Serial Number Request: ${json.encode(bodyB)}'); // Debug log
+
+          // 3. Generate Serial Number
+          Response res = await utilServices.genrateSerialNum(bodyB);
+          if (res.statusCode != 200) {
+            throw Exception(
+                'Failed to generate serial number - Status ${res.statusCode}: ${res.body}');
+          }
+
+          var payloadB = json.decode(res.body);
+          print('Generate Serial Number Response: $payloadB'); // Debug log
+
+          if (!payloadB.containsKey("parameters") ||
+              !payloadB["parameters"].containsKey("ds") ||
+              !payloadB["parameters"]["ds"].containsKey("SNFormat")) {
+            throw Exception(
+                'Invalid response format from generate serial number');
+          }
+
+          // 4. Update product items
+          productItems[itemIndex]['lotNum'] = "";
+          productItems[itemIndex]['Part_SellingFactor'] =
+              payload['Part_SellingFactor'];
+          productItems[itemIndex]['Part_PricePerCode'] =
+              payload['Part_PricePerCode'];
+          productItems[itemIndex]['isSelect'] = true;
+
+          var payloadSN = payloadB["parameters"]["ds"]["SNFormat"][0];
+          var payloadSerail =
+              payloadB["parameters"]["ds"]["SelectedSerialNumbers"];
+
+          // 5. Process serial numbers
+          for (var srItem in payloadSerail) {
+            srItems.add({
+              "Company": company,
+              "SerialNumber": srItem["SerialNumber"],
+              "PartNum": srItem["PartNum"],
+              "SNBaseNumber": srItem["SNBaseNumber"],
+              "TransType": "PUR-STK",
+              "RawSerialNum": srItem["RawSerialNum"],
+              "SNMask": srItem["SNMask"],
+              "RowMod": "A"
+            });
+          }
+
+          // 6. Add to snFormats
+          snFormats.add({
+            "Plant": plant,
+            "PartNum": payloadSN['PartNum'],
+            "SNMask": payloadSN['SNMask'],
+            "SNBaseDataType": payloadSN['SNBaseDataType'],
+            "PartPricePerCode": payloadSN['PartPricePerCode'],
+            "PartSellingFactor": payloadSN['PartSellingFactor'],
+            "RowMod": "A"
+          });
+        } catch (e, stackTrace) {
+          print('Error in Serial case: $e');
+          print('Stack trace: $stackTrace');
+          // Show error to user
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to process serial number: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        } finally {
+          setState(() {
+            isLoading = false;
+          });
+        }
+        break;
+      case "Serial-v2":
         setState(() {
           isLoading = true;
         });

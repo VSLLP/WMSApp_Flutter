@@ -253,9 +253,9 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
         (i) => i["POHeader_PONum"] == item["POHeader_PONum"],
       );
       if (item["RcvHead_PackSlip"] == null) {
-        print("Noting");
+        // print("Noting");
       } else {
-        print(item["RcvHead_PackSlip"].toString());
+        // print(item["RcvHead_PackSlip"].toString());
       }
       if (isProductExist == -1) {
         items.add(
@@ -299,7 +299,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
         // } else {
         //   print(item["RcvHead_PackSlip"].toString());
         // }
-        print("load po");
+        // print("load po");
         if (isProductExist == -1) {
           items.add(
             {
@@ -1223,7 +1223,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                         submit(slip);
                         Navigator.of(context).pop();
                         Navigator.of(context).pop();
-                        Navigator.of(context).pop();
+                        // Navigator.of(context).pop();
 
                         // Navigator.push(
                         //     context,

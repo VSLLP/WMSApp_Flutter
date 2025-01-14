@@ -398,46 +398,47 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
                                 ),
                               ],
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                SizedBox(
-                                  // width:
-                                  //     MediaQuery.of(context).size.width * 0.15,
-                                  child: Text(
-                                    "Inspection: ",
-                                    style: TextStyles.getBold(
-                                      14,
-                                      color: AppColors.colorDataColor,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.4,
-                                  color: Colors.transparent,
-                                  child: Row(
-                                    children: [
-                                      Checkbox(
-                                        checkColor: AppColors.colorWhite,
-                                        activeColor: AppColors.colorAssent,
-                                        value: isInsp,
-                                        onChanged: (bool? value) {
-                                          setState(() {
-                                            isInsp = value ?? false;
-                                          });
-                                          getCheangeInsp();
-                                        },
-                                      ),
-                                      SizedBox(
-                                        child: Text(
-                                            "Lot no:  ${lotNum == '' ? '-' : lotNum}"),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                            // Row(
+                            //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            //   children: [
+                            //     // SizedBox(
+                            //     //   // width:
+                            //     //   //     MediaQuery.of(context).size.width * 0.15,
+                            //     //   child: Text(
+                            //     //     "Inspection: ",
+                            //     //     style: TextStyles.getBold(
+                            //     //       14,
+                            //     //       color: AppColors.colorDataColor,
+                            //     //     ),
+                            //     //   ),
+                            //     // ),
+                            //     // Container(
+                            //     //   width:
+                            //     //       MediaQuery.of(context).size.width * 0.4,
+                            //     //   color: Colors.transparent,
+                            //     //   child: Row(
+                            //     //     children: [
+                            //     //       Checkbox(
+                            //     //         checkColor: AppColors.colorWhite,
+                            //     //         activeColor: AppColors.colorAssent,
+                            //     //         value: isInsp,
+                            //     //         onChanged: (bool? value) {
+                            //     //           setState(() {
+                            //     //             isInsp = value ?? false;
+                            //     //           });
+                            //     //           getCheangeInsp();
+                            //     //         },
+                            //     //       ),
+                            //     //       SizedBox(
+                            //     //         child: Text(
+                            //     //             "Lot no:  ${lotNum == '' ? '-' : lotNum}"),
+                            //     //       )
+                            //     //     ],
+                            //     //   ),
+                            //     // ),
+                            //   ],
+                            // ),
+
                             const SizedBox(
                               height: 40,
                             ),
