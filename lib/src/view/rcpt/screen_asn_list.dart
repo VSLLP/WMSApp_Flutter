@@ -1174,10 +1174,11 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                       width: 20,
                     ),
                     GestureDetector(
-                      onTap: () {
+                      onTap: () async {
+                        await submit(slip);
+
                         Navigator.of(context).pop();
 
-                        submit(slip);
                         Navigator.of(context).pop();
                         Navigator.of(context).pop();
                       },
