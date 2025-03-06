@@ -158,7 +158,8 @@ class _ScreenTransferShipItemsState extends State<ScreenTransferShipItems> {
                                           suffixIcon: txtScan.text.isNotEmpty
                                               ? GestureDetector(
                                                   onTap: () {
-                                                    txtScan.text = "";
+                                                    // txtScan.text = "";
+                                                    // print("Loading Data ");
                                                     for (var item
                                                         in productItems) {
                                                       item['isSelected'] =
@@ -473,6 +474,7 @@ class _ScreenTransferShipItemsState extends State<ScreenTransferShipItems> {
   }
 
   loadData() async {
+    print("Load Data");
     company = await sharedPref.getString("userCompnay");
     txtpackNum.text = widget.item['packNum'].toString();
     txtShipNo.text = widget.item['transferShipNo'].toString();
@@ -542,6 +544,7 @@ class _ScreenTransferShipItemsState extends State<ScreenTransferShipItems> {
 
   getPartAsync(val) async {
     try {
+      print("Entred to the fun");
       if (val.length <= 3) {
         return;
       }
@@ -556,21 +559,34 @@ class _ScreenTransferShipItemsState extends State<ScreenTransferShipItems> {
         splitKey = "~\n";
       }
 
+      print("split the key and value ");
+
       List<String> words = val.split(splitKey);
       if (words.length <= 2) {
         return;
       }
+      print("check the parnum length ");
 
+      if (words.length < 6) {
+        showError('Error', 'Invalid input format');
+        return;
+      }
       setState(() {
         isLoading = true;
       });
+
+      print("replacing key with '' ");
 
       partNumber = words[1].replaceAll("Part Code - ", '');
       String partDesc = words[2].replaceAll("Part Desc. - ", '');
       String lotNum = words[4].replaceAll("Lot No. -", '').replaceAll(" ", "");
       String serialNum = words[5].replaceAll("Serial No. - ", '');
 
+      print("get part infor ");
+
       var resB = await materialServices.getGetPart(partNumber);
+      print("get type of part");
+
       String prdType = getType(resB['value'][0]);
 
       int productIndex = productItems.indexWhere(

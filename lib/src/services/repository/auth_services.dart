@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 class AuthDelegate {
   getEmployeeDetailAsync(body, apiUrl) async {
+    print("This Code ran");
     HttpOverrides.global = MyHttpOverrides();
     Uri url = Uri.parse(
         "$apiUrl/BaqSvc/VSApp_UserDetails(${body['Company']})/?pr_UserID=${body['UserId']}");
@@ -17,6 +18,7 @@ class AuthDelegate {
       url,
       headers: requestHeaders,
     );
+    print({response.body});
     return json.decode(response.body);
   }
 
@@ -87,6 +89,7 @@ class AuthDelegate {
       url,
       headers: requestHeaders,
     );
+    print({response.body});
     return json.decode(response.body);
   }
 }

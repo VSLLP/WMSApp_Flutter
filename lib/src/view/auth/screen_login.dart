@@ -211,10 +211,13 @@ class _ScreenLoginState extends State<ScreenLogin> {
   }
 
   void setDefaultData() {
-    txtUrl.text = "https://epicor.ceasefire.asia/CFILPilot/api/v1";
+    // txtUrl.text = "https://epicor.ceasefire.asia/CFILPilot/api/v1";
+    txtUrl.text = "https://epicor.ceasefire.asia/E11INPilot/api/v1";
     txtCompany.text = "CTEMP1";
-    txtUsername.text = "manager";
-    txtPassword.text = "admin1234";
+    // txtUsername.text = "manager";
+    txtUsername.text = "vswmsdl09";
+    // txtPassword.text = "admin1234";
+    txtPassword.text = "vswmsdl09";
   }
 
   loadData() {
@@ -248,6 +251,8 @@ class _ScreenLoginState extends State<ScreenLogin> {
           showError("", "Invalid response");
         } else {
           var profileDetails = response['value'][0];
+          print("${profileDetails['Calculated_UserID']}");
+
           if ((profileDetails['Calculated_UserID'] == null ||
                   profileDetails['Calculated_UserID'].trim().isEmpty) ||
               (profileDetails['Calculated_Company'] == null ||

@@ -1,0 +1,2 @@
+C:/Users/asus/Desktop/VSLLP-WMSApplication-CFIL/android/app/.cxx/RelWithDebInfo/2g2h3y5h/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/asus/Desktop/VSLLP-WMSApplication-CFIL/android/app/.cxx/RelWithDebInfo/2g2h3y5h/arm64-v8a/CMakeFiles/rebuild_cache.dir

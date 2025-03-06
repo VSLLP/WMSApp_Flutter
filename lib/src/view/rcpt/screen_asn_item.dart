@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:epicor/core_packages.dart';
 
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
+import 'package:epicor/src/view/rcpt/bottom_sheet.dart';
 import 'package:epicor/src/view/rcpt/screen_asn_line.dart';
 import 'package:http/http.dart';
 
@@ -198,15 +201,60 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
                                 ),
                               ),
                             ),
-                            GestureDetector(
-                              onTap: () {
-                                if (!isLoading) {
-                                  itemQty.any((controller) =>
-                                          controller.text.isNotEmpty)
-                                      ? submit()
-                                      : {};
+                            // GestureDetector(
+                            //   onTap: () {
+                            //     if (!isLoading) {
+                            //       itemQty.any((controller) =>
+                            //               controller.text.isNotEmpty)
+                            //           ? submit()
+                            //           : {};
+                            //     }
+                            //   },
+                            //   child: Container(
+                            //     height: 38,
+                            //     width: 100,
+                            //     decoration: BoxDecoration(
+                            //       color: itemQty.any((controller) =>
+                            //               controller.text.isNotEmpty)
+                            //           ? AppColors.colorWhite
+                            //           : AppColors.colorGray300,
+                            //       borderRadius: BorderRadius.circular(8),
+                            //       boxShadow: [
+                            //         BoxShadow(
+                            //           color: AppColors.colorTansprent40,
+                            //           blurRadius: 2,
+                            //           offset: const Offset(-2, -2),
+                            //         )
+                            //       ],
+                            //     ),
+                            //     child: Center(
+                            //       child: Container(
+                            //         padding: const EdgeInsets.symmetric(
+                            //           vertical: 8.0,
+                            //         ),
+                            //         child: Text(
+                            //           'Submit',
+                            //           style: TextStyles.getBold(
+                            //             16,
+                            //             color: itemQty.any((controller) =>
+                            //                     controller.text.isNotEmpty)
+                            //                 ? AppColors.colorAssent
+                            //                 : AppColors.colorWhite,
+                            //           ),
+                            //         ),
+                            //       ),
+                            //     ),
+                            //   ),
+                            // ),
+
+                            DebouncedButton(
+                              onPressed: () async {
+                                if (itemQty.any((controller) =>
+                                    controller.text.isNotEmpty)) {
+                                  await submit(); // assuming submit() returns a Future
                                 }
                               },
+                              cooldown: const Duration(seconds: 2),
                               child: Container(
                                 height: 38,
                                 width: 100,
@@ -466,7 +514,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
           }
 
           var payload = resA['value'][0];
-          print('Serial Mapping Response: $payload');
+          // print('Serial Mapping Response: $payload');
 
           var bodyB = {
             "ds": {
@@ -500,7 +548,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
             "plantID": plant
           };
 
-          print('Generate Serial Number Request: ${json.encode(bodyB)}');
+          // print('Generate Serial Number Request: ${json.encode(bodyB)}');
 
           Response res = await utilServices.genrateSerialNum(bodyB);
           if (res.statusCode != 200) {
@@ -509,7 +557,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
           }
 
           var payloadB = json.decode(res.body);
-          print('Generate Serial Number Response: $payloadB');
+          // print('Generate Serial Number Response: $payloadB');
 
           if (!payloadB.containsKey("parameters") ||
               !payloadB["parameters"].containsKey("ds") ||
@@ -552,9 +600,9 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
             "RowMod": "A"
           });
         } catch (e, stackTrace) {
-          print('Error in Serial case: $e');
-          print('Stack trace: $stackTrace');
-
+          // print('Error in Serial case: $e');
+          // print('Stack trace: $stackTrace');
+          log(stackTrace.toString());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Failed to process serial number: ${e.toString()}'),
@@ -614,7 +662,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
             "xrefPartNum": "",
             "xrefPartType": "",
             "xrefCustNum": 0,
-            "NumToAdd": itemQty[itemIndex].text ?? '0',
+            "NumToAdd": itemQty[itemIndex].text,
             "baseBeginNum": "TEMP00000103202",
             "TransType": "PUR-STK",
             "SourceRowID": item['RowIdent'] ?? '',
@@ -671,7 +719,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
             });
           }
         } catch (e) {
-          print('Error in Serial case: $e');
+          // print('Error in Serial case: $e');
 
           showError('Error', 'Failed to process serial number: $e');
         } finally {
@@ -687,7 +735,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
         var bodyA = {"vPartNum": item["Part_PartNum"]};
         Response res = await utilServices.generateLot(bodyA);
         var payloadB = json.decode(res.body);
-        print(payloadB);
+        // print(payloadB);
         productItems[itemIndex]['lotNum'] =
             payloadB['parameters']['vNewLotNum'];
         productItems[itemIndex]['isSelect'] = true;
@@ -1156,12 +1204,14 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
                   "POLine": item['PODetail_POLine'],
                   "PORelNum": item['PORel_PORelNum'],
                   "PartDescription": item['PODetail_LineDesc'],
-                  "VendorQty": item['PODetail_OrderQty'],
+                  // "VendorQty": item['PODetail_OrderQty'],
+                  "VendorQty": itemQty[index].text,
                   "ReceiptType": "P",
                   "ReceivedTo": "PUR-STK",
                   "PUM": item['PODetail_IUM'],
                   "CostPerCode": item['Part_PricePerCode'],
-                  "ReceivedComplete": true,
+                  // "ReceivedComplete": true,
+                  "ReceivedComplete": false,
                   "ArrivedDate": formattedDate,
                   "CostPerFactor": double.parse(item['Part_SellingFactor']),
                   "EnableBin": true,
@@ -1187,7 +1237,9 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
             }
           };
           printLargeString(json.encode(body));
+          // print(body);
           Response res = await inventoryServices.postForJobtoinvLot(body);
+          // print(res);
           if (res.statusCode != 200) {
             showError('Error', json.decode(res.body)['ErrorMessage']);
             isSubmit = false;
@@ -1208,7 +1260,7 @@ class _ScreenAsnItemState extends State<ScreenAsnItem> {
         resetItems();
       }
     } catch (ex) {
-      showError('Error', "Server error occurred!" + ex.toString());
+      // showError('Error', "Server error occurred!" + ex.toString());
       setState(() {
         isLoading = false;
       });

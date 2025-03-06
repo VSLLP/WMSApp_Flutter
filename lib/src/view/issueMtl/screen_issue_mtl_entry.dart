@@ -312,8 +312,17 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
                                   keyboardType: TextInputType.name,
                                   autofocus: false,
                                   readOnly: true,
-                                  onTap: () {
-                                    choseOptions("MtlSeq", mtlSeqs);
+                                  // onTap: () {
+                                  //   choseOptions("MtlSeq", mtlSeqs);
+                                  // },
+                                  onTap: () async {
+                                    choseOptions("MtlSeq", mtlSeqs)
+                                        .then((selectedValue) {
+                                      if (selectedValue != null) {
+                                        handleMtlSeqChange(
+                                            selectedValue.toString());
+                                      }
+                                    });
                                   },
                                   validator: (value) {
                                     if (value!.isEmpty) {
@@ -361,7 +370,7 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
                                   keyboardType: TextInputType.name,
                                   autofocus: false,
                                   readOnly: true,
-                                  onTap: () {
+                                  onTap: () async {
                                     choseOptions("Warehouse", whareHouses);
                                   },
                                   validator: (value) {
@@ -565,7 +574,7 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
                                       ),
                                     ),
                                     SizedBox(
-                                      width: 80,
+                                      width: 70,
                                       child: Text(
                                         txtPreIssu,
                                         style: TextStyles.getBold(
@@ -1104,6 +1113,38 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
     txtMtlSeq.text = mtlSeqs[0]['value'].toString();
     selMtl = mtlSeqs[0]['value'].toString();
 
+    handleMtlSeqChange(mtlSeqs[0]['value'].toString());
+
+    /*
+
+    var selectedItem = items.firstWhere(
+        (item) => item['JobMtl_MtlSeq'].toString() == selMtl,
+        orElse: () => null);
+
+    if (selectedItem != null) {
+      // Get products and update lot numbers
+      var res = await materialServices.getProducts(
+        widget.item['JobHead_PartNum'],
+        selectedItem['Calculated_DefaultFromWarehouse'],
+        selectedItem['Calculated_DefaultFrombin'],
+      );
+
+      List<dynamic> tempItems = res['value'];
+      lotNums.clear();
+
+      for (var item in tempItems) {
+        if (item["PartBin_LotNum"] != "") {
+          lotNums.add(item["PartBin_LotNum"]);
+        }
+      }
+
+      if (lotNums.isNotEmpty && prdType == "2") {
+        lotNum = lotNums[0];
+        txtLotNum.text = lotNums[0];
+      }
+    }
+*/
+
     txtTWere.text = items[0]['Calculated_DefaultToWarehouse'];
     wereTID = items[0]['Calculated_DefaultToWarehouse'];
     txtTBin.text = items[0]['Calculated_DefaultToBin'];
@@ -1117,14 +1158,17 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
       items[0]['Calculated_DefaultFromWarehouse'],
       items[0]['Calculated_DefaultFrombin'],
     );
+    // print(res);
     List<dynamic> tempItems = res['value'];
     lotNums.clear();
 
     for (int i = 0; i < tempItems.length; i++) {
       if (tempItems[i]["PartBin_LotNum"] != "") {
         lotNums.add(tempItems[i]["PartBin_LotNum"]);
+        // print(lotNum);
       }
     }
+    // print(tempItems);
 
     if (lotNums.isNotEmpty && prdType == "2") {
       lotNum = lotNums[0];
@@ -1143,6 +1187,8 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
         .toStringAsFixed(2);
     txtIUM = items[0]['JobMtl_IUM'];
     txtQty.text = '0';
+
+    await updateLotNumbers();
 
     serItems.clear();
     getType(items[0]);
@@ -1182,124 +1228,57 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
     bins = response['value'];
   }
 
-  choseOptions(String title, List<dynamic> options) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 16,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(0),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Select $title",
-                  style: TextStyles.getBold(18),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  height: 1,
-                  color: AppColors.colorGray100,
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: SizedBox(
-                    child: options.isEmpty
-                        ? Container(
-                            color: Colors.transparent,
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 0,
-                              vertical: 10,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "No $title found.",
-                                  style: TextStyles.getRegularScund(
-                                    16,
-                                    color: AppColors.colorGray600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: options.length,
-                            shrinkWrap: true,
-                            scrollDirection: Axis.vertical,
-                            itemBuilder: (BuildContext context, int index) {
-                              return GestureDetector(
-                                onTap: () {
-                                  updateOtp(title, options[index]);
-                                  Navigator.of(context).pop();
-                                  setState(() {});
-                                },
-                                child: Container(
-                                  color: Colors.transparent,
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 0,
-                                    vertical: 10,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        getOptTitle(title, options[index]),
-                                        style: TextStyles.getRegularScund(
-                                          16,
-                                          color: AppColors.colorGray600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  height: 1,
-                  color: AppColors.colorGray100,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: SizedBox(
-                        child: Text(
-                          "Cancel",
-                          style: TextStyles.getBold(14),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+  Future<void> updateLotNumbers() async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+
+      // Get the current part number - make sure to use the correct one
+      String currentPartNum = txtFPartNo.text;
+
+      // Only proceed if we have all required data
+      if (currentPartNum.isEmpty || txtFWere.text.isEmpty) {
+        return;
+      }
+
+      // Get products for the current warehouse and bin
+      var res = await materialServices.getProducts(
+        currentPartNum,
+        txtFWere.text,
+        txtFBin.text.isEmpty ? "" : txtFBin.text, // Make bin optional
+      );
+
+      if (res['value'] != null) {
+        List<dynamic> tempItems = res['value'];
+
+        setState(() {
+          lotNums.clear();
+          // Update lot numbers list
+          for (var item in tempItems) {
+            if (item["PartBin_LotNum"] != null &&
+                item["PartBin_LotNum"].toString().isNotEmpty) {
+              lotNums.add(item["PartBin_LotNum"]);
+            }
+          }
+
+          // Update the lot number field if needed
+          if (lotNums.isNotEmpty && prdType == "2") {
+            lotNum = lotNums[0];
+            txtLotNum.text = lotNums[0];
+          } else {
+            lotNum = "";
+            txtLotNum.text = "";
+          }
+        });
+      }
+    } catch (ex) {
+      showError('Error', 'Failed to update lot numbers: ${ex.toString()}');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   updateOtp(String title, dynamic option) async {
@@ -1356,22 +1335,51 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
             break;
           }
         }
-      case "Warehouse":
-        txtTWere.text = option['Warehse_Description'];
-        wereTID = option['PartWhse_WarehouseCode'];
-        getBins(option['PartWhse_WarehouseCode']);
-        txtTBin.text = "";
-        break;
+      // case "Warehouse":
+      //   txtTWere.text = option['Warehse_Description'];
+      //   wereTID = option['PartWhse_WarehouseCode'];
+      //   getBins(option['PartWhse_WarehouseCode']);
+      //   txtTBin.text = "";
+      //   break;
+      // case "From Warehouse":
+      //   txtFWere.text = option['Warehse_Description'];
+      //   wereFID = option['PartWhse_WarehouseCode'];
+      //   getBins(option['PartWhse_WarehouseCode']);
+      //   txtFBin.text = "";
       case "From Warehouse":
-        txtFWere.text = option['Warehse_Description'];
-        wereFID = option['PartWhse_WarehouseCode'];
-        getBins(option['PartWhse_WarehouseCode']);
+        setState(() {
+          txtFWere.text = option['Warehse_Description'];
+          wereFID = option['PartWhse_WarehouseCode'];
+          // print(txtFWere.text);
+          // print(wereFID);
+        });
+
+        // First update bins
+        await getBins(option['PartWhse_WarehouseCode']);
+
+        // Clear the bin selection since warehouse changed
         txtFBin.text = "";
-      case "Bin":
-        txtTBin.text = option['WhseBin_BinNum'];
+
+        // Then update lot numbers with current context
+        await updateLotNumbers();
         break;
+      // case "From Bin":
+      //   txtFBin.text = option['WhseBin_BinNum'];
+      //   // Add this: Update lot numbers when bin changes
+      //   await updateLotNumbers();
+      //   break;
+      case "Bin":
+        setState(() {
+          txtFBin.text = option['WhseBin_BinNum'];
+        });
+        await updateLotNumbers();
+        break;
+
       case "From Bin":
-        txtFBin.text = option['WhseBin_BinNum'];
+        setState(() {
+          txtFBin.text = option['WhseBin_BinNum'];
+        });
+        await updateLotNumbers();
         break;
       case "Lot Number":
         txtLotNum.text = option;
@@ -1651,6 +1659,128 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
     }
   }
 
+  choseOptions(String title, List<dynamic> options) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Select $title",
+                  style: TextStyles.getBold(18),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: SizedBox(
+                    child: options.isEmpty
+                        ? Container(
+                            color: Colors.transparent,
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 0,
+                              vertical: 10,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "No $title found.",
+                                  style: TextStyles.getRegularScund(
+                                    16,
+                                    color: AppColors.colorGray600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: options.length,
+                            shrinkWrap: true,
+                            scrollDirection: Axis.vertical,
+                            itemBuilder: (BuildContext context, int index) {
+                              return GestureDetector(
+                                onTap: () async {
+                                  updateOtp(title, options[index]);
+                                  Navigator.of(context).pop();
+                                  setState(() {
+                                    // await loadData();
+                                  });
+                                },
+                                child: Container(
+                                  color: Colors.transparent,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 0,
+                                    vertical: 10,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        getOptTitle(title, options[index]),
+                                        style: TextStyles.getRegularScund(
+                                          16,
+                                          color: AppColors.colorGray600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          "Cancel",
+                          style: TextStyles.getBold(14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   showSucess(String title, String message) {
     showDialog(
       context: context,
@@ -1764,5 +1894,53 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
         );
       },
     );
+  }
+
+  Future<void> handleMtlSeqChange(String value) async {
+    selMtl = value;
+    txtMtlSeq.text = value;
+
+    // Find the corresponding item
+    var selectedItem = items.firstWhere(
+        (item) => item['JobMtl_MtlSeq'].toString() == value,
+        orElse: () => null);
+
+    if (selectedItem != null) {
+      // Update all dependent fields
+      txtTWere.text = selectedItem['Calculated_DefaultToWarehouse'];
+      wereTID = selectedItem['Calculated_DefaultToWarehouse'];
+      txtTBin.text = selectedItem['Calculated_DefaultToBin'];
+
+      txtFWere.text = selectedItem['Calculated_DefaultFromWarehouse'];
+      wereFID = selectedItem['Calculated_DefaultFromWarehouse'];
+      txtFBin.text = selectedItem['Calculated_DefaultFrombin'];
+
+      // Update lot numbers
+      var res = await materialServices.getProducts(
+        widget.item['JobHead_PartNum'],
+        selectedItem['Calculated_DefaultFromWarehouse'],
+        selectedItem['Calculated_DefaultFrombin'],
+      );
+
+      List<dynamic> tempItems = res['value'];
+      lotNums.clear();
+
+      for (int i = 0; i < tempItems.length; i++) {
+        if (tempItems[i]["PartBin_LotNum"] != "") {
+          lotNums.add(tempItems[i]["PartBin_LotNum"]);
+        }
+      }
+
+      // Update lot number field
+      if (lotNums.isNotEmpty && prdType == "2") {
+        lotNum = lotNums[0];
+        txtLotNum.text = lotNums[0];
+      } else {
+        lotNum = "";
+        txtLotNum.text = "";
+      }
+
+      setState(() {}); // Trigger UI update
+    }
   }
 }

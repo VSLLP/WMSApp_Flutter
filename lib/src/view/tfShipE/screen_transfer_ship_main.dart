@@ -3,6 +3,7 @@ import 'package:epicor/core_packages.dart';
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:epicor/src/view/tfShipE/screen_transfer_ship_entry.dart';
+
 import 'package:intl/intl.dart';
 
 class ScreenTransferShipMain extends StatefulWidget {
@@ -178,6 +179,16 @@ class _ScreenTransferShipMainState extends State<ScreenTransferShipMain> {
                                           ),
                                         ),
                                       ),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: Text(
+                                          "Pack Slip: ${(items[index]["TFShipDtl_PackNum"]) ?? 'New Shipment'}",
+                                          style: TextStyles.getBold(
+                                            14,
+                                            color: AppColors.colorDataColor,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -207,13 +218,31 @@ class _ScreenTransferShipMainState extends State<ScreenTransferShipMain> {
   }
 
   gotoEntryPage(item) async {
+    print("Item: $item");
+    var packNum = item['TFShipDtl_PackNum'] ?? "NEW";
+
+    var itemP = {
+      "orderNum": item['TFOrdHed_TFOrdNum'],
+      "packNum": packNum,
+      'transferShipNo': item['TFOrdHed_Character01'],
+      'fromPlant': item['TFOrdHed_Plant'],
+      'toPlant': item['TFOrdHed_ToPlant'],
+      'fromPlantName': item['Plant_Name'],
+      'toPlantName': item['Plant1_Name'],
+      'orderDate': item['TFOrdHed_OrderDate']
+    };
+
+    await sharedPref.setString("currentPackNum", packNum.toString());
+
+    if (!mounted) return;
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ScreenTransferShipEntry(
-          item: item,
+          item: itemP,
         ),
       ),
     );
+
     loadData();
   }
 }

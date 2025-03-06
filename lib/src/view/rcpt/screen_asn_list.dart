@@ -3,7 +3,7 @@ import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:epicor/src/view/rcpt/screen_asn_item.dart';
 import 'package:epicor/src/view/rcpt/screen_asn_r_item.dart';
-import 'package:epicor/src/view/rcpt/screen_rcpt_option.dart';
+
 import 'package:giffy_dialog/giffy_dialog.dart';
 import 'package:http/http.dart';
 
@@ -262,6 +262,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                 ? [item["RcvHead_PackSlip"].toString()]
                 : [],
             "Vendor_VendorNum": item["Vendor_VendorNum"],
+            "RcvHead_Received": item["RcvHead_Received"],
           },
         );
       } else {
@@ -300,6 +301,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                   ? [item["RcvHead_PackSlip"].toString()]
                   : [],
               "Vendor_VendorNum": item["Vendor_VendorNum"],
+              "RcvHead_Received": item["RcvHead_Received"],
             },
           );
         } else {
@@ -1002,7 +1004,9 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
 
   choseSlipOptions() {
     slips.clear();
+    // print(selItem);
     for (var item in selItem['RcvHead_PackSlip']) {
+      // print(item);
       slips.add(item);
     }
     showDialog(
@@ -1174,9 +1178,8 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                       width: 20,
                     ),
                     GestureDetector(
-                      onTap: () async {
-                        await submit(slip);
-
+                      onTap: () {
+                        _submitSlip(slip, context);
                         Navigator.of(context).pop();
 
                         Navigator.of(context).pop();
@@ -1200,6 +1203,12 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
         );
       },
     );
+  }
+
+  Future<void> _submitSlip(String slip, BuildContext context) async {
+    await submit(slip);
+
+    // ... other logic that might need context ...
   }
 
   submit(String slip) async {

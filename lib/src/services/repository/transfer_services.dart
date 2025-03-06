@@ -36,8 +36,11 @@ class TransferDelegate {
     String company = await sharedPref.getString("userCompnay");
     String plant = await sharedPref.getString("userPlant");
 
+    // Uri url = Uri.parse("$apiUrl/BaqSvc/VS_TFtest($company)?pr_Plant=$plant");
     Uri url = Uri.parse(
-        "$apiUrl/BaqSvc/VSAPP_TransferShipmentHead($company)?pr_Plant=$plant");
+        "$apiUrl/BaqSvc/VSAPP_TransferShipmentHead_V1($company)?pr_Plant=$plant");
+    // Uri url = Uri.parse(
+    //     "$apiUrl/BaqSvc/VSAPP_TransferShipmentHead($company)?pr_Plant=$plant");
     String basicAuth =
         'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
     Map<String, String> requestHeaders = {
@@ -296,30 +299,129 @@ class TransferDelegate {
     return json.decode(response.body);
   }
 
-  patchRecvItem(body, packnum) async {
-    HttpOverrides.global = MyHttpOverrides();
-    String apiUrl = await sharedPref.getString("userUrl");
-    // String userId = await sharedPref.getString("userName");
-    // String password = await sharedPref.getString("userPass");
+  // patchRecvItem(body, packnum) async {
+  //   HttpOverrides.global = MyHttpOverrides();
+  //   String apiUrl = await sharedPref.getString("userUrl");
+  //   String userId = await sharedPref.getString("userName");
+  //   // String password = await sharedPref.getString("userPass");
 
+  //   String company = await sharedPref.getString("userCompnay");
+
+  //   print(userId);
+  //   print(company);
+  //   Uri beforePatchUrl =
+  //       Uri.parse("$apiUrl/Ice.BO.UserFileSvc/UserComps($userId,$company)");
+  //   //Ice.BO.UserFileSvc/UserComps(manager,CTEMP1)
+
+  //   Uri url = Uri.parse(
+  //       "$apiUrl/Erp.BO.TransOrderReceiptSvc/PlantTrans($company,$packnum)");
+
+  //   String basicAuth = 'Basic ${base64Encode(utf8.encode('WMSID:WMSpass'))}';
+  //   Map<String, String> requestHeadersCurPlant = {
+  //     'Content-type': 'application/json',
+  //     'Accept': '*/*',
+  //     'Authorization': basicAuth,
+  //   };
+
+  //   var body2 = {
+  //     "Company": company,
+  //     "CurPlant": "MH08",
+  //   };
+
+  //   Map<String, String> requestHeaders = {
+  //     'Content-type': 'application/json',
+  //     'Accept': '*/*',
+  //     'Authorization': basicAuth,
+  //   };
+  //   print("requestHeadersCurPlant " + requestHeadersCurPlant.toString());
+
+  //   var beforPatchResponse = await http.patch(
+  //     beforePatchUrl,
+  //     headers: requestHeadersCurPlant,
+  //     body: body2,
+  //   );
+
+  //   print(beforPatchResponse.body);
+  //   if (beforPatchResponse.statusCode == 200 ||
+  //       beforPatchResponse.statusCode == 204) {
+  //     var response = await http.patch(
+  //       url,
+  //       headers: requestHeaders,
+  //       body: body,
+  //     );
+  //     return response;
+  //   }
+  //   // var response = await http.patch(
+  //   //   url,
+  //   //   headers: requestHeaders,
+  //   //   body: body,
+  //   // );
+  //   // return response;
+  // }
+
+  patchRecvItem(body, packnum) async {
+    // HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
     String company = await sharedPref.getString("userCompnay");
+    String plant = await sharedPref.getString("userPlant");
+    String password = await sharedPref.getString("userPass");
+
+    print(userId);
+    print(company);
+    print(userId);
+    print("Pack Num " + packnum);
+    Uri beforePatchUrl =
+        Uri.parse("$apiUrl/Ice.BO.UserFileSvc/UserComps($userId,$company)");
 
     Uri url = Uri.parse(
         "$apiUrl/Erp.BO.TransOrderReceiptSvc/PlantTrans($company,$packnum)");
 
-    String basicAuth = 'Basic ${base64Encode(utf8.encode('WMSID:WMSpass'))}';
+    // String basicAuth = 'Basic ${base64Encode(utf8.encode('WMSID:WMSpass'))}';
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeadersCurPlant = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    // Body as a Dart map
+    var body2 = {
+      "Company": company,
+      "CurPlant": plant,
+    };
+
+    // Ensure you jsonEncode the body before passing it
+    var jsonBody2 = jsonEncode(body2); // Convert Dart Map to JSON String
+
     Map<String, String> requestHeaders = {
       'Content-type': 'application/json',
       'Accept': '*/*',
       'Authorization': basicAuth,
     };
 
-    var response = await http.patch(
-      url,
-      headers: requestHeaders,
-      body: body,
+    // print("requestHeadersCurPlant: " + requestHeadersCurPlant.toString());
+    // print("Request Body: " + jsonBody2); // Log the JSON body
+
+    // PATCH request with the correctly encoded JSON body
+    var beforPatchResponse = await http.patch(
+      beforePatchUrl,
+      headers: requestHeadersCurPlant,
+      body: jsonBody2, // Pass the JSON string
     );
-    return response;
+
+    print(beforPatchResponse.body);
+
+    if (beforPatchResponse.statusCode == 200 ||
+        beforPatchResponse.statusCode == 204) {
+      var response = await http.patch(
+        url,
+        headers: requestHeaders,
+        body: body, // Make sure this is also JSON encoded
+      );
+      return response;
+    }
   }
 
   patchTransOrderShips(body, packnum) async {
@@ -333,6 +435,8 @@ class TransferDelegate {
     Uri url = Uri.parse(
         "$apiUrl/Erp.BO.TransOrderShipSvc/TransOrderShips($company,$packnum)");
 
+    // String basicAuth =
+    //     'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
     String basicAuth =
         'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
     Map<String, String> requestHeaders = {

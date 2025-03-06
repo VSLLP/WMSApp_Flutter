@@ -187,7 +187,7 @@ class InventoryDelegate {
 
     String company = await sharedPref.getString("userCompnay");
 
-    Uri url = Uri.parse("$apiUrl/BaqSvc/VSAPP_AssingedASN_V1($company)");
+    Uri url = Uri.parse("$apiUrl/BaqSvc/VSAPP_AssingedASN_V2($company)");
     String basicAuth =
         'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
     Map<String, String> requestHeaders = {

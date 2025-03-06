@@ -469,7 +469,10 @@ class _ScreenAsnEntryState extends State<ScreenAsnEntry> {
 
   choseOptions() {
     slips.clear();
+    // print(selItem);
     for (var item in selItem['RcvHead_PackSlip']) {
+      // print(item);
+
       slips.add(item);
     }
     if (!slips.contains('Add New')) {

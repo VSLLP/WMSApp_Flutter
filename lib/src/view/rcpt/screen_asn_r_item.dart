@@ -1210,11 +1210,7 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
           int requiredSerials = item['ScanQty'];
           if (serialNumbersForLot.length != requiredSerials) {
             throw Exception(
-                "Mismatch in serial numbers for part ${item['Part_PartNum']}" +
-                    (item['Part_TrackLots']
-                        ? " and lot ${item['lotNum']}"
-                        : "") +
-                    ". Required: $requiredSerials, Found: ${serialNumbersForLot.length}");
+                "Mismatch in serial numbers for part ${item['Part_PartNum']}${item['Part_TrackLots'] ? " and lot ${item['lotNum']}" : ""}. Required: $requiredSerials, Found: ${serialNumbersForLot.length}");
           }
         }
 
@@ -1237,12 +1233,14 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
                 "POLine": item['PODetail_POLine'],
                 "PORelNum": item['PORel_PORelNum'],
                 "PartDescription": item['PODetail_LineDesc'],
-                "VendorQty": item['PODetail_OrderQty'],
+                // "VendorQty": item['PODetail_OrderQty'],
+                "VendorQty": item['ScanQty'],
                 "ReceiptType": "P",
                 "ReceivedTo": "PUR-STK",
                 "PUM": item['PODetail_IUM'],
                 "CostPerCode": item['Part_PricePerCode'],
-                "ReceivedComplete": true,
+                // "ReceivedComplete": true,
+                "ReceivedComplete": false,
                 "ArrivedDate": formattedDate,
                 "CostPerFactor": sellingFactor,
                 "EnableBin": true,

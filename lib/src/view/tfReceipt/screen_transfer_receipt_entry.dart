@@ -456,11 +456,17 @@ class _ScreenTransferReceiptEntryState
       setState(() {
         isLoading = true;
       });
+
       String company = await sharedPref.getString("userCompnay");
       String plant = await sharedPref.getString("userPlant");
       bool isExcuted = false;
       bool isSucess = false;
+      // Run before Patch
+      // https://epicor.ceasefire.asia/CFILPilot/api/v1/Ice.BO.UserFileSvc/UserComps(manager,CTEMP1)
+
       var authBody = {"CurPlant": plant};
+      print(authBody);
+      print(items);
       await authServices.pathUserComps(authBody);
       for (var item in items) {
         if (item['recvDate'] != "") {
@@ -485,17 +491,20 @@ class _ScreenTransferReceiptEntryState
             "ReceiveToWhseCode": plant,
             "RequiredQty": item['TFShipDtl_OurStockShippedQty'],
             "TranType": "TO",
-            "SysRowID": item['PlantTran_SysRowID'],
+            //"SysRowID": item['PlantTran_SysRowID'],
             "ThisTranQty": item['TFShipDtl_OurStockShippedQty'],
             "TranDocTypeID": "INVTRF",
             "Character01": item['PlantTran_Character01'],
             "Character02": item['PlantTran_Character02'],
             "RowMod": "U"
           };
+          print(body);
+          print("Pack Num " + item['PlantTran_TranNum'].toString());
           Response res = await transferServices.patchRecvItem(
             json.encode(body),
-            item['PlantTran_TranNum'],
+            item['PlantTran_TranNum'].toString(),
           );
+          print("Response " + res.body);
           if (res.statusCode == 204) {
             isSucess = true;
           } else {

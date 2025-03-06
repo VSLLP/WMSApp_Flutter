@@ -1,9 +1,9 @@
 import 'package:epicor/core_packages.dart';
-
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:epicor/src/view/tfShipE/screen_transfer_ship_items.dart';
 import 'package:http/http.dart';
+import 'package:http/http.dart' as http;
 
 class ScreenTransferShipEntry extends StatefulWidget {
   final dynamic item;
@@ -26,6 +26,7 @@ class _ScreenTransferShipEntryState extends State<ScreenTransferShipEntry> {
   List<dynamic> docTypes = [];
   List<dynamic> shipTypes = [];
   List<dynamic> shipVia = [];
+  List<dynamic> packList = [];
 
   String packNum = "";
   String docTypeID = "";
@@ -38,6 +39,7 @@ class _ScreenTransferShipEntryState extends State<ScreenTransferShipEntry> {
   void initState() {
     super.initState();
     loadData();
+    loadSavedPackNum();
   }
 
   @override
@@ -407,6 +409,80 @@ class _ScreenTransferShipEntryState extends State<ScreenTransferShipEntry> {
                           ],
                         ),
                         const SizedBox(
+                          height: 25,
+                        ),
+                        Container(
+                          margin: const EdgeInsets.all(5),
+                          child: Text(
+                              "Packslips For Order Number: ${txtOrdNum.text}"),
+                        ),
+                        SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: packList.isNotEmpty
+                                ? packList.map((pack) {
+                                    return GestureDetector(
+                                      onTap: () async {
+                                        // Use the clicked pack number instead of packNum variable
+                                        var itemP = {
+                                          "orderNum": widget.item['orderNum'],
+                                          "packNum":
+                                              pack, // Use pack from map callback
+                                          'transferShipNo':
+                                              widget.item['transferShipNo'],
+                                        };
+
+                                        // Save clicked pack number to shared preferences
+                                        await sharedPref.setString(
+                                            "currentPackNum", pack.toString());
+
+                                        if (!mounted) return;
+
+                                        // Show snackbar before navigation
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Container(
+                                              margin: const EdgeInsets.all(10),
+                                              child: Text(
+                                                  "You clicked pack slip no: $pack"),
+                                            ),
+                                            duration:
+                                                const Duration(seconds: 2),
+                                          ),
+                                        );
+
+                                        // Navigate after showing snackbar
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                ScreenTransferShipItems(
+                                              item: itemP,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        margin: const EdgeInsets.only(
+                                            left: 10, top: 5),
+                                        child: Text(
+                                          pack.toString(),
+                                          style: const TextStyle(
+                                              fontSize: 16, color: Colors.blue),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList()
+                                : [
+                                    const Text(
+                                      "No data available",
+                                      style: TextStyle(
+                                          fontSize: 16, color: Colors.red),
+                                    ),
+                                  ],
+                          ),
+                        ),
+                        const SizedBox(
                           height: 60,
                         ),
                       ],
@@ -421,25 +497,214 @@ class _ScreenTransferShipEntryState extends State<ScreenTransferShipEntry> {
     );
   }
 
+  loadSavedPackNum() async {
+    String? savedPackNum = await sharedPref.getString("currentPackNum");
+    if (savedPackNum != null && savedPackNum.isNotEmpty) {
+      setState(() {
+        packNum = savedPackNum;
+      });
+      print("Loaded saved PackNum: $packNum"); // Debug print
+    }
+  }
+
+  // loadData() async {
+  //   txtOrdNum.text = widget.item['TFOrdHed_TFOrdNum'];
+  //   company = await sharedPref.getString("userCompnay");
+  //   String apiUrl = await sharedPref.getString("userUrl");
+  //   String userId = await sharedPref.getString("userName");
+  //   String password = await sharedPref.getString("userPass");
+  //   String plant = await sharedPref.getString("userPlant");
+
+  //   var resA = await transferServices.getDocType();
+  //   docTypes.clear();
+  //   docTypes = resA['value'];
+
+  //   var resB = await transferServices.getShipType();
+  //   shipTypes.clear();
+  //   shipTypes = resB['value'];
+
+  //   var resC = await transferServices.getShipVia();
+  //   shipVia.clear();
+  //   shipVia = resC['value'];
+
+  //   // https://epicor.ceasefire.asia/CFILPilot/api/v1/BaqSvc/VSApp_tfEntryPackslips?
+  //   Uri url = Uri.parse(
+  //       "$apiUrl/BaqSvc/VSApp_tfEntryPackslips?TFOrderNum=${txtOrdNum.text}");
+
+  //   String basicAuth =
+  //       'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+  //   Map<String, String> requestHeaders = {
+  //     'Content-type': 'application/json',
+  //     'Accept': '*/*',
+  //     'Authorization': basicAuth,
+  //   };
+
+  //   var response = await http.get(
+  //     url,
+  //     headers: requestHeaders,
+  //   );
+  //   print(response.body);
+  //   // return json.decode(response.body);
+
+  //   // packList.add("");
+
+  //   var jsonResponse = json.decode(response.body);
+
+  //   // Check if 'value' exists and is a list
+  //   if (jsonResponse['value'] != null && jsonResponse['value'] is List) {
+  //     // Iterate through the list and extract TFShipDtl_PackNum
+  //     for (var item in jsonResponse['value']) {
+  //       if (item['TFShipDtl_PackNum'] != null) {
+  //         packList.add(item['TFShipDtl_PackNum']);
+  //       }
+  //     }
+  //   }
+
+  //   setState(() {
+  //     isLoading = false;
+  //   });
+  // }
+  // loadData() async {
+  //   try {
+  //     // Initialize text field and shared preferences
+  //     txtOrdNum.text = widget.item['TFOrdHed_TFOrdNum'];
+
+  //     company = await sharedPref.getString("userCompnay");
+  //     String apiUrl = await sharedPref.getString("userUrl");
+  //     String userId = await sharedPref.getString("userName");
+  //     String password = await sharedPref.getString("userPass");
+  //     String plant = await sharedPref.getString("userPlant");
+
+  //     // Fetch document types, ship types, and ship vias
+  //     var resA = await transferServices.getDocType();
+  //     docTypes = resA['value'] ?? [];
+
+  //     var resB = await transferServices.getShipType();
+  //     shipTypes = resB['value'] ?? [];
+
+  //     var resC = await transferServices.getShipVia();
+  //     shipVia = resC['value'] ?? [];
+
+  //     // Construct the API URL
+  //     Uri url = Uri.parse(
+  //         "$apiUrl/BaqSvc/VSApp_tfEntryPackslips?TFOrderNum=${widget.item['TFOrdHed_TFOrdNum']}");
+
+  //     // Set up Basic Auth header
+  //     String basicAuth =
+  //         'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+  //     Map<String, String> requestHeaders = {
+  //       'Content-type': 'application/json',
+  //       'Accept': '*/*',
+  //       'Authorization': basicAuth,
+  //     };
+
+  //     // Perform the GET request
+  //     var response = await http.get(url, headers: requestHeaders);
+  //     print("Response Status: ${response.statusCode}");
+  //     print("Response Body: ${response.body}");
+
+  //     if (response.statusCode == 200) {
+  //       // Parse the JSON response
+  //       var jsonResponse = json.decode(response.body);
+
+  //       // Check if 'value' exists and is a list
+  //       if (jsonResponse['value'] != null && jsonResponse['value'] is List) {
+  //         // Iterate through the list and extract TFShipDtl_PackNum
+  //         for (var item in jsonResponse['value']) {
+  //           if (item['TFShipDtl_PackNum'] != null) {
+  //             packList.add(item['TFShipDtl_PackNum']);
+  //           }
+  //         }
+  //         print("Pack List: $packList");
+  //       }
+  //     } else {
+  //       print("Failed to fetch data: ${response.reasonPhrase}");
+  //     }
+  //   } catch (e) {
+  //     // Handle errors gracefully
+  //     print("Error occurred: $e");
+  //   } finally {
+  //     // Update the UI state
+  //     setState(() {
+  //       isLoading = false;
+  //     });
+  //   }
+  // }
   loadData() async {
-    txtOrdNum.text = widget.item['TFOrdHed_TFOrdNum'];
-    company = await sharedPref.getString("userCompnay");
+    try {
+      // Initialize text field and shared preferences
+      // print(widget.item);
+      // txtOrdNum.text = widget.item['TFOrdHed_TFOrdNum'] ?? '';
+      txtOrdNum.text = widget.item['orderNum'] ?? '';
 
-    var resA = await transferServices.getDocType();
-    docTypes.clear();
-    docTypes = resA['value'];
+      company = await sharedPref.getString("userCompnay") ?? '';
+      String apiUrl = await sharedPref.getString("userUrl") ?? '';
+      String userId = await sharedPref.getString("userName") ?? '';
+      String password = await sharedPref.getString("userPass") ?? '';
+      String plant = await sharedPref.getString("userPlant") ?? '';
 
-    var resB = await transferServices.getShipType();
-    shipTypes.clear();
-    shipTypes = resB['value'];
+      // Validate critical fields
+      if (apiUrl.isEmpty ||
+          userId.isEmpty ||
+          password.isEmpty ||
+          company.isEmpty) {
+        throw Exception("Required configuration values are missing.");
+      }
 
-    var resC = await transferServices.getShipVia();
-    shipVia.clear();
-    shipVia = resC['value'];
+      // Fetch document types, ship types, and ship vias
+      var resA = await transferServices.getDocType();
+      docTypes = resA['value'] ?? [];
 
-    setState(() {
-      isLoading = false;
-    });
+      var resB = await transferServices.getShipType();
+      shipTypes = resB['value'] ?? [];
+
+      var resC = await transferServices.getShipVia();
+      shipVia = resC['value'] ?? [];
+
+      // Construct the API URL
+      Uri url = Uri.parse(
+          "$apiUrl/BaqSvc/VSApp_tfEntryPackslips?TFOrderNum=${widget.item['orderNum']}");
+
+      // Set up Basic Auth header
+      String basicAuth =
+          'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+      Map<String, String> requestHeaders = {
+        'Content-type': 'application/json',
+        'Accept': '*/*',
+        'Authorization': basicAuth,
+      };
+
+      // Perform the GET request
+      var response = await http.get(url, headers: requestHeaders);
+      // print("Response Status: ${response.statusCode}");
+      // print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        // Parse the JSON response
+        var jsonResponse = json.decode(response.body);
+
+        // Check if 'value' exists and is a list
+        if (jsonResponse['value'] != null && jsonResponse['value'] is List) {
+          // Iterate through the list and extract TFShipDtl_PackNum
+          for (var item in jsonResponse['value']) {
+            if (item['TFShipDtl_PackNum'] != null) {
+              packList.add(item['TFShipDtl_PackNum']);
+            }
+          }
+          // print("Pack List: $packList");
+        }
+      } else {
+        // print("Failed to fetch data: ${response.reasonPhrase}");
+      }
+    } catch (e) {
+      // Handle errors gracefully
+      // print("Error occurred: $e");
+    } finally {
+      // Update the UI state
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   choseDocType() {
@@ -808,6 +1073,106 @@ class _ScreenTransferShipEntryState extends State<ScreenTransferShipEntry> {
     );
   }
 
+  // ship() async {
+  //   try {
+  //     setState(() {
+  //       isLoading = true;
+  //     });
+
+  //     if (txtDocType.text.isEmpty) {
+  //       throw Exception("Please select document type.");
+  //     }
+  //     if (txtShipType.text.isEmpty) {
+  //       throw Exception("Please select ship type.");
+  //     }
+  //     if (txtShipVia.text.isEmpty) {
+  //       throw Exception("Please select ship vai method.");
+  //     }
+
+  //     var body = {
+  //       "Company": company,
+  //       "PackNum": packNum,
+  //       "ShipDate": DateTime.now().toIso8601String(),
+  //       "Shipped": true,
+  //       "RowMod": "U"
+  //     };
+
+  //     print(company);
+  //     print(packNum);
+
+  //     Response res = await transferServices.patchTransOrderShips(
+  //       json.encode(body),
+  //       packNum,
+  //     );
+  //     if (res.statusCode == 204) {
+  //       showSucess(
+  //         'Success: ',
+  //         "Shipment line created successfully.",
+  //       );
+  //     } else {
+  //       showError(
+  //         'Error',
+  //         json.decode(res.body)['ErrorMessage'],
+  //       );
+  //     }
+  //   } catch (ex) {
+  //     showError('Error', ex.toString());
+  //   } finally {
+  //     setState(() {
+  //       isLoading = false;
+  //     });
+  //   }
+  // }
+
+  // submit() async {
+  //   try {
+  //     setState(() {
+  //       isLoading = true;
+  //     });
+  //     if (txtDocType.text.isEmpty) {
+  //       throw Exception("Please select document type.");
+  //     }
+  //     if (txtShipType.text.isEmpty) {
+  //       throw Exception("Please select ship type.");
+  //     }
+  //     if (txtShipVia.text.isEmpty) {
+  //       throw Exception("Please select ship vai method.");
+  //     }
+  //     var body = {
+  //       "Company": company,
+  //       "TranDocTypeID": docTypeID,
+  //       "ShortChar04": txtShipType.text,
+  //       "ShipDate": DateTime.now().toIso8601String(),
+  //       "RowMod": "A"
+  //     };
+  //     var res = await transferServices.postTransOrderShips(json.encode(body));
+
+  //     if (res.body != null) {
+  //       var payload = json.decode(res.body);
+  //       packNum = payload['PackNum'].toString();
+  //       var item = {
+  //         "orderNum": widget.item['TFOrdHed_TFOrdNum'],
+  //         "packNum": payload['PackNum'].toString(),
+  //         'transferShipNo': widget.item['TFOrdHed_Character01'],
+  //       };
+  //       if (!mounted) return;
+  //       Navigator.of(context).push(
+  //         MaterialPageRoute(
+  //           builder: (context) => ScreenTransferShipItems(
+  //             item: item,
+  //           ),
+  //         ),
+  //       );
+  //     }
+  //   } catch (ex) {
+  //     showError('Error', ex.toString());
+  //   } finally {
+  //     setState(() {
+  //       isLoading = false;
+  //     });
+  //   }
+  // }
+
   ship() async {
     try {
       setState(() {
@@ -824,6 +1189,19 @@ class _ScreenTransferShipEntryState extends State<ScreenTransferShipEntry> {
         throw Exception("Please select ship vai method.");
       }
 
+      // Check if packNum is available
+      String? currentPackNum = await sharedPref.getString("currentPackNum");
+      if (packNum.isEmpty && currentPackNum != null) {
+        packNum = currentPackNum;
+      }
+
+      if (packNum.isEmpty) {
+        throw Exception(
+            "No valid PackNum found. Please submit the form first.");
+      }
+
+      // print("Shipping with PackNum: $packNum");
+
       var body = {
         "Company": company,
         "PackNum": packNum,
@@ -832,11 +1210,18 @@ class _ScreenTransferShipEntryState extends State<ScreenTransferShipEntry> {
         "RowMod": "U"
       };
 
+      // print("Company: $company");
+      // print("PackNum: $packNum");
+
       Response res = await transferServices.patchTransOrderShips(
         json.encode(body),
         packNum,
       );
+
       if (res.statusCode == 204) {
+        // Clear the saved packNum by setting it to empty string
+        await sharedPref.setString("currentPackNum", "");
+
         showSucess(
           'Success: ',
           "Shipment line created successfully.",
@@ -861,6 +1246,7 @@ class _ScreenTransferShipEntryState extends State<ScreenTransferShipEntry> {
       setState(() {
         isLoading = true;
       });
+
       if (txtDocType.text.isEmpty) {
         throw Exception("Please select document type.");
       }
@@ -870,6 +1256,8 @@ class _ScreenTransferShipEntryState extends State<ScreenTransferShipEntry> {
       if (txtShipVia.text.isEmpty) {
         throw Exception("Please select ship vai method.");
       }
+      // String currentPackNum = await sharedPref.getString("currentPackNum");
+
       var body = {
         "Company": company,
         "TranDocTypeID": docTypeID,
@@ -877,15 +1265,32 @@ class _ScreenTransferShipEntryState extends State<ScreenTransferShipEntry> {
         "ShipDate": DateTime.now().toIso8601String(),
         "RowMod": "A"
       };
+
       var res = await transferServices.postTransOrderShips(json.encode(body));
       if (res.body != null) {
         var payload = json.decode(res.body);
-        packNum = payload['PackNum'].toString();
+        print("Payload: $payload");
+        setState(() {
+          // Add setState here
+          packNum = payload['PackNum'].toString();
+        });
+
+        // print("PackNum saved: $packNum"); // Debug print
+
         var item = {
-          "orderNum": widget.item['TFOrdHed_TFOrdNum'],
-          "packNum": payload['PackNum'].toString(),
-          'transferShipNo': widget.item['TFOrdHed_Character01'],
+          "orderNum": widget.item['orderNum'],
+          "packNum": packNum,
+          'transferShipNo': widget.item['transferShipNo'],
+          'fromPlant': widget.item['fromPlant'],
+          'toPlant': widget.item['toPlant'],
+          'fromPlantName': widget.item['fromPlantName'],
+          'toPlantName': widget.item['toPlantName'],
+          'orderDate': widget.item['orderDate']
         };
+        print("Item: $item");
+        // Save packNum to shared preferences for persistence
+        await sharedPref.setString("currentPackNum", packNum);
+
         if (!mounted) return;
         Navigator.of(context).push(
           MaterialPageRoute(
