@@ -1181,9 +1181,8 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                       onTap: () {
                         _submitSlip(slip, context);
                         Navigator.of(context).pop();
-
                         Navigator.of(context).pop();
-                        Navigator.of(context).pop();
+                        // Navigator.of(context).pop();
                       },
                       child: SizedBox(
                         child: Text(

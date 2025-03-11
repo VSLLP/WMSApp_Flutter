@@ -158,21 +158,7 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
                                       suffixIcon: txtScan.text.isNotEmpty
                                           ? GestureDetector(
                                               onTap: () {
-                                                int itemIndex =
-                                                    productItems.indexWhere(
-                                                  (item) =>
-                                                      item['Part_PartNum'] ==
-                                                      partNum,
-                                                );
-                                                productItems[itemIndex]
-                                                    ['isSelect'] = false;
-                                                txtQty.text = "";
-                                                txtScan.text = "";
-                                                isLot = false;
-                                                qty = 0;
-                                                setState(() {
-                                                  partNum = "";
-                                                });
+                                                clearItem();
                                               },
                                               child: SizedBox(
                                                 width: 20,
@@ -639,6 +625,22 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
     });
   }
 
+  clearItem() {
+    int itemIndex = productItems.indexWhere(
+      (item) => item['Part_PartNum'] == partNum,
+    );
+    if (itemIndex != -1) {
+      productItems[itemIndex]['isSelect'] = false;
+    }
+    txtQty.text = "";
+    txtScan.text = "";
+    isLot = false;
+    qty = 0;
+    setState(() {
+      partNum = "";
+    });
+  }
+
   getPartAsync(val) async {
     try {
       if (val.length <= 3) {
@@ -665,6 +667,8 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
       String partCode = '';
       String partLot = '';
       String partSerial = '';
+      bool isScnned = false;
+      bool isPrdExsit = false;
 
       for (String word in words) {
         if (word.contains("Part Code -")) {
@@ -676,7 +680,25 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
         }
       }
 
-      if (partCode.isEmpty) {
+      for (int i = 0; i < productItems.length; i++) {
+        String prdT = getType(productItems[i]);
+        if (productItems[i]['Part_PartNum']
+                .toString()
+                .toLowerCase()
+                .contains(val.toString().toLowerCase()) &&
+            prdT == "4") {
+          isPrdExsit = true;
+          if (productItems[i]['Part_PartNum'].toString().toLowerCase() ==
+              val.toString().toLowerCase()) {
+            partCode = val;
+          }
+          break;
+        } else {
+          isPrdExsit = false;
+        }
+      }
+
+      if (partCode.isEmpty && !isPrdExsit) {
         throw Exception("Part code not found in scan");
       }
 
@@ -684,246 +706,250 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
       for (int i = 0; i < productItems.length; i++) {
         if (productItems[i]['Part_PartNum'] == partCode) {
           itemIndexes.add(i);
+          isScnned = true;
         }
       }
 
-      if (itemIndexes.isEmpty) {
+      if (itemIndexes.isEmpty && !isPrdExsit) {
         throw Exception("Please scan valid product in PO.");
       }
 
-      int nullLotIndex = -1;
-      for (int index in itemIndexes) {
-        if (productItems[index]['lotNum'] == null ||
-            productItems[index]['lotNum'] == "") {
-          nullLotIndex = index;
-          break;
-        }
-      }
-
-      int matchingLotIndex = -1;
-      if (nullLotIndex == -1) {
+      if (isScnned) {
+        int nullLotIndex = -1;
         for (int index in itemIndexes) {
-          if (productItems[index]['lotNum'] == partLot) {
-            matchingLotIndex = index;
+          if (productItems[index]['lotNum'] == null ||
+              productItems[index]['lotNum'] == "") {
+            nullLotIndex = index;
             break;
           }
         }
-      }
 
-      int targetIndex;
-      if (nullLotIndex != -1) {
-        targetIndex = nullLotIndex;
-      } else if (matchingLotIndex != -1) {
-        targetIndex = matchingLotIndex;
-      } else if (productItems[itemIndexes[0]]['Part_TrackLots']) {
-        var newItem = Map<String, dynamic>.from(productItems[itemIndexes[0]]);
-        newItem['isSelect'] = true;
-        newItem['ScanQty'] = 0;
-        newItem['lotNum'] = partLot;
-
-        productItems.add(newItem);
-        targetIndex = productItems.length - 1;
-      } else {
-        targetIndex = itemIndexes[0];
-      }
-
-      productItems[targetIndex]['isSelect'] = true;
-      String prdType = getType(productItems[targetIndex]);
-
-      partNum = partCode;
-      txtQty.text = productItems[targetIndex]['ScanQty'].toString();
-      qty = productItems[targetIndex]['ScanQty'];
-
-      setState(() {
-        isLoading = true;
-      });
-
-      switch (prdType) {
-        case '1':
-          productItems[targetIndex]['lotNum'] = partLot;
-
-          var resA = await utilServices.getSerialMapping(partCode);
-          var payload = resA['value'][0];
-
-          int seIndex = srItems.indexWhere((item) =>
-              item['SerialNumber'] == partSerial && item['LotNum'] == partLot);
-
-          if (seIndex != -1) {
-            throw Exception("Product already scanned.");
-          }
-          double requiredQty = double.parse(
-              productItems[targetIndex]['PODetail_OrderQty'].toString());
-
-          int existingSerials = srItems
-              .where((item) =>
-                  item["PartNum"] == partCode && item["LotNum"] == partLot)
-              .length;
-
-          if (existingSerials >= requiredQty) {
-            throw Exception(
-                "Cannot scan more items. Required quantity already met.");
-          }
-          srItems.add({
-            "Company": company,
-            "SerialNumber": partSerial,
-            "PartNum": partCode,
-            "LotNum": partLot,
-            "SNBaseNumber": partSerial.substring(0, 15),
-            "TransType": "PUR-STK",
-            "RawSerialNum": partSerial,
-            "SNMask": payload['Part_SNMask'],
-            "RowMod": "A"
-          });
-
-          qty = existingSerials + 1;
-          txtQty.text = qty.toString();
-          productItems[targetIndex]['ScanQty'] = qty;
-
-          isLot = false;
-
-          int snIndex =
-              snFormats.indexWhere((item) => item['PartNum'] == partCode);
-          if (snIndex == -1) {
-            snFormats.add({
-              "Plant": plant,
-              "PartNum": partCode,
-              "SNMask": payload['Part_SNMask'],
-              "SNBaseDataType": payload['Part_SNBaseDataType'],
-              "PartPricePerCode": payload['Part_PricePerCode'],
-              "PartSellingFactor": payload['Part_SellingFactor'],
-              "RowMod": "A"
-            });
-          }
-          break;
-
-        case '2':
-          for (var item in productItems) {
-            item['isSelect'] = false;
-          }
-
-          targetIndex = itemIndexes.firstWhere(
-              (index) => productItems[index]['lotNum'] == partLot,
-              orElse: () => -1);
-
-          if (targetIndex == -1) {
-            targetIndex = itemIndexes.firstWhere(
-                (index) =>
-                    productItems[index]['lotNum'] == null ||
-                    productItems[index]['lotNum'].toString().trim() == '',
-                orElse: () => -1);
-          }
-
-          if (targetIndex == -1 &&
-              productItems[itemIndexes[0]]['Part_TrackLots'] == true) {
-            bool lotExists = false;
-            for (var item in productItems) {
-              if (item['Part_PartNum'] == partCode &&
-                  item['lotNum'] == partLot) {
-                lotExists = true;
-                targetIndex = productItems.indexOf(item);
-                break;
-              }
+        int matchingLotIndex = -1;
+        if (nullLotIndex == -1) {
+          for (int index in itemIndexes) {
+            if (productItems[index]['lotNum'] == partLot) {
+              matchingLotIndex = index;
+              break;
             }
-
-            if (!lotExists) {
-              var newItem =
-                  Map<String, dynamic>.from(productItems[itemIndexes[0]]);
-              newItem['isSelect'] = true;
-              newItem['ScanQty'] = 0;
-              newItem['lotNum'] = partLot;
-              productItems.add(newItem);
-              targetIndex = productItems.length - 1;
-            }
-          } else if (targetIndex == -1) {
-            targetIndex = itemIndexes[0];
           }
+        }
 
-          if (targetIndex != -1) {
-            productItems[targetIndex]['isSelect'] = true;
+        int targetIndex;
+        if (nullLotIndex != -1) {
+          targetIndex = nullLotIndex;
+        } else if (matchingLotIndex != -1) {
+          targetIndex = matchingLotIndex;
+        } else if (productItems[itemIndexes[0]]['Part_TrackLots']) {
+          var newItem = Map<String, dynamic>.from(productItems[itemIndexes[0]]);
+          newItem['isSelect'] = true;
+          newItem['ScanQty'] = 0;
+          newItem['lotNum'] = partLot;
+
+          productItems.add(newItem);
+          targetIndex = productItems.length - 1;
+        } else {
+          targetIndex = itemIndexes[0];
+        }
+
+        productItems[targetIndex]['isSelect'] = true;
+        String prdType = getType(productItems[targetIndex]);
+
+        partNum = partCode;
+        txtQty.text = productItems[targetIndex]['ScanQty'].toString();
+        qty = productItems[targetIndex]['ScanQty'];
+
+        setState(() {
+          isLoading = true;
+        });
+
+        switch (prdType) {
+          case '1':
             productItems[targetIndex]['lotNum'] = partLot;
 
-            partNum = partCode;
-            qty = productItems[targetIndex]['ScanQty'];
-            txtQty.text = qty.toString();
-          }
+            var resA = await utilServices.getSerialMapping(partCode);
+            var payload = resA['value'][0];
 
-          isLot = true;
-          break;
+            int seIndex = srItems.indexWhere((item) =>
+                item['SerialNumber'] == partSerial &&
+                item['LotNum'] == partLot);
 
-        case '3':
-          var resA = await utilServices.getSerialMapping(partCode);
-          var payload = resA['value'][0];
-          productItems[targetIndex]['lotNum'] = "";
+            if (seIndex != -1) {
+              throw Exception("Product already scanned.");
+            }
+            double requiredQty = double.parse(
+                productItems[targetIndex]['PODetail_OrderQty'].toString());
 
-          int seIndex =
-              srItems.indexWhere((item) => item['SerialNumber'] == partSerial);
+            int existingSerials = srItems
+                .where((item) =>
+                    item["PartNum"] == partCode && item["LotNum"] == partLot)
+                .length;
 
-          if (seIndex != -1) {
-            throw Exception("Product already scanned.");
-          }
-
-          double requiredQty = double.parse(
-              productItems[targetIndex]['PODetail_OrderQty'].toString());
-          int existingSerials =
-              srItems.where((item) => item["PartNum"] == partCode).length;
-
-          if (existingSerials >= requiredQty) {
-            throw Exception(
-                "Cannot scan more items. Required quantity already met.");
-          }
-
-          srItems.add({
-            "Company": company,
-            "SerialNumber": partSerial,
-            "PartNum": partCode,
-            "SNBaseNumber": partSerial,
-            "TransType": "PUR-STK",
-            "RawSerialNum": partSerial,
-            "SNMask": payload['Part_SNMask'],
-            "RowMod": "A"
-          });
-
-          qty = existingSerials + 1;
-          txtQty.text = qty.toString();
-          productItems[targetIndex]['ScanQty'] = qty;
-
-          isLot = false;
-
-          int snIndex =
-              snFormats.indexWhere((item) => item['PartNum'] == partCode);
-          if (snIndex == -1) {
-            snFormats.add({
-              "Plant": plant,
+            if (existingSerials >= requiredQty) {
+              throw Exception(
+                  "Cannot scan more items. Required quantity already met.");
+            }
+            srItems.add({
+              "Company": company,
+              "SerialNumber": partSerial,
               "PartNum": partCode,
+              "LotNum": partLot,
+              "SNBaseNumber": partSerial.substring(0, 15),
+              "TransType": "PUR-STK",
+              "RawSerialNum": partSerial,
               "SNMask": payload['Part_SNMask'],
-              "SNBaseDataType": payload['Part_SNBaseDataType'],
-              "PartPricePerCode": payload['Part_PricePerCode'],
-              "PartSellingFactor": payload['Part_SellingFactor'],
               "RowMod": "A"
             });
-          }
-          break;
-        case '4':
-          isLot = true;
-          break;
-      }
 
-      setState(() {
-        isLoading = true;
-      });
+            qty = existingSerials + 1;
+            txtQty.text = qty.toString();
+            productItems[targetIndex]['ScanQty'] = qty;
 
-      var resW = await utilServices.getWareHouses(partNum);
-      whareHouses.clear();
-      whareHouses = resW['value'];
+            isLot = false;
 
-      if (isInsp) {
-        txtWare.text = whareHouses[0]['Calculated_ReceiptInspWarehouse'];
-        wherId = whareHouses[0]['Calculated_ReceiptWarhouse'];
-        txtBin.text = whareHouses[0]['Calculated_ReceiptInspBin'];
-      } else {
-        txtWare.text = whareHouses[0]['Calculated_ReceiptWarhouse'];
-        wherId = whareHouses[0]['Calculated_ReceiptWarhouse'];
-        txtBin.text = whareHouses[0]['Calculated_ReceiptBin'];
+            int snIndex =
+                snFormats.indexWhere((item) => item['PartNum'] == partCode);
+            if (snIndex == -1) {
+              snFormats.add({
+                "Plant": plant,
+                "PartNum": partCode,
+                "SNMask": payload['Part_SNMask'],
+                "SNBaseDataType": payload['Part_SNBaseDataType'],
+                "PartPricePerCode": payload['Part_PricePerCode'],
+                "PartSellingFactor": payload['Part_SellingFactor'],
+                "RowMod": "A"
+              });
+            }
+            break;
+
+          case '2':
+            for (var item in productItems) {
+              item['isSelect'] = false;
+            }
+
+            targetIndex = itemIndexes.firstWhere(
+                (index) => productItems[index]['lotNum'] == partLot,
+                orElse: () => -1);
+
+            if (targetIndex == -1) {
+              targetIndex = itemIndexes.firstWhere(
+                  (index) =>
+                      productItems[index]['lotNum'] == null ||
+                      productItems[index]['lotNum'].toString().trim() == '',
+                  orElse: () => -1);
+            }
+
+            if (targetIndex == -1 &&
+                productItems[itemIndexes[0]]['Part_TrackLots'] == true) {
+              bool lotExists = false;
+              for (var item in productItems) {
+                if (item['Part_PartNum'] == partCode &&
+                    item['lotNum'] == partLot) {
+                  lotExists = true;
+                  targetIndex = productItems.indexOf(item);
+                  break;
+                }
+              }
+
+              if (!lotExists) {
+                var newItem =
+                    Map<String, dynamic>.from(productItems[itemIndexes[0]]);
+                newItem['isSelect'] = true;
+                newItem['ScanQty'] = 0;
+                newItem['lotNum'] = partLot;
+                productItems.add(newItem);
+                targetIndex = productItems.length - 1;
+              }
+            } else if (targetIndex == -1) {
+              targetIndex = itemIndexes[0];
+            }
+
+            if (targetIndex != -1) {
+              productItems[targetIndex]['isSelect'] = true;
+              productItems[targetIndex]['lotNum'] = partLot;
+
+              partNum = partCode;
+              qty = productItems[targetIndex]['ScanQty'];
+              txtQty.text = qty.toString();
+            }
+
+            isLot = true;
+            break;
+
+          case '3':
+            var resA = await utilServices.getSerialMapping(partCode);
+            var payload = resA['value'][0];
+            productItems[targetIndex]['lotNum'] = "";
+
+            int seIndex = srItems
+                .indexWhere((item) => item['SerialNumber'] == partSerial);
+
+            if (seIndex != -1) {
+              throw Exception("Product already scanned.");
+            }
+
+            double requiredQty = double.parse(
+                productItems[targetIndex]['PODetail_OrderQty'].toString());
+            int existingSerials =
+                srItems.where((item) => item["PartNum"] == partCode).length;
+
+            if (existingSerials >= requiredQty) {
+              throw Exception(
+                  "Cannot scan more items. Required quantity already met.");
+            }
+
+            srItems.add({
+              "Company": company,
+              "SerialNumber": partSerial,
+              "PartNum": partCode,
+              "SNBaseNumber": partSerial,
+              "TransType": "PUR-STK",
+              "RawSerialNum": partSerial,
+              "SNMask": payload['Part_SNMask'],
+              "RowMod": "A"
+            });
+
+            qty = existingSerials + 1;
+            txtQty.text = qty.toString();
+            productItems[targetIndex]['ScanQty'] = qty;
+
+            isLot = false;
+
+            int snIndex =
+                snFormats.indexWhere((item) => item['PartNum'] == partCode);
+            if (snIndex == -1) {
+              snFormats.add({
+                "Plant": plant,
+                "PartNum": partCode,
+                "SNMask": payload['Part_SNMask'],
+                "SNBaseDataType": payload['Part_SNBaseDataType'],
+                "PartPricePerCode": payload['Part_PricePerCode'],
+                "PartSellingFactor": payload['Part_SellingFactor'],
+                "RowMod": "A"
+              });
+            }
+            break;
+          case '4':
+            isLot = true;
+            break;
+        }
+
+        setState(() {
+          isLoading = true;
+        });
+
+        var resW = await utilServices.getWareHouses(partNum);
+        whareHouses.clear();
+        whareHouses = resW['value'];
+
+        if (isInsp) {
+          txtWare.text = whareHouses[0]['Calculated_ReceiptInspWarehouse'];
+          wherId = whareHouses[0]['Calculated_ReceiptWarhouse'];
+          txtBin.text = whareHouses[0]['Calculated_ReceiptInspBin'];
+        } else {
+          txtWare.text = whareHouses[0]['Calculated_ReceiptWarhouse'];
+          wherId = whareHouses[0]['Calculated_ReceiptWarhouse'];
+          txtBin.text = whareHouses[0]['Calculated_ReceiptBin'];
+        }
       }
     } catch (ex) {
       showError('Error', ex.toString());
