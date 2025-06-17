@@ -215,9 +215,11 @@ class _ScreenLoginState extends State<ScreenLogin> {
     txtUrl.text = "https://epicor.ceasefire.asia/E11INPilot/api/v1";
     txtCompany.text = "CTEMP1";
     // txtUsername.text = "manager";
-    txtUsername.text = "vswmsdl09";
+    // txtUsername.text = "vswmsdl09";
+    txtUsername.text = "vswmsuk90";
     // txtPassword.text = "admin1234";
-    txtPassword.text = "vswmsdl09";
+    // txtPassword.text = "vswmsdl09";
+    txtPassword.text = "Tru@123";
   }
 
   loadData() {

@@ -4,6 +4,7 @@ import 'package:epicor/src/services/model/menu.dart';
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:epicor/src/view/custShip/custship.dart';
+import 'package:epicor/src/view/custShip/screen_cust_ship_main.dart';
 import 'package:epicor/src/view/home/screen_profile.dart';
 import 'package:epicor/src/view/insp/screen_insp_main.dart';
 import 'package:epicor/src/view/issueMtl/screen_issue_mtl_list.dart';
@@ -213,10 +214,8 @@ class _ScreenHomeState extends State<ScreenHome> {
   }
 
   gotoCustShip() async {
-    print("object");
-
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const CustomerShipmentHead()),
+      MaterialPageRoute(builder: (context) => const ScreenCustShipMain()),
     );
   }
 
