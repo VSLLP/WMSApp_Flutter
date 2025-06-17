@@ -15,7 +15,7 @@ class CustomerShipmentHead extends StatefulWidget {
 class _CustomerShipmentHeadState extends State<CustomerShipmentHead>
     with SingleTickerProviderStateMixin {
   String company = 'CTEMP1';
-  String plant = '';
+  String plant = "";
   List<dynamic> orders = [];
   bool isLoading = true;
   late AnimationController _controller;
@@ -25,12 +25,17 @@ class _CustomerShipmentHeadState extends State<CustomerShipmentHead>
     super.initState();
     _controller = AnimationController(vsync: this);
     loadData();
+    getPlant();
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  getPlant() async {
+    plant = await sharedPref.getString("userPlant");
   }
 
   @override
@@ -106,7 +111,7 @@ class _CustomerShipmentHeadState extends State<CustomerShipmentHead>
                                   const SnackBar(
                                       content: Text("Calling Open Orders")));
                               setState(() {
-                                // loadOrders();
+                                loadData();
                               });
                             },
                             child: Text(
@@ -133,7 +138,7 @@ class _CustomerShipmentHeadState extends State<CustomerShipmentHead>
                                     const SnackBar(
                                         content: Text("Callings Shipments")));
                                 setState(() {
-                                  // loasShipments();
+                                  loadDataShipments();
                                 });
                               },
                               child: Text(
@@ -175,7 +180,7 @@ class _CustomerShipmentHeadState extends State<CustomerShipmentHead>
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          "Pack Num: ",
+                                          "Pack Num: ${orders[index]["ShipHead_PackNum"]}",
                                           style: TextStyles.getBold(
                                             14,
                                             color: AppColors.colorDataColor,
@@ -200,7 +205,7 @@ class _CustomerShipmentHeadState extends State<CustomerShipmentHead>
                                       height: 4,
                                     ),
                                     Text(
-                                      "CFIL Order No: ",
+                                      "CFIL Order No: ${orders[index]["OrderHed_OrderNum"]}",
                                       style: TextStyles.getBold(
                                         14,
                                         color: AppColors.colorDataColor,
@@ -210,35 +215,35 @@ class _CustomerShipmentHeadState extends State<CustomerShipmentHead>
                                       height: 4,
                                     ),
                                     Text(
-                                      "From Branch: ",
+                                      "Plant:  ${plant}",
                                       style: TextStyles.getBold(
                                         14,
                                         color: AppColors.colorDataColor,
                                       ),
                                     ),
-                                    const SizedBox(
-                                      height: 4,
-                                    ),
-                                    Text(
-                                      "Receiving Branch: ",
-                                      style: TextStyles.getBold(
-                                        14,
-                                        color: AppColors.colorDataColor,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 4,
-                                    ),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: Text(
-                                        "Date: ",
-                                        style: TextStyles.getBold(
-                                          14,
-                                          color: AppColors.colorDataColor,
-                                        ),
-                                      ),
-                                    ),
+                                    // const SizedBox(
+                                    //   height: 4,
+                                    // ),
+                                    // Text(
+                                    //   "Receiving Branch: ${orders[index]["Customer_Name"]}",
+                                    //   style: TextStyles.getBold(
+                                    //     14,
+                                    //     color: AppColors.colorDataColor,
+                                    //   ),
+                                    // ),
+                                    // const SizedBox(
+                                    //   height: 4,
+                                    // ),
+                                    // SizedBox(
+                                    //   width: double.infinity,
+                                    //   child: Text(
+                                    //     "Date: ${orders[index]["OrderHed_OrderDate"]}",
+                                    //     style: TextStyles.getBold(
+                                    //       14,
+                                    //       color: AppColors.colorDataColor,
+                                    //     ),
+                                    //   ),
+                                    // ),
                                   ],
                                 ),
                               ),
@@ -258,11 +263,27 @@ class _CustomerShipmentHeadState extends State<CustomerShipmentHead>
   }
 
   loadData() async {
-    var response = await authServices.getMenuAsync(company);
+    var response = await customerShipmentServices.getCustomerShipmentList();
     var items = response['value'];
     orders.clear();
     for (var item in items) {
-      orders.add(item);
+      if (item["ShipHead_PackNum"] == null) {
+        orders.add(item);
+      }
+    }
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  loadDataShipments() async {
+    var response = await customerShipmentServices.getCustomerShipmentList();
+    var items = response['value'];
+    orders.clear();
+    for (var item in items) {
+      if (item["ShipHead_PackNum"] != null) {
+        orders.add(item);
+      }
     }
     setState(() {
       isLoading = false;
