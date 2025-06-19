@@ -212,7 +212,7 @@ class _ScreenLoginState extends State<ScreenLogin> {
 
   void setDefaultData() {
     // txtUrl.text = "https://epicor.ceasefire.asia/CFILPilot/api/v1";
-    txtUrl.text = "https://epicor.ceasefire.asia/E11INPilot/api/v1";
+    txtUrl.text = "https://epicor.ceasefire.asia/E11INP/api/v1";
     txtCompany.text = "CTEMP1";
     // txtUsername.text = "manager";
     // txtUsername.text = "vswmsdl09";

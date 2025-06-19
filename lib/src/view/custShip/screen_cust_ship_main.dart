@@ -3,6 +3,7 @@ import 'package:epicor/core_packages.dart';
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:epicor/src/view/custShip/screen_cust_ship_details.dart';
+import 'package:http/http.dart';
 
 import 'package:intl/intl.dart';
 
@@ -14,6 +15,7 @@ class ScreenCustShipMain extends StatefulWidget {
 }
 
 class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
+  var txtOrdNum = TextEditingController();
   var txtCustomer = TextEditingController();
   var txtDocType = TextEditingController();
   var txtShipVia = TextEditingController();
@@ -22,7 +24,12 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
   List<dynamic> docTypes = [];
   List<dynamic> shipVias = [];
 
+  dynamic customer = {};
+
   String docType = "";
+  String comp = "";
+  String plant = "";
+  String packNum = "";
 
   bool isLoading = true;
   bool isError = false;
@@ -272,10 +279,9 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
     setState(() {
       isLoading = true;
     });
-    var resA = await inventoryServices.getFacTrnsDoc();
-    var payloadA = json.decode(resA.body);
-    docTypes.clear();
-    docTypes = payloadA['value'];
+
+    comp = await sharedPref.getString("userCompnay");
+    plant = await sharedPref.getString("userPlant");
 
     var resB = await inventoryServices.getFacShipVia();
     var payloadB = json.decode(resB.body);
@@ -323,7 +329,39 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                   height: 1,
                   color: AppColors.colorGray100,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 2),
+                SizedBox(
+                  child: Container(
+                    color: Colors.transparent,
+                    child: TextFormField(
+                      controller: txtOrdNum,
+                      style: TextStyles.getBold(12),
+                      decoration: InputDecoration(
+                        hintText: "Order Name",
+                        hintStyle: TextStyles.getRegularScund(
+                          14,
+                          color: AppColors.colorGray600,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 0,
+                        ),
+                        counterText: "",
+                      ),
+                      keyboardType: TextInputType.number,
+                      autofocus: false,
+                      onChanged: (quer) {
+                        getOrderDetails(quer);
+                      },
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return "Please enter order number.";
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ),
                 SizedBox(
                   child: Container(
                     color: Colors.transparent,
@@ -348,6 +386,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                       ),
                       keyboardType: TextInputType.name,
                       autofocus: false,
+                      readOnly: true,
                       validator: (value) {
                         if (value!.isEmpty) {
                           return "Please select customer.";
@@ -436,10 +475,12 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                   children: [
                     GestureDetector(
                       onTap: () {
+                        txtOrdNum.text = "";
                         txtCustomer.text = "";
                         txtDocType.text = "";
                         txtShipVia.text = "";
                         docType = "";
+                        packNum = "";
                         Navigator.of(context).pop();
                       },
                       child: SizedBox(
@@ -454,9 +495,11 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        if (txtCustomer.text.isEmpty ||
+                        if (txtOrdNum.text.isEmpty ||
+                            txtCustomer.text.isEmpty ||
                             txtShipVia.text.isEmpty ||
-                            txtDocType.text.isEmpty) {
+                            txtDocType.text.isEmpty ||
+                            packNum.isEmpty) {
                           setState(() {
                             isError = true;
                           });
@@ -481,8 +524,79 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
     );
   }
 
-  createHead() {
-    //Todo: Create head option API call
+  getOrderDetails(pcNum) async {
+    if (pcNum.length < 5) {
+      return;
+    }
+    setState(() {
+      isLoading = true;
+    });
+    var res = await customerShipmentServices.getOrderPackNum(pcNum);
+    customer = res["value"][0];
+    txtCustomer.text = customer["Customer_Name"];
+
+    var resA = await customerShipmentServices.getTransDoc(pcNum);
+    docTypes.clear();
+    docTypes = resA['value'];
+
+    packNum = pcNum;
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  createHead() async {
+    if (isLoading) {
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+    var body = {
+      "Company": comp,
+      "PackNum": packNum,
+      "ShipDate": DateTime.now().toIso8601String(),
+      "ShipViaCode": txtShipVia.text,
+      "Plant": plant,
+      "CustNum": customer["OrderHed_CustNum"],
+      "OrderNum": customer["OrderHed_OrderNum"],
+      "TranDocTypeID": docType,
+      "RowMod": "A"
+    };
+    printLargeString(json.encode(body));
+    Response res = await customerShipmentServices.createShipHead(body);
+    if (res.statusCode == 200) {
+      showSuccess(
+        'Success',
+        "Customer shipment created successfully!",
+      );
+    } else {
+      showError(
+        'Error',
+        json.decode(res.body)['ErrorMessage'],
+      );
+    }
+  }
+
+  reset() {
+    txtOrdNum.text = "";
+    txtCustomer.text = "";
+    txtDocType.text = "";
+    txtShipVia.text = "";
+    docType = "";
+    packNum = "";
+    customer = {};
+    docTypes = [];
+    loadData();
+  }
+
+  void printLargeString(String text) {
+    const int chunkSize = 800;
+    for (int i = 0; i < text.length; i += chunkSize) {
+      debugPrint(text.substring(
+          i, i + chunkSize > text.length ? text.length : i + chunkSize));
+    }
   }
 
   gotoDetailsPage(dynamic record) {
@@ -628,6 +742,122 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                         child: Text(
                           "Cancel",
                           style: TextStyles.getBold(14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  showError(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyles.getRegularScund(16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: TextStyles.getRegularScund(14),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(child: Container()),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          'OK',
+                          style: TextStyles.getBold(
+                            14,
+                            color: AppColors.colorPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  showSuccess(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyles.getRegularScund(16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: TextStyles.getRegularScund(14),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(child: Container()),
+                    GestureDetector(
+                      onTap: () {
+                        reset();
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          'OK',
+                          style: TextStyles.getBold(
+                            14,
+                            color: AppColors.colorPrimary,
+                          ),
                         ),
                       ),
                     ),
