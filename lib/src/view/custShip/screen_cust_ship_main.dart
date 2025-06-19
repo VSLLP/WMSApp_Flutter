@@ -29,7 +29,6 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
   String docType = "";
   String comp = "";
   String plant = "";
-  String packNum = "";
 
   bool isLoading = true;
   bool isError = false;
@@ -283,6 +282,10 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
     comp = await sharedPref.getString("userCompnay");
     plant = await sharedPref.getString("userPlant");
 
+    var resA = await customerShipmentServices.getTransDoc();
+    docTypes.clear();
+    docTypes = resA['value'];
+
     var resB = await inventoryServices.getFacShipVia();
     var payloadB = json.decode(resB.body);
     shipVias.clear();
@@ -349,10 +352,11 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                         counterText: "",
                       ),
                       keyboardType: TextInputType.number,
-                      autofocus: false,
-                      onChanged: (quer) {
-                        getOrderDetails(quer);
+                      onTap: () {
+                        choseDropOptions("Order Number", orders);
                       },
+                      autofocus: false,
+                      readOnly: true,
                       validator: (value) {
                         if (value!.isEmpty) {
                           return "Please enter order number.";
@@ -480,7 +484,6 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                         txtDocType.text = "";
                         txtShipVia.text = "";
                         docType = "";
-                        packNum = "";
                         Navigator.of(context).pop();
                       },
                       child: SizedBox(
@@ -498,13 +501,13 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                         if (txtOrdNum.text.isEmpty ||
                             txtCustomer.text.isEmpty ||
                             txtShipVia.text.isEmpty ||
-                            txtDocType.text.isEmpty ||
-                            packNum.isEmpty) {
+                            txtDocType.text.isEmpty) {
                           setState(() {
                             isError = true;
                           });
                         } else {
                           createHead();
+                          Navigator.of(context).pop();
                         }
                       },
                       child: SizedBox(
@@ -524,22 +527,13 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
     );
   }
 
-  getOrderDetails(pcNum) async {
-    if (pcNum.length < 5) {
-      return;
-    }
+  getCustomerDetails() async {
     setState(() {
       isLoading = true;
     });
-    var res = await customerShipmentServices.getOrderPackNum(pcNum);
+    var res = await customerShipmentServices.getOrderPackNum(txtOrdNum.text);
     customer = res["value"][0];
     txtCustomer.text = customer["Customer_Name"];
-
-    var resA = await customerShipmentServices.getTransDoc(pcNum);
-    docTypes.clear();
-    docTypes = resA['value'];
-
-    packNum = pcNum;
     setState(() {
       isLoading = false;
     });
@@ -549,33 +543,42 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
     if (isLoading) {
       return;
     }
-
     setState(() {
       isLoading = true;
     });
-    var body = {
-      "Company": comp,
-      "PackNum": packNum,
-      "ShipDate": DateTime.now().toIso8601String(),
-      "ShipViaCode": txtShipVia.text,
-      "Plant": plant,
-      "CustNum": customer["OrderHed_CustNum"],
-      "OrderNum": customer["OrderHed_OrderNum"],
-      "TranDocTypeID": docType,
-      "RowMod": "A"
-    };
-    printLargeString(json.encode(body));
-    Response res = await customerShipmentServices.createShipHead(body);
-    if (res.statusCode == 200) {
-      showSuccess(
-        'Success',
-        "Customer shipment created successfully!",
-      );
-    } else {
-      showError(
-        'Error',
-        json.decode(res.body)['ErrorMessage'],
-      );
+    try {
+      var body = {
+        "Company": comp,
+        "PackNum": txtOrdNum.text,
+        "ShipDate": DateTime.now().toIso8601String(),
+        "ShipViaCode": txtShipVia.text,
+        "Plant": plant,
+        "CustNum": customer["OrderHed_CustNum"],
+        "OrderNum": customer["OrderHed_OrderNum"],
+        "TranDocTypeID": docType,
+        "RowMod": "A"
+      };
+      printLargeString(json.encode(body));
+      Response res = await customerShipmentServices.createShipHead(body);
+      printLargeString(res.body);
+      if (res.statusCode == 200) {
+        showSuccess(
+          'Success',
+          "Customer shipment created successfully!",
+        );
+      } else {
+        showError(
+          'Error',
+          json.decode(res.body)['ErrorMessage'],
+        );
+      }
+    } catch (ex) {
+      showError('Error', ex.toString());
+    } finally {
+      reset();
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -585,7 +588,6 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
     txtDocType.text = "";
     txtShipVia.text = "";
     docType = "";
-    packNum = "";
     customer = {};
     docTypes = [];
     loadData();
@@ -611,6 +613,9 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
 
   updateOtp(String title, dynamic option) {
     switch (title) {
+      case "Order Number":
+        txtOrdNum.text = option["OrderHed_OrderNum"].toString();
+        break;
       case "DocType":
         txtDocType.text = option['TranDocType_Description'];
         docType = option['TranDocType_TranDocTypeID'];
@@ -626,6 +631,8 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
 
   getOptTitle(String title, dynamic option) {
     switch (title) {
+      case "Order Number":
+        return option["OrderHed_OrderNum"].toString();
       case "DocType":
         return option['TranDocType_Description'];
       case "ShipVia":
@@ -697,6 +704,9 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                                 onTap: () {
                                   updateOtp(title, options[index]);
                                   Navigator.of(context).pop();
+                                  if (title == "Order Number") {
+                                    getCustomerDetails();
+                                  }
                                   setState(() {});
                                 },
                                 child: Container(

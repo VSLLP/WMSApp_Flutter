@@ -55,14 +55,14 @@ class CustomerShipmentDelegate {
     return json.decode(response.body);
   }
 
-  getTransDoc(String packSlip) async {
+  getTransDoc() async {
     HttpOverrides.global = MyHttpOverrides();
     String apiUrl = await sharedPref.getString("userUrl");
     String userId = await sharedPref.getString("userName");
     String password = await sharedPref.getString("userPass");
 
     Uri url =
-        Uri.parse("$apiUrl/BaqSvc/VSApp_TranDocType?pr_TrandocType=$packSlip");
+        Uri.parse("$apiUrl/BaqSvc/VSApp_TranDocType?pr_TrandocType=PackSlip");
     String basicAuth =
         'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
     Map<String, String> requestHeaders = {
