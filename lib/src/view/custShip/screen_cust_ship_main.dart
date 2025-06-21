@@ -559,10 +559,8 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
         "TranDocTypeID": docType,
         "RowMod": "A"
       };
-      printLargeString(json.encode(body));
       Response res = await customerShipmentServices.createShipHead(body);
-      printLargeString(res.body);
-      if (res.statusCode == 200) {
+      if (res.statusCode == 201) {
         showSuccess(
           'Success',
           "Customer shipment created successfully!",
