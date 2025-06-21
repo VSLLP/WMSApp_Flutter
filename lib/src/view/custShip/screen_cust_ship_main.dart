@@ -19,8 +19,11 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
   var txtCustomer = TextEditingController();
   var txtDocType = TextEditingController();
   var txtShipVia = TextEditingController();
+  var txtSearch = TextEditingController();
 
   List<dynamic> orders = [];
+  List<dynamic> openOrderMain = [];
+  List<dynamic> openOrderFilter = [];
   List<dynamic> docTypes = [];
   List<dynamic> shipVias = [];
 
@@ -297,6 +300,16 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
     for (var item in items) {
       orders.add(item);
     }
+
+    var resMain =
+        await customerShipmentServices.getOrderPackNum(txtOrdNum.text);
+    var itemsOpen = resMain['value'];
+    openOrderMain.clear();
+    openOrderFilter.clear();
+    for (var item in itemsOpen) {
+      openOrderMain.add(item);
+      openOrderFilter.add(item);
+    }
     setState(() {
       isLoading = false;
     });
@@ -353,7 +366,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                       ),
                       keyboardType: TextInputType.number,
                       onTap: () {
-                        choseDropOptions("Order Number", orders);
+                        choseDropOptions("Order Number", true, openOrderFilter);
                       },
                       autofocus: false,
                       readOnly: true,
@@ -425,7 +438,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                     ),
                     keyboardType: TextInputType.name,
                     onTap: () {
-                      choseDropOptions("DocType", docTypes);
+                      choseDropOptions("DocType", false, docTypes);
                     },
                     autofocus: false,
                     readOnly: true,
@@ -455,7 +468,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                     ),
                     keyboardType: TextInputType.name,
                     onTap: () {
-                      choseDropOptions("ShipVia", shipVias);
+                      choseDropOptions("ShipVia", false, shipVias);
                     },
                     autofocus: false,
                     readOnly: true,
@@ -525,18 +538,6 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
         );
       },
     );
-  }
-
-  getCustomerDetails() async {
-    setState(() {
-      isLoading = true;
-    });
-    var res = await customerShipmentServices.getOrderPackNum(txtOrdNum.text);
-    customer = res["value"][0];
-    txtCustomer.text = customer["Customer_Name"];
-    setState(() {
-      isLoading = false;
-    });
   }
 
   createHead() async {
@@ -615,6 +616,8 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
     switch (title) {
       case "Order Number":
         txtOrdNum.text = option["OrderHed_OrderNum"].toString();
+        customer = option;
+        txtCustomer.text = customer["Customer_Name"];
         break;
       case "DocType":
         txtDocType.text = option['TranDocType_Description'];
@@ -642,124 +645,110 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
     }
   }
 
-  choseDropOptions(String title, List<dynamic> options) {
+  choseDropOptions(String title, bool isSearch, List<dynamic> options) {
+    List<dynamic> items = List.from(options);
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 16,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(0),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Select $title",
-                  style: TextStyles.getBold(18),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  height: 1,
-                  color: AppColors.colorGray100,
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: SizedBox(
-                    child: options.isEmpty
-                        ? Container(
-                            color: Colors.transparent,
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 0,
-                              vertical: 10,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "No $title found.",
-                                  style: TextStyles.getRegularScund(
-                                    16,
-                                    color: AppColors.colorGray600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: options.length,
-                            shrinkWrap: true,
-                            scrollDirection: Axis.vertical,
-                            itemBuilder: (BuildContext context, int index) {
-                              return GestureDetector(
-                                onTap: () {
-                                  updateOtp(title, options[index]);
-                                  Navigator.of(context).pop();
-                                  if (title == "Order Number") {
-                                    getCustomerDetails();
-                                  }
-                                  setState(() {});
-                                },
-                                child: Container(
-                                  color: Colors.transparent,
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 0,
-                                    vertical: 10,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        getOptTitle(title, options[index]),
-                                        style: TextStyles.getRegularScund(
-                                          16,
-                                          color: AppColors.colorGray600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  height: 1,
-                  color: AppColors.colorGray100,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: SizedBox(
-                        child: Text(
-                          "Cancel",
-                          style: TextStyles.getBold(14),
-                        ),
+                    Text("Select $title", style: TextStyles.getBold(18)),
+                    const SizedBox(height: 4),
+                    isSearch
+                        ? Column(
+                            children: [
+                              const SizedBox(height: 6),
+                              SizedBox(
+                                height: 36,
+                                child: TextFormField(
+                                  controller: txtSearch,
+                                  style: TextStyles.getBold(10),
+                                  decoration: InputDecoration(
+                                    hintText: "Search",
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                          width: 0.6,
+                                          color: AppColors.colorGray600),
+                                      borderRadius: BorderRadius.circular(4.0),
+                                    ),
+                                    suffixIcon: Icon(Icons.search,
+                                        color: AppColors.colorGray600,
+                                        size: 16),
+                                    hintStyle: TextStyles.getRegularScund(14,
+                                        color: AppColors.colorGray600),
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      items = options.where((ord) {
+                                        return ord["OrderHed_OrderNum"]
+                                            .toString()
+                                            .toLowerCase()
+                                            .startsWith(value.toLowerCase());
+                                      }).toList();
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          )
+                        : Container(),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      height: 1,
+                      color: AppColors.colorGray100,
+                    ),
+                    Expanded(
+                      child: items.isEmpty
+                          ? Center(
+                              child: Text("No $title found.",
+                                  style: TextStyles.getRegularScund(16,
+                                      color: AppColors.colorGray600)))
+                          : ListView.builder(
+                              itemCount: items.length,
+                              itemBuilder: (context, index) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    updateOtp(title, items[index]);
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: Container(
+                                    margin: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                    child: Text(
+                                      getOptTitle(title, items[index]),
+                                      style: TextStyles.getRegularScund(16,
+                                          color: AppColors.colorGray600),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Text("Cancel", style: TextStyles.getBold(14)),
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
