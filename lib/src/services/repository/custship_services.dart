@@ -28,6 +28,78 @@ class CustShipDelegate {
     );
     return json.decode(response.body);
   }
+
+  getTransDoc() async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    Uri url =
+        Uri.parse("$apiUrl/BaqSvc/VSApp_TranDocType?pr_TrandocType=PackSlip");
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.get(
+      url,
+      headers: requestHeaders,
+    );
+    return json.decode(response.body);
+  }
+
+  getCustByName(String query) async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    String company = await sharedPref.getString("userCompnay");
+
+    Uri url = Uri.parse(
+        "$apiUrl/BaqSvc/VSAPP_Customer($company)/?pr_CustName=$query&%24top=200");
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.get(
+      url,
+      headers: requestHeaders,
+    );
+    return json.decode(response.body);
+  }
+
+  createShipHead(body) async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    Uri url = Uri.parse("$apiUrl/Erp.BO.CustShipSvc/CustShips");
+
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.post(
+      url,
+      headers: requestHeaders,
+      body: json.encode(body),
+    );
+    return response;
+  }
 }
 
 class MyHttpOverrides extends HttpOverrides {

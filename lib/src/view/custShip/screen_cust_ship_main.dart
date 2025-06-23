@@ -15,19 +15,20 @@ class ScreenCustShipMain extends StatefulWidget {
 }
 
 class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
-  var txtOrdNum = TextEditingController();
-  var txtCustomer = TextEditingController();
+  var txtCustNum = TextEditingController();
   var txtDocType = TextEditingController();
   var txtShipVia = TextEditingController();
   var txtSearch = TextEditingController();
 
   List<dynamic> orders = [];
-  List<dynamic> openOrderMain = [];
   List<dynamic> openOrderFilter = [];
   List<dynamic> docTypes = [];
   List<dynamic> shipVias = [];
 
+  Timer? debounce;
+
   dynamic customer = {};
+  dynamic order = {};
 
   String docType = "";
   String comp = "";
@@ -285,7 +286,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
     comp = await sharedPref.getString("userCompnay");
     plant = await sharedPref.getString("userPlant");
 
-    var resA = await customerShipmentServices.getTransDoc();
+    var resA = await custShipServices.getTransDoc();
     docTypes.clear();
     docTypes = resA['value'];
 
@@ -301,15 +302,6 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
       orders.add(item);
     }
 
-    var resMain =
-        await customerShipmentServices.getOrderPackNum(txtOrdNum.text);
-    var itemsOpen = resMain['value'];
-    openOrderMain.clear();
-    openOrderFilter.clear();
-    for (var item in itemsOpen) {
-      openOrderMain.add(item);
-      openOrderFilter.add(item);
-    }
     setState(() {
       isLoading = false;
     });
@@ -350,44 +342,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                   child: Container(
                     color: Colors.transparent,
                     child: TextFormField(
-                      controller: txtOrdNum,
-                      style: TextStyles.getBold(12),
-                      decoration: InputDecoration(
-                        hintText: "Order Name",
-                        hintStyle: TextStyles.getRegularScund(
-                          14,
-                          color: AppColors.colorGray600,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 0,
-                        ),
-                        counterText: "",
-                      ),
-                      keyboardType: TextInputType.number,
-                      onTap: () {
-                        choseDropOptions("Order Number", true, openOrderFilter);
-                      },
-                      autofocus: false,
-                      readOnly: true,
-                      validator: (value) {
-                        if (value!.isEmpty) {
-                          return "Please enter order number.";
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  child: Container(
-                    color: Colors.transparent,
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 0,
-                      vertical: 10,
-                    ),
-                    child: TextFormField(
-                      controller: txtCustomer,
+                      controller: txtCustNum,
                       style: TextStyles.getBold(12),
                       decoration: InputDecoration(
                         hintText: "Customer Name",
@@ -401,25 +356,21 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                         ),
                         counterText: "",
                       ),
-                      keyboardType: TextInputType.name,
+                      keyboardType: TextInputType.text,
+                      onTap: () {
+                        choseCustOptions("Customer Name");
+                      },
                       autofocus: false,
                       readOnly: true,
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return "Please select customer.";
+                          return "Please select customar name.";
                         }
                         return null;
                       },
                     ),
                   ),
                 ),
-                isError
-                    ? Text(
-                        "Please enter customer name",
-                        style: TextStyles.getBold(8,
-                            color: AppColors.colorPrimary),
-                      )
-                    : Container(),
                 SizedBox(
                   child: TextFormField(
                     controller: txtDocType,
@@ -492,8 +443,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        txtOrdNum.text = "";
-                        txtCustomer.text = "";
+                        txtCustNum.text = "";
                         txtDocType.text = "";
                         txtShipVia.text = "";
                         docType = "";
@@ -510,9 +460,8 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                       width: 40,
                     ),
                     GestureDetector(
-                      onTap: () {
-                        if (txtOrdNum.text.isEmpty ||
-                            txtCustomer.text.isEmpty ||
+                      onTap: () async {
+                        if (txtCustNum.text.isEmpty ||
                             txtShipVia.text.isEmpty ||
                             txtDocType.text.isEmpty) {
                           setState(() {
@@ -520,7 +469,6 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                           });
                         } else {
                           createHead();
-                          Navigator.of(context).pop();
                         }
                       },
                       child: SizedBox(
@@ -540,82 +488,11 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
     );
   }
 
-  createHead() async {
-    if (isLoading) {
-      return;
-    }
-    setState(() {
-      isLoading = true;
-    });
-    try {
-      var body = {
-        "Company": comp,
-        "PackNum": txtOrdNum.text,
-        "ShipDate": DateTime.now().toIso8601String(),
-        "ShipViaCode": txtShipVia.text,
-        "Plant": plant,
-        "CustNum": customer["OrderHed_CustNum"],
-        "OrderNum": customer["OrderHed_OrderNum"],
-        "TranDocTypeID": docType,
-        "RowMod": "A"
-      };
-      Response res = await customerShipmentServices.createShipHead(body);
-      if (res.statusCode == 201) {
-        showSuccess(
-          'Success',
-          "Customer shipment created successfully!",
-        );
-      } else {
-        showError(
-          'Error',
-          json.decode(res.body)['ErrorMessage'],
-        );
-      }
-    } catch (ex) {
-      showError('Error', ex.toString());
-    } finally {
-      reset();
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  reset() {
-    txtOrdNum.text = "";
-    txtCustomer.text = "";
-    txtDocType.text = "";
-    txtShipVia.text = "";
-    docType = "";
-    customer = {};
-    docTypes = [];
-    loadData();
-  }
-
-  void printLargeString(String text) {
-    const int chunkSize = 800;
-    for (int i = 0; i < text.length; i += chunkSize) {
-      debugPrint(text.substring(
-          i, i + chunkSize > text.length ? text.length : i + chunkSize));
-    }
-  }
-
-  gotoDetailsPage(dynamic record) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ScreenCustShipDetails(
-          item: record,
-        ),
-      ),
-    );
-  }
-
   updateOtp(String title, dynamic option) {
     switch (title) {
-      case "Order Number":
-        txtOrdNum.text = option["OrderHed_OrderNum"].toString();
+      case "Customer Name":
+        txtCustNum.text = option['Customer_Name'];
         customer = option;
-        txtCustomer.text = customer["Customer_Name"];
         break;
       case "DocType":
         txtDocType.text = option['TranDocType_Description'];
@@ -632,8 +509,8 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
 
   getOptTitle(String title, dynamic option) {
     switch (title) {
-      case "Order Number":
-        return option["OrderHed_OrderNum"].toString();
+      case "Customer Name":
+        return option['Customer_Name'];
       case "DocType":
         return option['TranDocType_Description'];
       case "ShipVia":
@@ -662,45 +539,6 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text("Select $title", style: TextStyles.getBold(18)),
-                    const SizedBox(height: 4),
-                    isSearch
-                        ? Column(
-                            children: [
-                              const SizedBox(height: 6),
-                              SizedBox(
-                                height: 36,
-                                child: TextFormField(
-                                  controller: txtSearch,
-                                  style: TextStyles.getBold(10),
-                                  decoration: InputDecoration(
-                                    hintText: "Search",
-                                    border: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          width: 0.6,
-                                          color: AppColors.colorGray600),
-                                      borderRadius: BorderRadius.circular(4.0),
-                                    ),
-                                    suffixIcon: Icon(Icons.search,
-                                        color: AppColors.colorGray600,
-                                        size: 16),
-                                    hintStyle: TextStyles.getRegularScund(14,
-                                        color: AppColors.colorGray600),
-                                  ),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      items = options.where((ord) {
-                                        return ord["OrderHed_OrderNum"]
-                                            .toString()
-                                            .toLowerCase()
-                                            .startsWith(value.toLowerCase());
-                                      }).toList();
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
-                          )
-                        : Container(),
                     const SizedBox(height: 8),
                     Container(
                       width: double.infinity,
@@ -750,6 +588,197 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
         );
       },
     );
+  }
+
+  choseCustOptions(String title) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Select $title", style: TextStyles.getBold(18)),
+                    const SizedBox(height: 4),
+                    Column(
+                      children: [
+                        const SizedBox(height: 6),
+                        SizedBox(
+                          height: 36,
+                          child: TextFormField(
+                            controller: txtSearch,
+                            style: TextStyles.getBold(10),
+                            decoration: InputDecoration(
+                              hintText: "Search",
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    width: 0.6, color: AppColors.colorGray600),
+                                borderRadius: BorderRadius.circular(4.0),
+                              ),
+                              suffixIcon: Icon(Icons.search,
+                                  color: AppColors.colorGray600, size: 16),
+                              hintStyle: TextStyles.getRegularScund(14,
+                                  color: AppColors.colorGray600),
+                            ),
+                            onChanged: (value) {
+                              if (debounce?.isActive ?? false) {
+                                debounce?.cancel();
+                              }
+                              debounce =
+                                  Timer(const Duration(milliseconds: 500), () {
+                                filterCustomerViaName(value, setState);
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      height: 1,
+                      color: AppColors.colorGray100,
+                    ),
+                    Expanded(
+                      child: isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : openOrderFilter.isEmpty
+                              ? Center(
+                                  child: Text("No $title found.",
+                                      style: TextStyles.getRegularScund(16,
+                                          color: AppColors.colorGray600)))
+                              : ListView.builder(
+                                  itemCount: openOrderFilter.length,
+                                  itemBuilder: (context, index) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        updateOtp(
+                                            title, openOrderFilter[index]);
+                                        txtSearch.text = "";
+                                        openOrderFilter = [];
+                                        setState(() {});
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Container(
+                                        margin: const EdgeInsets.symmetric(
+                                            vertical: 10),
+                                        child: Text(
+                                          getOptTitle(
+                                              title, openOrderFilter[index]),
+                                          style: TextStyles.getRegularScund(16,
+                                              color: AppColors.colorGray600),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () {
+                          openOrderFilter = [];
+                          setState(() {});
+                          Navigator.of(context).pop();
+                        },
+                        child: Text("Cancel", style: TextStyles.getBold(14)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  filterCustomerViaName(String query, StateSetter setState) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      var res = await custShipServices.getCustByName(query);
+      openOrderFilter = res["value"];
+    } catch (e) {
+      openOrderFilter = [];
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  gotoDetailsPage(dynamic record) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ScreenCustShipDetails(
+          item: record,
+        ),
+      ),
+    );
+  }
+
+  createHead() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      var body = {
+        "Company": comp,
+        "PackNum": 0,
+        "ShipDate": DateTime.now().toIso8601String(),
+        "ShipViaCode": txtShipVia.text,
+        "Plant": plant,
+        "CustNum": customer["Customer_CustNum"],
+        "OrderNum": 0,
+        "TranDocTypeID": docType,
+        "RowMod": "A"
+      };
+      Response res = await custShipServices.createShipHead(body);
+      if (res.statusCode == 201) {
+        order = res.body;
+        showSuccess(
+          'Success',
+          "Customer shipment created successfully!",
+        );
+      } else {
+        showError(
+          'Error',
+          json.decode(res.body)['value'],
+        );
+      }
+    } catch (ex) {
+      showError('Error', ex.toString());
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  reset() {
+    txtCustNum.text = "";
+    txtDocType.text = "";
+    txtShipVia.text = "";
+    docType = "";
+    customer = {};
+    docTypes = [];
+    openOrderFilter = [];
+    Navigator.of(context).pop();
+    loadData();
   }
 
   showError(String title, String message) {
@@ -846,7 +875,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                       onTap: () {
                         reset();
                         Navigator.of(context).pop();
-                        Navigator.of(context).pop();
+                        gotoDetailsPage(order);
                       },
                       child: SizedBox(
                         child: Text(
@@ -866,5 +895,13 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
         );
       },
     );
+  }
+
+  void printLargeString(String text) {
+    const int chunkSize = 800;
+    for (int i = 0; i < text.length; i += chunkSize) {
+      debugPrint(text.substring(
+          i, i + chunkSize > text.length ? text.length : i + chunkSize));
+    }
   }
 }
