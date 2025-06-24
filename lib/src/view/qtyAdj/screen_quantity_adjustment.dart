@@ -38,6 +38,8 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
   bool isLoading = true;
   bool isSubmit = false;
 
+  String selectedWh = "";
+
   @override
   void initState() {
     super.initState();
@@ -106,52 +108,52 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Lot",
-                                      style: TextStyles.getBold(16),
-                                    ),
-                                    Radio(
-                                      value: "1",
-                                      groupValue: _val,
-                                      activeColor: AppColors.colorDataColor,
-                                      onChanged: (String? value) {
-                                        _val = "1";
-                                        clearData();
-                                        setState(() {});
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Serial",
-                                      style: TextStyles.getBold(16),
-                                    ),
-                                    Radio(
-                                      value: "2",
-                                      groupValue: _val,
-                                      activeColor: AppColors.colorDataColor,
-                                      onChanged: (String? value) {
-                                        _val = "2";
-                                        clearData();
-                                        setState(() {});
-                                      },
-                                    ),
-                                  ],
-                                )
-                              ],
-                            ),
+                            // Row(
+                            //   mainAxisAlignment: MainAxisAlignment.start,
+                            //   children: [
+                            //     Row(
+                            //       mainAxisAlignment: MainAxisAlignment.start,
+                            //       children: [
+                            //         Text(
+                            //           "Lot",
+                            //           style: TextStyles.getBold(16),
+                            //         ),
+                            //         Radio(
+                            //           value: "1",
+                            //           groupValue: _val,
+                            //           activeColor: AppColors.colorDataColor,
+                            //           onChanged: (String? value) {
+                            //             _val = "1";
+                            //             clearData();
+                            //             setState(() {});
+                            //           },
+                            //         ),
+                            //       ],
+                            //     ),
+                            //     const SizedBox(
+                            //       width: 10,
+                            //     ),
+                            //     Row(
+                            //       mainAxisAlignment: MainAxisAlignment.start,
+                            //       children: [
+                            //         Text(
+                            //           "Serial",
+                            //           style: TextStyles.getBold(16),
+                            //         ),
+                            //         Radio(
+                            //           value: "2",
+                            //           groupValue: _val,
+                            //           activeColor: AppColors.colorDataColor,
+                            //           onChanged: (String? value) {
+                            //             _val = "2";
+                            //             clearData();
+                            //             setState(() {});
+                            //           },
+                            //         ),
+                            //       ],
+                            //     )
+                            //   ],
+                            // ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -810,6 +812,7 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
     bins.clear();
     productItems.clear();
     productSerialItems.clear();
+    selectedWh = "";
     setState(() {});
   }
 
@@ -843,6 +846,12 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
         isLoading = true;
       });
 
+      if (partNumber != "") {
+        _val = '1';
+      } else {
+        _val = '2';
+      }
+
       var response = await inventoryServices.getPartAsync(partNumber);
       if (response == null) {
         throw Exception("No product found.");
@@ -875,8 +884,12 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
           wheres.clear();
           for (var item in items) {
             wheres.add(item["PartWhse_WarehouseCode"].toString());
+            selectedWh = item["PartPlant_PrimWhse"].toString();
           }
           selectedIndex = productItems.length - 1;
+
+          txtWere.text = selectedWh;
+          getPartBins(selectedWh);
         }
       } else {
         int isProductExist = productItems.indexWhere(
@@ -910,6 +923,13 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
         }
         selectedIndex = productItems.length - 1;
       }
+
+      // var responseD = await inventoryServices.getDefaultPartAsync(partNumber);
+      // if (responseD != null) {
+      //   selectedWh = responseD["Warehse_Description"];
+      //   txtWere.text = selectedWh;
+      //   //txtWere = wheres;
+      // }
     } catch (ex) {
       clearData();
       showError('Error', ex.toString());
@@ -1465,6 +1485,7 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
   }
 
   void getPartBins(String whe) async {
+    var selectedBin = "";
     try {
       setState(() {
         isLoading = true;
@@ -1478,6 +1499,8 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
       for (var item in items) {
         bins.add(item["WhseBin_BinNum"].toString());
       }
+
+      txtBin.text = bins[0].toString();
     } catch (ex) {
       showError('', ex.toString());
     } finally {
