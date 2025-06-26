@@ -5,10 +5,12 @@ import 'package:epicor/src/view/core/screen_network.dart';
 
 class ScreenCustShipDetails extends StatefulWidget {
   final dynamic item;
+  final bool isNew;
 
   const ScreenCustShipDetails({
     super.key,
     required this.item,
+    required this.isNew,
   });
 
   @override
@@ -16,6 +18,10 @@ class ScreenCustShipDetails extends StatefulWidget {
 }
 
 class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
+  List<dynamic> orders = [];
+  List<String> wheres = [];
+  List<String> bins = [];
+
   var txtOrdNum = TextEditingController();
   var txtScan = TextEditingController();
   var txtWare = TextEditingController();
@@ -129,7 +135,8 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                                     ),
                                     keyboardType: TextInputType.name,
                                     onTap: () {
-                                      // chooseOrder();
+                                      choseDropOptions(
+                                          "Order Num", false, orders);
                                     },
                                     autofocus: false,
                                     readOnly: true,
@@ -220,7 +227,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                                       counterText: "",
                                     ),
                                     onChanged: (val) {
-                                      // getPartAsync(val);
+                                      getPartAsync(val);
                                     },
                                     keyboardType: TextInputType.name,
                                     autofocus: false,
@@ -453,23 +460,17 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
     setState(() {
       isLoading = true;
     });
-    //Todo: load details here.
-    // var resA = await inventoryServices.getFacTrnsDoc();
-    // var payloadA = json.decode(resA.body);
-    // docTypes.clear();
-    // docTypes = payloadA['value'];
-
-    // var resB = await inventoryServices.getFacShipVia();
-    // var payloadB = json.decode(resB.body);
-    // shipVias.clear();
-    // shipVias = payloadB['value'];
-
-    // var response = await custShipServices.getOpenShipment();
-    // var items = response['value'];
-    // orders.clear();
-    // for (var item in items) {
-    //   orders.add(item);
-    // }
+    if (widget.isNew) {
+      var selItem = json.decode(widget.item)["CustNum"];
+      var resA =
+          await custShipServices.getOpenShipmentByCustomer(selItem.toString());
+      orders.clear();
+      orders = resA['value'];
+    } else {
+      orders.clear();
+      orders.add(widget.item);
+      txtOrdNum.text = widget.item["OrderHed_OrderNum"].toString();
+    }
     setState(() {
       isLoading = false;
     });
@@ -517,10 +518,6 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
     return rows;
   }
 
-  submit() {
-    //Todo: add code for final submit
-  }
-
   Widget tableCell(String text) {
     return TableCell(
       child: Padding(
@@ -536,5 +533,284 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
         ),
       ),
     );
+  }
+
+  updateOtp(String title, dynamic option) {
+    switch (title) {
+      case "Order Num":
+        txtOrdNum.text = option['OrderHed_OrderNum'].toString();
+        break;
+      default:
+        return "NA";
+    }
+    setState(() {});
+  }
+
+  getOptTitle(String title, dynamic option) {
+    switch (title) {
+      case "Order Num":
+        return option['OrderHed_OrderNum'].toString();
+      default:
+        return "NA";
+    }
+  }
+
+  choseDropOptions(String title, bool isSearch, List<dynamic> options) {
+    List<dynamic> items = List.from(options);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Select $title", style: TextStyles.getBold(18)),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      height: 1,
+                      color: AppColors.colorGray100,
+                    ),
+                    Expanded(
+                      child: items.isEmpty
+                          ? Center(
+                              child: Text("No $title found.",
+                                  style: TextStyles.getRegularScund(16,
+                                      color: AppColors.colorGray600)))
+                          : ListView.builder(
+                              itemCount: items.length,
+                              itemBuilder: (context, index) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    updateOtp(title, items[index]);
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: Container(
+                                    margin: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                    child: Text(
+                                      getOptTitle(title, items[index]),
+                                      style: TextStyles.getRegularScund(16,
+                                          color: AppColors.colorGray600),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Text("Cancel", style: TextStyles.getBold(14)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  getPartAsync(String val) async {
+    try {
+      if (val.length <= 3) {
+        return;
+      }
+
+      String partNum = "";
+      String serialNum = "";
+      String partLot = "";
+
+      if (val.length == 20) {
+        partNum = val.substring(0, 9);
+        serialNum = val.substring(13, 20);
+      } else {
+        String splitKey = "";
+        if (val.contains("\r\n")) {
+          splitKey = "\r\n";
+        } else if (val.contains("\n")) {
+          splitKey = "\n";
+        } else if (val.contains("~")) {
+          splitKey = "~";
+        } else if (val.contains("~\n")) {
+          splitKey = "~\n";
+        }
+
+        List<String> words = val.split(splitKey);
+        if (words.length <= 2) {
+          return;
+        }
+
+        partNum = words[1].replaceAll("Part Code - ", '');
+        serialNum = words[5].replaceAll("Serial No. - ", '');
+        partLot = words[4].replaceAll("Lot No. -", '').replaceAll(" ", "");
+      }
+
+      if (partNum.isNotEmpty) {
+        getWhere(partNum);
+      } else {
+        throw Exception("Please scan a valid PartNum.");
+      }
+    } catch (ex) {
+      showError('Error', ex.toString());
+    } finally {
+      txtScan.text = "";
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  getWhere(String partnum) async {
+    var response = await inventoryServices.getPartAsync(partnum);
+    if (response == null) {
+      throw Exception("No product found.");
+    }
+    var items = response['value'];
+    wheres.clear();
+    for (var item in items) {
+      wheres.add(item["PartWhse_WarehouseCode"].toString());
+    }
+  }
+
+  submit() {
+    //Todo: add code for final submit
+  }
+
+  showError(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyles.getRegularScund(16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: TextStyles.getRegularScund(14),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(child: Container()),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          'OK',
+                          style: TextStyles.getBold(
+                            14,
+                            color: AppColors.colorPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  showSuccess(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyles.getRegularScund(16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: TextStyles.getRegularScund(14),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(child: Container()),
+                    GestureDetector(
+                      onTap: () {
+                        // reset();
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          'OK',
+                          style: TextStyles.getBold(
+                            14,
+                            color: AppColors.colorPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void printLargeString(String text) {
+    const int chunkSize = 800;
+    for (int i = 0; i < text.length; i += chunkSize) {
+      debugPrint(text.substring(
+          i, i + chunkSize > text.length ? text.length : i + chunkSize));
+    }
   }
 }

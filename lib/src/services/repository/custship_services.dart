@@ -29,6 +29,32 @@ class CustShipDelegate {
     return json.decode(response.body);
   }
 
+  getOpenShipmentByCustomer(String custnum) async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    String plant = await sharedPref.getString("userPlant");
+    String company = await sharedPref.getString("userCompnay");
+
+    Uri url = Uri.parse(
+        "$apiUrl/BaqSvc/VSAPP_OpenShipment($company)?pr_custnum=$custnum&pr_Plant=$plant");
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.get(
+      url,
+      headers: requestHeaders,
+    );
+    return json.decode(response.body);
+  }
+
   getTransDoc() async {
     HttpOverrides.global = MyHttpOverrides();
     String apiUrl = await sharedPref.getString("userUrl");

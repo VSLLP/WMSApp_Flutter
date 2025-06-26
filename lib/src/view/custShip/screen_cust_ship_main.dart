@@ -174,7 +174,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                       itemBuilder: (BuildContext context, int index) {
                         return GestureDetector(
                           onTap: () {
-                            gotoDetailsPage(orders[index]);
+                            gotoDetailsPage(orders[index], false);
                           },
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -311,178 +311,204 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 16,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(0),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Create new shipment header",
-                  style: TextStyles.getBold(18),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
                 ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  height: 1,
-                  color: AppColors.colorGray100,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(0),
                 ),
-                const SizedBox(height: 2),
-                SizedBox(
-                  child: Container(
-                    color: Colors.transparent,
-                    child: TextFormField(
-                      controller: txtCustNum,
-                      style: TextStyles.getBold(12),
-                      decoration: InputDecoration(
-                        hintText: "Customer Name",
-                        hintStyle: TextStyles.getRegularScund(
-                          14,
-                          color: AppColors.colorGray600,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 0,
-                        ),
-                        counterText: "",
-                      ),
-                      keyboardType: TextInputType.text,
-                      onTap: () {
-                        choseCustOptions("Customer Name");
-                      },
-                      autofocus: false,
-                      readOnly: true,
-                      validator: (value) {
-                        if (value!.isEmpty) {
-                          return "Please select customar name.";
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  child: TextFormField(
-                    controller: txtDocType,
-                    style: TextStyles.getBold(12),
-                    decoration: InputDecoration(
-                      hintText: "Document Type",
-                      hintStyle: TextStyles.getRegularScund(
-                        14,
-                        color: AppColors.colorGray600,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 0,
-                      ),
-                      counterText: "",
-                    ),
-                    keyboardType: TextInputType.name,
-                    onTap: () {
-                      choseDropOptions("DocType", false, docTypes);
-                    },
-                    autofocus: false,
-                    readOnly: true,
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return "Please enter document type.";
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                SizedBox(
-                  child: TextFormField(
-                    controller: txtShipVia,
-                    style: TextStyles.getBold(12),
-                    decoration: InputDecoration(
-                      hintText: "Ship Via",
-                      hintStyle: TextStyles.getRegularScund(
-                        14,
-                        color: AppColors.colorGray600,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 0,
-                      ),
-                      counterText: "",
-                    ),
-                    keyboardType: TextInputType.name,
-                    onTap: () {
-                      choseDropOptions("ShipVia", false, shipVias);
-                    },
-                    autofocus: false,
-                    readOnly: true,
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return "Please enter ship via.";
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  height: 1,
-                  color: AppColors.colorGray100,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        txtCustNum.text = "";
-                        txtDocType.text = "";
-                        txtShipVia.text = "";
-                        docType = "";
-                        Navigator.of(context).pop();
-                      },
-                      child: SizedBox(
-                        child: Text(
-                          "Cancel",
-                          style: TextStyles.getBold(14),
+                    Text(
+                      "Create new shipment header",
+                      style: TextStyles.getBold(18),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      height: 1,
+                      color: AppColors.colorGray100,
+                    ),
+                    const SizedBox(height: 2),
+                    SizedBox(
+                      child: Container(
+                        color: Colors.transparent,
+                        child: TextFormField(
+                          controller: txtCustNum,
+                          style: TextStyles.getBold(12),
+                          decoration: InputDecoration(
+                            hintText: "Customer Name",
+                            hintStyle: TextStyles.getRegularScund(
+                              14,
+                              color: AppColors.colorGray600,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 0,
+                            ),
+                            counterText: "",
+                          ),
+                          keyboardType: TextInputType.text,
+                          onTap: () {
+                            if (isLoading) {
+                              return;
+                            }
+                            choseCustOptions("Customer Name");
+                          },
+                          autofocus: false,
+                          readOnly: true,
+                          validator: (value) {
+                            if (value!.isEmpty) {
+                              return "Please select customar name.";
+                            }
+                            return null;
+                          },
                         ),
                       ),
                     ),
-                    const SizedBox(
-                      width: 40,
-                    ),
-                    GestureDetector(
-                      onTap: () async {
-                        if (txtCustNum.text.isEmpty ||
-                            txtShipVia.text.isEmpty ||
-                            txtDocType.text.isEmpty) {
-                          setState(() {
-                            isError = true;
-                          });
-                        } else {
-                          createHead();
-                        }
-                      },
-                      child: SizedBox(
-                        child: Text(
-                          "Create",
-                          style: TextStyles.getBold(14),
+                    SizedBox(
+                      child: TextFormField(
+                        controller: txtDocType,
+                        style: TextStyles.getBold(12),
+                        decoration: InputDecoration(
+                          hintText: "Document Type",
+                          hintStyle: TextStyles.getRegularScund(
+                            14,
+                            color: AppColors.colorGray600,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 0,
+                          ),
+                          counterText: "",
                         ),
+                        keyboardType: TextInputType.name,
+                        onTap: () {
+                          if (isLoading) {
+                            return;
+                          }
+                          choseDropOptions("DocType", false, docTypes);
+                        },
+                        autofocus: false,
+                        readOnly: true,
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return "Please enter document type.";
+                          }
+                          return null;
+                        },
                       ),
+                    ),
+                    SizedBox(
+                      child: TextFormField(
+                        controller: txtShipVia,
+                        style: TextStyles.getBold(12),
+                        decoration: InputDecoration(
+                          hintText: "Ship Via",
+                          hintStyle: TextStyles.getRegularScund(
+                            14,
+                            color: AppColors.colorGray600,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 0,
+                          ),
+                          counterText: "",
+                        ),
+                        keyboardType: TextInputType.name,
+                        onTap: () {
+                          if (isLoading) {
+                            return;
+                          }
+                          choseDropOptions("ShipVia", false, shipVias);
+                        },
+                        autofocus: false,
+                        readOnly: true,
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return "Please enter ship via.";
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      height: 1,
+                      color: AppColors.colorGray100,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            txtCustNum.text = "";
+                            txtDocType.text = "";
+                            txtShipVia.text = "";
+                            docType = "";
+                            Navigator.of(context).pop();
+                          },
+                          child: SizedBox(
+                            child: Text(
+                              "Cancel",
+                              style: TextStyles.getBold(14),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 40,
+                        ),
+                        isLoading
+                            ? Container(
+                                width: 48,
+                                height: 48,
+                                color: Colors.transparent,
+                                child: Center(
+                                  child: Lottie.asset(
+                                    'assets/anim/anim-bgLoading.json',
+                                    width: 100,
+                                  ),
+                                ),
+                              )
+                            : GestureDetector(
+                                onTap: () async {
+                                  if (txtCustNum.text.isEmpty ||
+                                      txtShipVia.text.isEmpty ||
+                                      txtDocType.text.isEmpty) {
+                                    setState(() {
+                                      isError = true;
+                                    });
+                                  } else {
+                                    setState(() {});
+                                    createHead();
+                                  }
+                                },
+                                child: SizedBox(
+                                  child: Text(
+                                    "Create",
+                                    style: TextStyles.getBold(14),
+                                  ),
+                                ),
+                              ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -721,11 +747,12 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
     });
   }
 
-  gotoDetailsPage(dynamic record) {
+  gotoDetailsPage(dynamic record, bool isN) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ScreenCustShipDetails(
           item: record,
+          isNew: isN,
         ),
       ),
     );
@@ -875,7 +902,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                       onTap: () {
                         reset();
                         Navigator.of(context).pop();
-                        gotoDetailsPage(order);
+                        gotoDetailsPage(order, true);
                       },
                       child: SizedBox(
                         child: Text(
@@ -895,13 +922,5 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
         );
       },
     );
-  }
-
-  void printLargeString(String text) {
-    const int chunkSize = 800;
-    for (int i = 0; i < text.length; i += chunkSize) {
-      debugPrint(text.substring(
-          i, i + chunkSize > text.length ? text.length : i + chunkSize));
-    }
   }
 }
