@@ -19,13 +19,26 @@ class ScreenCustShipDetails extends StatefulWidget {
 
 class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
   List<dynamic> orders = [];
-  List<String> wheres = [];
-  List<String> bins = [];
+  List<dynamic> ordersFilter = [];
+  List<dynamic> items = [];
+  List<dynamic> wheres = [];
+  List<dynamic> bins = [];
+
+  List<TextEditingController> itemQty = [];
+
+  dynamic whe = {};
+  dynamic bin = {};
 
   var txtOrdNum = TextEditingController();
   var txtScan = TextEditingController();
   var txtWare = TextEditingController();
   var txtBin = TextEditingController();
+  var txtSearch = TextEditingController();
+
+  String partNum = "";
+  String serialNum = "";
+  String partLot = "";
+  String qrType = "";
 
   bool isLoading = true;
 
@@ -136,7 +149,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                                     keyboardType: TextInputType.name,
                                     onTap: () {
                                       choseDropOptions(
-                                          "Order Num", false, orders);
+                                          "Order Num", true, ordersFilter);
                                     },
                                     autofocus: false,
                                     readOnly: true,
@@ -279,7 +292,8 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                                     ),
                                     keyboardType: TextInputType.name,
                                     onTap: () {
-                                      // chooseWaereHouse();
+                                      choseDropOptions(
+                                          "Warehouse", false, wheres);
                                     },
                                     autofocus: false,
                                     readOnly: true,
@@ -331,7 +345,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                                     ),
                                     keyboardType: TextInputType.name,
                                     onTap: () {
-                                      // chooseBin();
+                                      choseDropOptions("Binnum", false, bins);
                                     },
                                     autofocus: false,
                                     readOnly: true,
@@ -378,7 +392,8 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                                               2: FixedColumnWidth(130),
                                               3: FixedColumnWidth(100),
                                               4: FixedColumnWidth(100),
-                                              5: FixedColumnWidth(100)
+                                              5: FixedColumnWidth(100),
+                                              6: FixedColumnWidth(100)
                                             },
                                             border: const TableBorder.symmetric(
                                               inside: BorderSide(
@@ -465,11 +480,30 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
       var resA =
           await custShipServices.getOpenShipmentByCustomer(selItem.toString());
       orders.clear();
+      ordersFilter.clear();
       orders = resA['value'];
+      ordersFilter = resA['value'];
     } else {
       orders.clear();
+      ordersFilter.clear();
       orders.add(widget.item);
+      ordersFilter.add(widget.item);
       txtOrdNum.text = widget.item["OrderHed_OrderNum"].toString();
+    }
+    if (txtOrdNum.text.isNotEmpty) {
+      var resA = await custShipServices.getOpenShipmentItems(txtOrdNum.text);
+      items.clear();
+      for (var it in resA['value']) {
+        it["isSelect"] = false;
+        it["shipQty"] = "1";
+        it["scanLot"] = "-";
+        items.add(it);
+        itemQty.add(
+          TextEditingController(
+            text: it["shipQty"],
+          ),
+        );
+      }
     }
     setState(() {
       isLoading = false;
@@ -483,38 +517,65 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
         tableCell('Order Num'),
         tableCell('Order Line'),
         tableCell('Order Relase'),
+        tableCell('Part Num'),
         tableCell('Order Qty'),
         tableCell('Ship Qty'),
         tableCell("Lot Num")
       ],
     ));
-    //Todo: load product items in row
-    // for (int i = 0; i < productItems.length; i++) {
-    // var item = productItems[i];
 
-    // rows.add(
-    //   TableRow(
-    //     decoration: BoxDecoration(
-    //       color: productItems[i]['isSelect']
-    //           ? AppColors.colorCyan300
-    //           : Colors.transparent,
-    //     ),
-    //     children: [
-    //       tableCellRow(item["PODetail_PONUM"].toString()),
-    //       tableCellRow(item["PODetail_POLine"].toString()),
-    //       tableCellRow(item["Part_PartNum"].toString()),
-    //       tableCellRow(
-    //         double.parse(item["PODetail_OrderQty"].toString())
-    //             .toStringAsFixed(2),
-    //       ),
-    //       tableCellRow(
-    //         double.parse(item["ScanQty"].toString()).toStringAsFixed(2),
-    //       ),
-    //       tableCell(item["lotNum"].toString())
-    //     ],
-    //   ),
-    // );
-    // }
+    for (int i = 0; i < items.length; i++) {
+      var item = items[i];
+      rows.add(
+        TableRow(
+          decoration: BoxDecoration(
+            color:
+                item['isSelect'] ? AppColors.colorCyan300 : Colors.transparent,
+          ),
+          children: [
+            tableCellRow(item["OrderHed_OrderNum"].toString()),
+            tableCellRow(item["OrderRel_OrderLine"].toString()),
+            tableCellRow(item["OrderRel_OrderRelNum"].toString()),
+            tableCellRow(item["OrderRel_PartNum"]),
+            tableCellRow(
+              double.parse(item["OrderRel_OurReqQty"].toString())
+                  .toStringAsFixed(2),
+            ),
+            item["isSelect"]
+                ? TableCell(
+                    child: Container(
+                      margin: const EdgeInsets.all(6),
+                      height: 28,
+                      child: TextFormField(
+                        controller: itemQty[i],
+                        style: TextStyles.getBold(12),
+                        decoration: InputDecoration(
+                          hintText: "Qty",
+                          hintStyle: TextStyles.getRegularScund(
+                            12,
+                            color: AppColors.colorGray600,
+                          ),
+                          contentPadding: const EdgeInsets.only(
+                            left: 4,
+                            bottom: 16,
+                          ),
+                          counterText: "",
+                        ),
+                        keyboardType: TextInputType.name,
+                        onChanged: (val) {
+                          items[i]["shipQty"] = val;
+                          setState(() {});
+                        },
+                        autofocus: false,
+                      ),
+                    ),
+                  )
+                : tableCellRow(item["shipQty"]),
+            tableCellRow(item["scanLot"]),
+          ],
+        ),
+      );
+    }
     return rows;
   }
 
@@ -535,10 +596,56 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
     );
   }
 
+  Widget tableCellRow(String text) {
+    return TableCell(
+      child: SizedBox(
+        height: 60,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Center(
+            child: Text(
+              text,
+              style: TextStyles.getRegularScund(14),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  refreshOrderNumber() async {
+    if (txtOrdNum.text.isNotEmpty) {
+      var resA = await custShipServices.getOpenShipmentItems(txtOrdNum.text);
+      items.clear();
+      for (var it in resA['value']) {
+        it["isSelect"] = false;
+        it["shipQty"] = "1";
+        it["scanLot"] = "-";
+        items.add(it);
+        itemQty.add(
+          TextEditingController(
+            text: it["shipQty"],
+          ),
+        );
+      }
+    }
+    setState(() {});
+  }
+
   updateOtp(String title, dynamic option) {
     switch (title) {
       case "Order Num":
         txtOrdNum.text = option['OrderHed_OrderNum'].toString();
+        refreshOrderNumber();
+        break;
+      case "Warehouse":
+        whe = option;
+        txtWare.text = whe["PartWhse_WarehouseCode"];
+        getBin();
+        break;
+      case "Binnum":
+        bin = option;
+        txtBin.text = bin["WhseBin_BinNum"];
         break;
       default:
         return "NA";
@@ -550,6 +657,10 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
     switch (title) {
       case "Order Num":
         return option['OrderHed_OrderNum'].toString();
+      case "Warehouse":
+        return option['Warehse_Description'].toString();
+      case "Binnum":
+        return option['WhseBin_BinNum'].toString();
       default:
         return "NA";
     }
@@ -574,7 +685,38 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text("Select $title", style: TextStyles.getBold(18)),
-                    const SizedBox(height: 8),
+                    isSearch
+                        ? TextFormField(
+                            controller: txtSearch,
+                            style: TextStyles.getBold(
+                              12,
+                              color: AppColors.colorBlack,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: "Search item",
+                              hintStyle: TextStyles.getRegularScund(
+                                14,
+                                color: AppColors.colorGray600,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 0,
+                              ),
+                              counterText: "",
+                            ),
+                            onChanged: (val) {
+                              items = orders
+                                  .where((ord) => ord["OrderHed_OrderNum"]
+                                      .toString()
+                                      .startsWith(val))
+                                  .toList();
+                              setState(() {});
+                            },
+                            keyboardType: TextInputType.name,
+                            autofocus: false,
+                          )
+                        : Container(),
+                    const SizedBox(height: 4),
                     Container(
                       width: double.infinity,
                       height: 1,
@@ -631,14 +773,17 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
         return;
       }
 
-      String partNum = "";
-      String serialNum = "";
-      String partLot = "";
+      partNum = "";
+      serialNum = "";
+      partLot = "";
+      qrType = "";
 
       if (val.length == 20) {
+        qrType = "A";
         partNum = val.substring(0, 9);
         serialNum = val.substring(13, 20);
       } else {
+        qrType = "B";
         String splitKey = "";
         if (val.contains("\r\n")) {
           splitKey = "\r\n";
@@ -660,11 +805,24 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
         partLot = words[4].replaceAll("Lot No. -", '').replaceAll(" ", "");
       }
 
-      if (partNum.isNotEmpty) {
-        getWhere(partNum);
-      } else {
-        throw Exception("Please scan a valid PartNum.");
+      if (partNum.isEmpty || serialNum.isEmpty) {
+        throw Exception("Invalid QR Code.");
       }
+
+      int productIndex = items.indexWhere(
+        (item) => item["OrderRel_PartNum"] == partNum,
+      );
+
+      if (productIndex == -1) {
+        throw Exception("Please scan a valid PartNum.");
+      } else {
+        if (qrType == "B") {
+          items[productIndex]["scanLot"] = partLot;
+        }
+        items[productIndex]["isSelect"] = true;
+      }
+
+      getWhere(partNum);
     } catch (ex) {
       showError('Error', ex.toString());
     } finally {
@@ -683,8 +841,32 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
     var items = response['value'];
     wheres.clear();
     for (var item in items) {
-      wheres.add(item["PartWhse_WarehouseCode"].toString());
+      wheres.add(item);
     }
+    if (wheres.isNotEmpty) {
+      whe = wheres.first;
+      txtWare.text = whe["Calculated_ReceiptWarhouse"];
+    }
+    getBin();
+    setState(() {});
+  }
+
+  getBin() async {
+    var response =
+        await inventoryServices.getPartBinAsync(partNum, txtWare.text);
+    if (response == null) {
+      throw Exception("No product found.");
+    }
+    var items = response['value'];
+    bins.clear();
+    for (var item in items) {
+      bins.add(item);
+    }
+    if (bins.isNotEmpty) {
+      bin = bins.first;
+      txtBin.text = bin["WhseBin_BinNum"];
+    }
+    setState(() {});
   }
 
   submit() {

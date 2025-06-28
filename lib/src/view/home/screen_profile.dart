@@ -13,6 +13,7 @@ class ScreenProfile extends StatefulWidget {
 class _ScreenProfileState extends State<ScreenProfile> {
   bool isLoading = true;
   bool isSubmit = false;
+  bool isCam = false;
 
   String userId = "";
 
@@ -171,6 +172,34 @@ class _ScreenProfileState extends State<ScreenProfile> {
                             ),
                           ],
                         ),
+                        Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              color: Colors.transparent,
+                              child: Center(
+                                child: Icon(
+                                  Icons.camera,
+                                  size: 28,
+                                  color: AppColors.colorPrimary,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              "Camera Scan",
+                              style: TextStyles.getBold(
+                                18,
+                                color: AppColors.colorTertiary,
+                              ),
+                            ),
+                            Expanded(child: Container()),
+                            Switch(
+                              value: isCam,
+                              onChanged: (val) => {saveCamera(val)},
+                            )
+                          ],
+                        ),
                         const SizedBox(
                           height: 24,
                         ),
@@ -265,8 +294,16 @@ class _ScreenProfileState extends State<ScreenProfile> {
 
   loadData() async {
     userId = await sharedPref.getString("userName");
+    isCam = await sharedPref.getBool("isCam");
     setState(() {
       isLoading = false;
+    });
+  }
+
+  saveCamera(bool value) async {
+    await sharedPref.setBool("isCam", value);
+    setState(() {
+      isCam = value;
     });
   }
 
