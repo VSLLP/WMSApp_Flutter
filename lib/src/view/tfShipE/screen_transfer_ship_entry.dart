@@ -641,7 +641,6 @@ class _ScreenTransferShipEntryState extends State<ScreenTransferShipEntry> {
       String apiUrl = await sharedPref.getString("userUrl") ?? '';
       String userId = await sharedPref.getString("userName") ?? '';
       String password = await sharedPref.getString("userPass") ?? '';
-      String plant = await sharedPref.getString("userPlant") ?? '';
 
       // Validate critical fields
       if (apiUrl.isEmpty ||

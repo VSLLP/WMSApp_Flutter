@@ -3,7 +3,7 @@ import 'package:epicor/src/services/model/menu.dart';
 
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
-import 'package:epicor/src/view/custShip/custship.dart';
+import 'package:epicor/src/view/custShip/screen_cust_ship_main.dart';
 import 'package:epicor/src/view/home/screen_profile.dart';
 import 'package:epicor/src/view/insp/screen_insp_main.dart';
 import 'package:epicor/src/view/issueMtl/screen_issue_mtl_list.dart';
@@ -11,7 +11,6 @@ import 'package:epicor/src/view/misIssue/screen_mis_issue_main.dart';
 import 'package:epicor/src/view/prdRcpt/screen_job_list.dart';
 import 'package:epicor/src/view/qtyAdj/screen_quantity_adjustment.dart';
 import 'package:epicor/src/view/rcpt/screen_asn_list.dart';
-import 'package:epicor/src/view/rcpt/screen_rcpt_option.dart';
 import 'package:epicor/src/view/tfReceipt/screen_transfer_receipt_main.dart';
 import 'package:epicor/src/view/tfShipE/screen_transfer_ship_main.dart';
 
@@ -213,10 +212,8 @@ class _ScreenHomeState extends State<ScreenHome> {
   }
 
   gotoCustShip() async {
-    print("object");
-
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const CustomerShipmentHead()),
+      MaterialPageRoute(builder: (context) => const ScreenCustShipMain()),
     );
   }
 

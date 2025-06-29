@@ -1424,25 +1424,34 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
         return;
       }
 
-      String splitKey = "";
-      if (val.contains("\r\n")) {
-        splitKey = "\r\n";
-      } else if (val.contains("\n")) {
-        splitKey = "\n";
-      } else if (val.contains("~")) {
-        splitKey = "~";
-      } else if (val.contains("~\n")) {
-        splitKey = "~\n";
-      }
+      String partNum = "";
+      String serialNum = "";
+      String partLot = "";
 
-      List<String> words = val.split(splitKey);
-      if (words.length <= 2) {
-        return;
-      }
+      if (val.length == 20) {
+        partNum = val.substring(0, 9);
+        serialNum = val.substring(13, 20);
+      } else {
+        String splitKey = "";
+        if (val.contains("\r\n")) {
+          splitKey = "\r\n";
+        } else if (val.contains("\n")) {
+          splitKey = "\n";
+        } else if (val.contains("~")) {
+          splitKey = "~";
+        } else if (val.contains("~\n")) {
+          splitKey = "~\n";
+        }
 
-      String partNum = words[1].replaceAll("Part Code - ", '');
-      String serialNum = words[5].replaceAll("Serial No. - ", '');
-      String partLot = words[4].replaceAll("Lot No. -", '').replaceAll(" ", "");
+        List<String> words = val.split(splitKey);
+        if (words.length <= 2) {
+          return;
+        }
+
+        partNum = words[1].replaceAll("Part Code - ", '');
+        serialNum = words[5].replaceAll("Serial No. - ", '');
+        partLot = words[4].replaceAll("Lot No. -", '').replaceAll(" ", "");
+      }
 
       if (txtFPartNo.text == partNum) {
         lotNum = partLot;
