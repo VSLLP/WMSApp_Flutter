@@ -24,6 +24,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
   List<dynamic> shipVias = [];
   List<dynamic> slips = [];
   List<dynamic> items = [];
+  List<dynamic> founditems = [];
 
   var txtPackNum = TextEditingController();
   var txtDocType = TextEditingController();
@@ -134,16 +135,25 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                   const SizedBox(
                     height: 8,
                   ),
+                  TextField(
+                    onChanged: (value) => _runFilter(value),
+                    decoration: const InputDecoration(
+                        labelText: 'Type here for search',
+                        suffixIcon: Icon(Icons.search)),
+                  ),
+                  const SizedBox(
+                    height: 8,
+                  ),
                   Expanded(
                     child: SizedBox(
                       child: ListView.builder(
-                        itemCount: items.length,
+                        itemCount: founditems.length,
                         shrinkWrap: true,
                         scrollDirection: Axis.vertical,
                         itemBuilder: (BuildContext context, int index) {
                           return GestureDetector(
                             onTap: () {
-                              getTTTTT(items[index]);
+                              getTTTTT(founditems[index]);
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -175,7 +185,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                                                     .width *
                                                 0.74,
                                             child: Text(
-                                              "Company Name: ${items[index]["VendorPP_Name"]}",
+                                              "Company Name: ${founditems[index]["VendorPP_Name"]}",
                                               style: TextStyles.getBold(
                                                 14,
                                                 color: AppColors.colorDataColor,
@@ -201,7 +211,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                                         height: 4,
                                       ),
                                       Text(
-                                        "PO: ${items[index]["POHeader_PONum"]}",
+                                        "PO: ${founditems[index]["POHeader_PONum"]}",
                                         style: TextStyles.getBold(
                                           14,
                                           color: AppColors.colorDataColor,
@@ -213,7 +223,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                                       SizedBox(
                                         width: double.infinity,
                                         child: Text(
-                                          "City: ${items[index]["VendorPP_City"]}",
+                                          "City: ${founditems[index]["VendorPP_City"]}",
                                           style: TextStyles.getBold(
                                             14,
                                             color: AppColors.colorDataColor,
@@ -273,6 +283,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
     }
     setState(() {
       isLoading = false;
+      founditems = items;
     });
   }
 
@@ -313,6 +324,7 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
     }
     setState(() {
       isLoading = false;
+      founditems = items;
     });
   }
 
@@ -353,6 +365,24 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
     setState(() {
       isLoading = false;
     });
+  }
+
+  void _runFilter(String enteredKeyword) {
+    List<dynamic> results = [];
+    if (enteredKeyword.isNotEmpty) {
+      results = items.where((item) {
+        final vendorName = item["VendorPP_Name"].toLowerCase();
+        final poheaderPonum = item["POHeader_PONum"];
+        return vendorName.contains(enteredKeyword.toLowerCase()) ||
+            poheaderPonum.toString().contains(enteredKeyword);
+      }).toList();
+      // we use the toLowerCase() method to make it case-insensitive
+
+      // Refresh the UI
+      setState(() {
+        founditems = results;
+      });
+    }
   }
 
   Future<void> getTTTTT(item) async {
