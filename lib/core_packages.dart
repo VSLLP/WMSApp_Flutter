@@ -6,6 +6,7 @@ import 'package:epicor/src/services/repository/material_services.dart';
 import 'package:epicor/src/services/repository/spref_services.dart';
 import 'package:epicor/src/services/repository/transfer_services.dart';
 import 'package:epicor/src/services/repository/util_services.dart';
+import 'package:epicor/src/services/repository/custshipment_services.dart';
 
 export 'dart:async';
 export 'dart:convert';
@@ -30,3 +31,5 @@ final MaterialDelegate materialServices = MaterialDelegate();
 final UtilDelegate utilServices = UtilDelegate();
 final IsnpDelegate isnpServices = IsnpDelegate();
 final JobToInvDelegate jobinvServices = JobToInvDelegate();
+final CustomerShipmentDelegate custshipment_services =
+    CustomerShipmentDelegate();

@@ -263,7 +263,7 @@ class _CustomerShipmentHeadState extends State<CustomerShipmentHead>
   }
 
   loadData() async {
-    var response = await customerShipmentServices.getCustomerShipmentList();
+    var response = await custshipment_services.getCustomerShipmentList();
     var items = response['value'];
     orders.clear();
     for (var item in items) {
@@ -277,7 +277,7 @@ class _CustomerShipmentHeadState extends State<CustomerShipmentHead>
   }
 
   loadDataShipments() async {
-    var response = await customerShipmentServices.getCustomerShipmentList();
+    var response = await custshipment_services.getCustomerShipmentList();
     var items = response['value'];
     orders.clear();
     for (var item in items) {
