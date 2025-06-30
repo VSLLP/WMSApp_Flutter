@@ -54,21 +54,39 @@ class _ScreenSplashState extends State<ScreenSplash> {
   }
 
   requestPermissions() async {
+    bool permissionGrant = false;
     if (Platform.isAndroid) {
-      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-      if (androidInfo.version.sdkInt > 32) {
-        loadData();
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      final sdkInt = androidInfo.version.sdkInt;
+      if (sdkInt <= 32) {
+        final status = await Permission.storage.request().isGranted;
+        permissionGrant = status;
       } else {
-        Map<Permission, PermissionStatus> statuses = await [
-          Permission.storage,
-        ].request();
-        if (statuses[Permission.storage] == PermissionStatus.granted) {
-          loadData();
-        } else {
-          SystemNavigator.pop();
-        }
+        permissionGrant = true;
       }
+    } else if (Platform.isIOS) {
+      final status = await Permission.photos.request().isGranted;
+      permissionGrant = status;
+    }
+
+    if (!permissionGrant) {
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Permission Required"),
+          content: const Text(
+            "Storage permission was not granted. The app will now close.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                SystemNavigator.pop();
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
     } else {
       loadData();
     }

@@ -7,7 +7,6 @@ import 'package:epicor/src/services/repository/material_services.dart';
 import 'package:epicor/src/services/repository/spref_services.dart';
 import 'package:epicor/src/services/repository/transfer_services.dart';
 import 'package:epicor/src/services/repository/util_services.dart';
-import 'package:epicor/src/services/repository/custshipment_services.dart';
 
 export 'dart:async';
 export 'dart:convert';
