@@ -2,6 +2,7 @@ import 'package:epicor/core_packages.dart';
 
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
+import 'package:epicor/src/view/home/screen_qr_scan.dart';
 
 class ScreenCustShipDetails extends StatefulWidget {
   final dynamic item;
@@ -41,6 +42,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
   String qrType = "";
 
   bool isLoading = true;
+  bool isCam = false;
 
   @override
   void initState() {
@@ -211,7 +213,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                                       suffixIcon: txtScan.text.isNotEmpty
                                           ? GestureDetector(
                                               onTap: () {
-                                                // clearItem();
+                                                txtScan.text = "";
                                               },
                                               child: SizedBox(
                                                 width: 20,
@@ -242,8 +244,14 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                                     onChanged: (val) {
                                       getPartAsync(val);
                                     },
+                                    onTap: () {
+                                      if (isCam) {
+                                        getScan();
+                                      }
+                                    },
                                     keyboardType: TextInputType.name,
                                     autofocus: false,
+                                    readOnly: isCam,
                                     validator: (value) {
                                       if (value!.isEmpty) {
                                         return "Please scan product.";
@@ -475,6 +483,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
     setState(() {
       isLoading = true;
     });
+    isCam = await sharedPref.getBool("isCam");
     if (widget.isNew) {
       var selItem = json.decode(widget.item)["CustNum"];
       var resA =
@@ -871,6 +880,17 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
 
   submit() {
     //Todo: add code for final submit
+  }
+
+  getScan() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ScreenQrScan(),
+      ),
+    );
+    if (result != null && result is String) {
+      getPartAsync(result);
+    }
   }
 
   showError(String title, String message) {

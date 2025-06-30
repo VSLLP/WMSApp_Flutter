@@ -302,9 +302,75 @@ class _ScreenProfileState extends State<ScreenProfile> {
 
   saveCamera(bool value) async {
     await sharedPref.setBool("isCam", value);
+    if (value) {
+      final status = await Permission.camera.request().isGranted;
+      if (!status) {
+        showError(
+          "Permission error",
+          "Please allow camera permission in order use the barcode scanner!",
+        );
+      }
+    }
     setState(() {
       isCam = value;
     });
+  }
+
+  showError(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyles.getRegularScund(16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: TextStyles.getRegularScund(14),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(child: Container()),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          'OK',
+                          style: TextStyles.getBold(
+                            14,
+                            color: AppColors.colorPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   logout() async {
