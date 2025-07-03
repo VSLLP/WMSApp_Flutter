@@ -129,6 +129,58 @@ class CustShipDelegate {
     return json.decode(response.body);
   }
 
+  getGetPart(String partNum) async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    String plant = await sharedPref.getString("userPlant");
+    String company = await sharedPref.getString("userCompnay");
+
+    Uri url = Uri.parse(
+        "$apiUrl/BaqSvc/VSAPP_GetPart($company)/?pr_PartNum=$partNum&pr_Plant=$plant");
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.get(
+      url,
+      headers: requestHeaders,
+    );
+    return json.decode(response.body);
+  }
+
+  getSerialAvail(String partNum, String whe, String bin) async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    String plant = await sharedPref.getString("userPlant");
+    String company = await sharedPref.getString("userCompnay");
+
+    Uri url = Uri.parse(
+        "$apiUrl/BaqSvc/VSAPP_SerialNoAvail($company)/?pr_Plant=$plant&pr_PartNum=$partNum&pr_Warehse=$whe&pr_Bin=$bin");
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.get(
+      url,
+      headers: requestHeaders,
+    );
+    return json.decode(response.body);
+  }
+
   createShipHead(body) async {
     HttpOverrides.global = MyHttpOverrides();
     String apiUrl = await sharedPref.getString("userUrl");
@@ -136,6 +188,30 @@ class CustShipDelegate {
     String password = await sharedPref.getString("userPass");
 
     Uri url = Uri.parse("$apiUrl/Erp.BO.CustShipSvc/CustShips");
+
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.post(
+      url,
+      headers: requestHeaders,
+      body: json.encode(body),
+    );
+    return response;
+  }
+
+  submitShipment(body) async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    Uri url = Uri.parse("$apiUrl/Erp.BO.CustShipSvc/Update");
 
     String basicAuth =
         'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
