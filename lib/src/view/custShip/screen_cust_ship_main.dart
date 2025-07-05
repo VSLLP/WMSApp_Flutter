@@ -24,6 +24,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
   List<dynamic> openOrderFilter = [];
   List<dynamic> docTypes = [];
   List<dynamic> shipVias = [];
+  List<dynamic> founditems = [];
 
   Timer? debounce;
 
@@ -168,13 +169,22 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                       )
                     ],
                   ),
+                  TextField(
+                    onChanged: (value) => _runFilter(value),
+                    decoration: const InputDecoration(
+                        labelText: 'Type here for search',
+                        suffixIcon: Icon(Icons.search)),
+                  ),
+                  const SizedBox(
+                    height: 22,
+                  ),
                   Expanded(
                     child: ListView.builder(
-                      itemCount: orders.length,
+                      itemCount: founditems.length,
                       itemBuilder: (BuildContext context, int index) {
                         return GestureDetector(
                           onTap: () {
-                            gotoDetailsPage(orders[index], false);
+                            gotoDetailsPage(founditems[index], false);
                           },
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -205,7 +215,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                                                   .width *
                                               0.7,
                                           child: Text(
-                                            "Customer Name: ${orders[index]["Customer_Name"]}",
+                                            "Customer Name: ${founditems[index]["Customer_Name"]}",
                                             style: TextStyles.getBold(
                                               14,
                                               color: AppColors.colorDataColor,
@@ -231,7 +241,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                                       height: 4,
                                     ),
                                     Text(
-                                      "Pack Num: ${orders[index]["ShipHead_PackNum"]}",
+                                      "Pack Num: ${founditems[index]["ShipHead_PackNum"]}",
                                       style: TextStyles.getBold(
                                         14,
                                         color: AppColors.colorDataColor,
@@ -241,7 +251,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                                       height: 4,
                                     ),
                                     Text(
-                                      "Entry Person: ${orders[index]["OrderHed_EntryPerson"]}",
+                                      "Entry Person: ${founditems[index]["OrderHed_EntryPerson"]}",
                                       style: TextStyles.getBold(
                                         14,
                                         color: AppColors.colorDataColor,
@@ -253,7 +263,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                                     SizedBox(
                                       width: double.infinity,
                                       child: Text(
-                                        "Date: ${DateFormat('dd/MM/yyyy').format(DateTime.parse(orders[index]["ShipHead_ShipDate"])).toString()}",
+                                        "Date: ${founditems[index]["ShipHead_ShipDate"] == null ? '' : DateFormat('dd/MM/yyyy').format(DateTime.parse(founditems[index]["ShipHead_ShipDate"])).toString()}",
                                         style: TextStyles.getBold(
                                           14,
                                           color: AppColors.colorDataColor,
@@ -304,7 +314,28 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
 
     setState(() {
       isLoading = false;
+      founditems = orders;
     });
+  }
+
+  void _runFilter(String enteredKeyword) {
+    List<dynamic> results = [];
+    if (enteredKeyword.isNotEmpty) {
+      results = orders.where((item) {
+        final custName = item["Customer_Name"].toLowerCase();
+        final packNum = item["ShipHead_PackNum"];
+        final person = item["OrderHed_EntryPerson"].toLowerCase();
+        return custName.contains(enteredKeyword.toLowerCase()) ||
+            packNum.toString().contains(enteredKeyword) ||
+            person.contains(enteredKeyword.toLowerCase());
+      }).toList();
+      // we use the toLowerCase() method to make it case-insensitive
+
+      // Refresh the UI
+      setState(() {
+        founditems = results;
+      });
+    }
   }
 
   createShipment() {

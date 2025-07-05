@@ -16,6 +16,7 @@ class _ScreenJoblistState extends State<ScreenJoblist> {
   bool isSubmit = false;
 
   List<dynamic> items = [];
+  List<dynamic> founditems = [];
 
   @override
   void initState() {
@@ -78,16 +79,25 @@ class _ScreenJoblistState extends State<ScreenJoblist> {
                   const SizedBox(
                     height: 8,
                   ),
+                  TextField(
+                    onChanged: (value) => _runFilter(value),
+                    decoration: const InputDecoration(
+                        labelText: 'Type here for search',
+                        suffixIcon: Icon(Icons.search)),
+                  ),
+                  const SizedBox(
+                    height: 8,
+                  ),
                   Expanded(
                     child: SizedBox(
                       child: ListView.builder(
-                        itemCount: items.length,
+                        itemCount: founditems.length,
                         shrinkWrap: true,
                         scrollDirection: Axis.vertical,
                         itemBuilder: (BuildContext context, int index) {
                           return GestureDetector(
                             onTap: () {
-                              gotoEntryPage(items[index]);
+                              gotoEntryPage(founditems[index]);
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -114,7 +124,7 @@ class _ScreenJoblistState extends State<ScreenJoblist> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            "Job No.: ${items[index]["JobHead_JobNum"]}",
+                                            "Job No.: ${founditems[index]["JobHead_JobNum"]}",
                                             style: TextStyles.getBold(
                                               14,
                                               color: AppColors.colorDataColor,
@@ -139,7 +149,7 @@ class _ScreenJoblistState extends State<ScreenJoblist> {
                                         height: 4,
                                       ),
                                       Text(
-                                        "Part No.: ${items[index]["JobHead_PartNum"]}",
+                                        "Part No.: ${founditems[index]["JobHead_PartNum"]}",
                                         style: TextStyles.getBold(
                                           14,
                                           color: AppColors.colorDataColor,
@@ -151,7 +161,7 @@ class _ScreenJoblistState extends State<ScreenJoblist> {
                                       SizedBox(
                                         width: double.infinity,
                                         child: Text(
-                                          "Part Description: ${items[index]["JobHead_PartDescription"]}",
+                                          "Part Description: ${founditems[index]["JobHead_PartDescription"]}",
                                           style: TextStyles.getBold(
                                             14,
                                             color: AppColors.colorDataColor,
@@ -177,12 +187,33 @@ class _ScreenJoblistState extends State<ScreenJoblist> {
     );
   }
 
+  void _runFilter(String enteredKeyword) {
+    List<dynamic> results = [];
+    if (enteredKeyword.isNotEmpty) {
+      results = items.where((item) {
+        final jobnum = item["JobHead_JobNum"].toLowerCase();
+        final partnum = item["JobHead_PartNum"].toLowerCase();
+        final desc = item["JobHead_PartDescription"].toLowerCase();
+        return jobnum.contains(enteredKeyword.toLowerCase()) ||
+            partnum.contains(enteredKeyword.toLowerCase()) ||
+            desc.contains(enteredKeyword.toLowerCase());
+      }).toList();
+      // we use the toLowerCase() method to make it case-insensitive
+
+      // Refresh the UI
+      setState(() {
+        founditems = results;
+      });
+    }
+  }
+
   loadData() async {
     var response = await jobinvServices.getJobList();
     items.clear();
     items = response['value'];
     setState(() {
       isLoading = false;
+      founditems = items;
     });
   }
 
