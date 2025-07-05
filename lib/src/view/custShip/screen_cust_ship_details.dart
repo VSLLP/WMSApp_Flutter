@@ -3,6 +3,7 @@ import 'package:epicor/core_packages.dart';
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:epicor/src/view/home/screen_qr_scan.dart';
+import 'package:http/http.dart';
 
 class ScreenCustShipDetails extends StatefulWidget {
   final dynamic item;
@@ -27,6 +28,8 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
 
   List<TextEditingController> itemQty = [];
 
+  dynamic customer = {};
+  dynamic ord = {};
   dynamic whe = {};
   dynamic bin = {};
 
@@ -502,10 +505,14 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
     if (txtOrdNum.text.isNotEmpty) {
       var resA = await custShipServices.getOpenShipmentItems(txtOrdNum.text);
       items.clear();
+      itemQty.clear();
       for (var it in resA['value']) {
         it["isSelect"] = false;
-        it["shipQty"] = "1";
+        it["shipQty"] = "0";
         it["scanLot"] = "-";
+        it["serials"] = [];
+        it["qrType"] = "";
+        it["prdTrack"] = "";
         items.add(it);
         itemQty.add(
           TextEditingController(
@@ -576,6 +583,8 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                           setState(() {});
                         },
                         autofocus: false,
+                        readOnly: (item["prdTrack"] == "1" ||
+                            item["prdTrack"] == "3"),
                       ),
                     ),
                   )
@@ -622,14 +631,20 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
     );
   }
 
-  refreshOrderNumber() async {
+  refreshOrderNumber(String custName) async {
+    var res = await custShipServices.getCustByName(custName);
+    customer = res["value"][0];
     if (txtOrdNum.text.isNotEmpty) {
       var resA = await custShipServices.getOpenShipmentItems(txtOrdNum.text);
       items.clear();
+      itemQty.clear();
       for (var it in resA['value']) {
         it["isSelect"] = false;
-        it["shipQty"] = "1";
+        it["shipQty"] = "0";
         it["scanLot"] = "-";
+        it["serials"] = [];
+        it["qrType"] = "";
+        it["prdTrack"] = "";
         items.add(it);
         itemQty.add(
           TextEditingController(
@@ -642,10 +657,14 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
   }
 
   updateOtp(String title, dynamic option) {
+    setState(() {
+      isLoading = true;
+    });
     switch (title) {
       case "Order Num":
         txtOrdNum.text = option['OrderHed_OrderNum'].toString();
-        refreshOrderNumber();
+        ord = option;
+        refreshOrderNumber(ord["Customer_Name"]);
         break;
       case "Warehouse":
         whe = option;
@@ -659,7 +678,9 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
       default:
         return "NA";
     }
-    setState(() {});
+    setState(() {
+      isLoading = false;
+    });
   }
 
   getOptTitle(String title, dynamic option) {
@@ -742,6 +763,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                               itemBuilder: (context, index) {
                                 return GestureDetector(
                                   onTap: () {
+                                    txtSearch.text = "";
                                     updateOtp(title, items[index]);
                                     Navigator.of(context).pop();
                                   },
@@ -762,7 +784,10 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
+                        onTap: () {
+                          txtSearch.text = "";
+                          Navigator.of(context).pop();
+                        },
                         child: Text("Cancel", style: TextStyles.getBold(14)),
                       ),
                     ),
@@ -776,6 +801,21 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
     );
   }
 
+  getType(item) {
+    if (item['Part_TrackLots'] && item['Part_TrackSerialNum']) {
+      return "1";
+    }
+    if (item['Part_TrackLots']) {
+      return "2";
+    }
+    if (item['Part_TrackSerialNum']) {
+      return "3";
+    }
+    if (!item['Part_TrackLots'] && !item['Part_TrackSerialNum']) {
+      return "4";
+    }
+  }
+
   getPartAsync(String val) async {
     try {
       if (val.length <= 3) {
@@ -787,7 +827,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
       partLot = "";
       qrType = "";
 
-      if (val.length == 20) {
+      if (val.length == 22) {
         qrType = "A";
         partNum = val.substring(0, 9);
         serialNum = val.substring(13, 20);
@@ -809,9 +849,13 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
           return;
         }
 
-        partNum = words[1].replaceAll("Part Code - ", '');
-        serialNum = words[5].replaceAll("Serial No. - ", '');
-        partLot = words[4].replaceAll("Lot No. -", '').replaceAll(" ", "");
+        partNum = words[1].replaceAll("Part Code - ", '').replaceAll("~", "");
+        serialNum =
+            words[5].replaceAll("Serial No. - ", '').replaceAll("~", "");
+        partLot = words[4]
+            .replaceAll("Lot No. -", '')
+            .replaceAll("~", "")
+            .replaceAll(" ", "");
       }
 
       if (partNum.isEmpty || serialNum.isEmpty) {
@@ -822,13 +866,26 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
         (item) => item["OrderRel_PartNum"] == partNum,
       );
 
+      var resPrd = await custShipServices.getGetPart(partNum);
+      if (resPrd["value"].length == 0) {
+        throw Exception("Invalid partnum no details found.");
+      }
+
+      var prdDtl = resPrd["value"][0];
+
       if (productIndex == -1) {
         throw Exception("Please scan a valid PartNum.");
       } else {
-        if (qrType == "B") {
+        if (qrType == "B" && partLot.isNotEmpty) {
           items[productIndex]["scanLot"] = partLot;
         }
         items[productIndex]["isSelect"] = true;
+        items[productIndex]["shipQty"] =
+            (int.parse(items[productIndex]["shipQty"]) + 1).toString();
+        items[productIndex]["serials"].add(serialNum);
+        items[productIndex]["qrType"] = qrType;
+        items[productIndex]["prdTrack"] = getType(prdDtl);
+        itemQty[productIndex].text = items[productIndex]["shipQty"];
       }
 
       getWhere(partNum);
@@ -878,8 +935,175 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
     setState(() {});
   }
 
-  submit() {
-    //Todo: add code for final submit
+  clearData() {
+    items.clear();
+    itemQty.clear();
+    wheres.clear();
+    bins.clear();
+    txtOrdNum.text = "";
+    txtScan.text = "";
+    txtWare.text = "";
+    txtBin.text = "";
+    txtSearch.text = "";
+    whe = {};
+    bin = {};
+    ord = {};
+    customer = {};
+    partNum = "";
+    serialNum = "";
+    partLot = "";
+    qrType = "";
+    loadData();
+  }
+
+  submit() async {
+    try {
+      String plant = await sharedPref.getString("userPlant");
+      String company = await sharedPref.getString("userCompnay");
+
+      bool isSubmit = false;
+
+      setState(() {
+        isLoading = true;
+      });
+
+      for (var item in items) {
+        if (item["qrType"] != "") {
+          printLargeString(json.encode(item));
+
+          isSubmit = true;
+
+          double qTY = double.parse(item['shipQty'].toString());
+          double rqTY = double.parse(item['OrderRel_OurReqQty'].toString());
+          if (qTY <= 0) {
+            throw Exception(
+                "Invalid QTY at Orderline ${item["OrderRel_OrderLine"]}.");
+          }
+          if (qTY > rqTY) {
+            throw Exception(
+                "QTY cannot be grater than reqQty at Orderline ${item["OrderRel_OrderLine"]}.");
+          }
+
+          if (item["qrType"] == "A" && item["prdTrack"] != ["4"]) {
+            var apia = await custShipServices.getSerialAvail(
+                partNum, txtWare.text, txtBin.text);
+            printLargeString(json.encode(apia));
+          }
+
+          var body = {};
+
+          switch (item["prdTrack"]) {
+            case "4":
+            case "2":
+              body = {
+                "ds": {
+                  "ShipDtl": [
+                    {
+                      "Company": company,
+                      "CustNum": customer["Customer_CustNum"],
+                      "PackNum": ord["ShipHead_PackNum"],
+                      "PackLine": 0,
+                      "OrderNum": txtOrdNum.text,
+                      "OrderLine": item["OrderRel_OrderLine"],
+                      "OrderRelNum": item["OrderRel_OrderRelNum"],
+                      "PartNum": item["OrderRel_PartNum"],
+                      "LineDesc": item["OrderDtl_LineDesc"],
+                      "Plant": plant,
+                      "BinNum": txtBin.text,
+                      "LotNum": item['scanLot'],
+                      "WarehouseCode": txtWare.text,
+                      "InventoryShipUOM": item["OrderDtl_IUM"],
+                      "DisplayInvQty": item['shipQty'],
+                      "SellingInventoryShipQty": item['shipQty'],
+                      "SalesUM": item["OrderDtl_SalesUM"],
+                      "IUM": item["OrderDtl_IUM"],
+                      "RowMod": "A"
+                    }
+                  ],
+                  "SelectedSerialNumbers": []
+                }
+              };
+              break;
+            case "3":
+            case "1":
+              List<dynamic> serialBody = [];
+              for (var serial in item["serials"]) {
+                serialBody.add({
+                  "Company": company,
+                  "SerialNumber": serial,
+                  "Scrapped": false,
+                  "ScrappedReasonCode": "",
+                  "Voided": false,
+                  "Reference": "",
+                  "ReasonCodeType": "",
+                  "ReasonCodeDesc": "",
+                  "PartNum": item["OrderRel_PartNum"],
+                  "SNPrefix": "",
+                  "SNBaseNumber": serial,
+                  "XRefPartNum": "",
+                  "XRefPartType": "",
+                  "TransType": "STK-PCK",
+                  "RowMod": "A"
+                });
+              }
+
+              body = {
+                "ds": {
+                  "ShipDtl": [
+                    {
+                      "Company": company,
+                      "CustNum": customer["Customer_CustNum"],
+                      "PackNum": ord["ShipHead_PackNum"],
+                      "PackLine": 0,
+                      "OrderNum": txtOrdNum.text,
+                      "OrderLine": item["OrderRel_OrderLine"],
+                      "OrderRelNum": item["OrderRel_OrderRelNum"],
+                      "PartNum": item["OrderRel_PartNum"],
+                      "LineDesc": item["OrderDtl_LineDesc"],
+                      "Plant": plant,
+                      "BinNum": txtBin.text,
+                      "LotNum": item["scanLot"] == "-" ? "" : item["scanLot"],
+                      "WarehouseCode": txtWare.text,
+                      "InventoryShipUOM": item["OrderDtl_IUM"],
+                      "DisplayInvQty": item['shipQty'],
+                      "SellingInventoryShipQty": item['shipQty'],
+                      "SalesUM": item["OrderDtl_SalesUM"],
+                      "IUM": item["OrderDtl_IUM"],
+                      "TrackSerialNum": true,
+                      "FromPlantTracking": true,
+                      "ToPlantTracking": true,
+                      "RowMod": "A"
+                    }
+                  ],
+                  "SelectedSerialNumbers": serialBody
+                }
+              };
+              break;
+          }
+
+          printLargeString(json.encode(body));
+          // Response res = await custShipServices.submitShipment(body);
+
+          // if (res.statusCode != 200) {
+          //   throw Exception(json.decode(res.body)['ErrorMessage']);
+          // }
+        }
+      }
+      if (isSubmit) {
+        showSuccess(
+          'Success: ',
+          "Customer shipment submitted successfully.",
+        );
+      } else {
+        throw Exception("Please scan atleast one product to submit.");
+      }
+    } catch (ex) {
+      showError('', ex.toString());
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   getScan() async {
@@ -985,7 +1209,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                     Expanded(child: Container()),
                     GestureDetector(
                       onTap: () {
-                        // reset();
+                        clearData();
                         Navigator.of(context).pop();
                       },
                       child: SizedBox(
