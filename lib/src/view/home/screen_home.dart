@@ -11,8 +11,10 @@ import 'package:epicor/src/view/misIssue/screen_mis_issue_main.dart';
 import 'package:epicor/src/view/prdRcpt/screen_job_list.dart';
 import 'package:epicor/src/view/qtyAdj/screen_quantity_adjustment.dart';
 import 'package:epicor/src/view/rcpt/screen_asn_list.dart';
+import 'package:epicor/src/view/returnMtl/screen_return_mtl_list.dart';
 import 'package:epicor/src/view/tfReceipt/screen_transfer_receipt_main.dart';
 import 'package:epicor/src/view/tfShipE/screen_transfer_ship_main.dart';
+import 'package:epicor/src/view/returnMtl/screen_return_main.dart';
 
 class ScreenHome extends StatefulWidget {
   const ScreenHome({super.key});
@@ -360,6 +362,13 @@ class _ScreenHomeState extends State<ScreenHome> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => const ScreenMisIssueMain(),
+          ),
+        );
+        break;
+      case "ReturnMtl":
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const ScreenReturnMtlList(),
           ),
         );
         break;
