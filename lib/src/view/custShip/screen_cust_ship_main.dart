@@ -567,7 +567,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
   getOptTitle(String title, dynamic option) {
     switch (title) {
       case "Customer Name":
-        return option['Customer_Name'];
+        return "${option['Customer_CustID']}:${option['Customer_Name']}";
       case "DocType":
         return option['TranDocType_Description'];
       case "ShipVia":

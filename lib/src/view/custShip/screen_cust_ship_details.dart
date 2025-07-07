@@ -884,10 +884,10 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
       partLot = "";
       qrType = "";
 
-      if (val.length == 22) {
+      if (!val.contains("\n")) {
         qrType = "A";
         partNum = val.substring(0, 9);
-        serialNum = val.substring(13, 22);
+        serialNum = val.substring(13);
       } else {
         qrType = "B";
         String splitKey = "";
