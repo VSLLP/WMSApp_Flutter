@@ -2,18 +2,17 @@ import 'package:epicor/core_packages.dart';
 
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
-import 'package:epicor/src/view/prdRcpt/screen_inv_entry.dart';
+import 'package:epicor/src/view/issueMtl/screen_issue_mtl_entry.dart';
 
-class ScreenJoblist extends StatefulWidget {
-  const ScreenJoblist({super.key});
+class ScreenReturnMtlList extends StatefulWidget {
+  const ScreenReturnMtlList({super.key});
 
   @override
-  State<ScreenJoblist> createState() => _ScreenJoblistState();
+  State<ScreenReturnMtlList> createState() => _ScreenReturnMtlList();
 }
 
-class _ScreenJoblistState extends State<ScreenJoblist> {
+class _ScreenReturnMtlList extends State<ScreenReturnMtlList> {
   bool isLoading = true;
-  bool isSubmit = false;
 
   List<dynamic> items = [];
   List<dynamic> founditems = [];
@@ -66,7 +65,7 @@ class _ScreenJoblistState extends State<ScreenJoblist> {
                         Align(
                           alignment: Alignment.center,
                           child: Text(
-                            'Jobs Details',
+                            'Issue to Job',
                             style: TextStyles.getBold(
                               22,
                               color: AppColors.colorWhite,
@@ -149,7 +148,7 @@ class _ScreenJoblistState extends State<ScreenJoblist> {
                                         height: 4,
                                       ),
                                       Text(
-                                        "Part No.: ${founditems[index]["JobHead_PartNum"]}",
+                                        "Part No: ${founditems[index]["JobHead_PartNum"]}",
                                         style: TextStyles.getBold(
                                           14,
                                           color: AppColors.colorDataColor,
@@ -158,14 +157,11 @@ class _ScreenJoblistState extends State<ScreenJoblist> {
                                       const SizedBox(
                                         height: 4,
                                       ),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: Text(
-                                          "Part Description: ${founditems[index]["JobHead_PartDescription"]}",
-                                          style: TextStyles.getBold(
-                                            14,
-                                            color: AppColors.colorDataColor,
-                                          ),
+                                      Text(
+                                        "Part Description: ${founditems[index]["JobHead_PartDescription"]}",
+                                        style: TextStyles.getBold(
+                                          14,
+                                          color: AppColors.colorDataColor,
                                         ),
                                       ),
                                     ],
@@ -187,15 +183,25 @@ class _ScreenJoblistState extends State<ScreenJoblist> {
     );
   }
 
+  loadData() async {
+    var response = await transferServices.getIssueMaterialList();
+    items.clear();
+    items = response['value'];
+    setState(() {
+      isLoading = false;
+      founditems = items;
+    });
+  }
+
   void _runFilter(String enteredKeyword) {
     List<dynamic> results = [];
     if (enteredKeyword.isNotEmpty) {
       results = items.where((item) {
-        final jobnum = item["JobHead_JobNum"].toLowerCase();
-        final partnum = item["JobHead_PartNum"].toLowerCase();
+        final jobNum = item["JobHead_JobNum"].toLowerCase();
+        final partNum = item["JobHead_PartNum"].toLowerCase();
         final desc = item["JobHead_PartDescription"].toLowerCase();
-        return jobnum.contains(enteredKeyword.toLowerCase()) ||
-            partnum.contains(enteredKeyword.toLowerCase()) ||
+        return jobNum.contains(enteredKeyword.toLowerCase()) ||
+            partNum.contains(enteredKeyword.toLowerCase()) ||
             desc.contains(enteredKeyword.toLowerCase());
       }).toList();
       // we use the toLowerCase() method to make it case-insensitive
@@ -207,23 +213,14 @@ class _ScreenJoblistState extends State<ScreenJoblist> {
     }
   }
 
-  loadData() async {
-    var response = await jobinvServices.getJobList();
-    items.clear();
-    items = response['value'];
-    setState(() {
-      isLoading = false;
-      founditems = items;
-    });
-  }
-
-  gotoEntryPage(item) {
-    Navigator.of(context).push(
+  gotoEntryPage(item) async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ScreenInvEntry(
+        builder: (context) => ScreenIssueMtlEntry(
           item: item,
         ),
       ),
     );
+    loadData();
   }
 }

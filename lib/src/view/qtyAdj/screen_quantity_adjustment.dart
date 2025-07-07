@@ -2,6 +2,7 @@ import 'package:epicor/core_packages.dart';
 
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
+import 'package:epicor/src/view/home/screen_qr_scan.dart';
 
 class ScreenQuantityAdjustment extends StatefulWidget {
   const ScreenQuantityAdjustment({super.key});
@@ -37,6 +38,7 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
 
   bool isLoading = true;
   bool isSubmit = false;
+  bool isCam = false;
 
   String selectedWh = "";
 
@@ -161,9 +163,10 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
                                   width:
                                       MediaQuery.of(context).size.width * 0.3,
                                   child: Text(
-                                    _val == "1"
-                                        ? "Part / Lot: "
-                                        : "Part / Serial: ",
+                                    // _val == "1"
+                                    //     ? "Part / Lot: "
+                                    //     : "Part / Serial: ",
+                                    "Product Scan",
                                     style: TextStyles.getBold(
                                       14,
                                       color: AppColors.colorDataColor,
@@ -187,9 +190,10 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
                                     controller: txtScan,
                                     style: TextStyles.getRegularScund(12),
                                     decoration: InputDecoration(
-                                      hintText: _val == "1"
-                                          ? "Scan Part / Lot"
-                                          : "Scan Part / Serial",
+                                      hintText: "Product Scan",
+                                      // _val == "1"
+                                      //     ? "Scan Part / Lot"
+                                      //     : "Scan Part / Serial",
                                       hintStyle: TextStyles.getRegularScund(
                                         14,
                                         color: AppColors.colorDataColor,
@@ -233,6 +237,11 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
                                     ),
                                     onChanged: (val) {
                                       getPartAsync(val);
+                                    },
+                                    onTap: () {
+                                      if (isCam) {
+                                        getScan();
+                                      }
                                     },
                                     keyboardType: TextInputType.name,
                                     autofocus: false,
@@ -1622,9 +1631,20 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
     }
   }
 
+  getScan() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ScreenQrScan(),
+      ),
+    );
+    if (result != null && result is String) {
+      getPartAsync(result);
+    }
+  }
+
   loadData() async {
     company = await sharedPref.getString("userCompnay");
-
+    isCam = await sharedPref.getBool("isCam");
     var response = await inventoryServices.getDocType();
     docTypes.clear();
     docTypes = response['value'];

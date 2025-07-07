@@ -14,7 +14,7 @@ class ScreenRcptInspHead extends StatefulWidget {
 
 class _ScreenRcptInspHeadState extends State<ScreenRcptInspHead> {
   List<dynamic> items = [];
-
+  List<dynamic> founditems = [];
   bool isLoading = true;
 
   @override
@@ -78,16 +78,25 @@ class _ScreenRcptInspHeadState extends State<ScreenRcptInspHead> {
                   const SizedBox(
                     height: 8,
                   ),
+                  TextField(
+                    onChanged: (value) => _runFilter(value),
+                    decoration: const InputDecoration(
+                        labelText: 'Type here for search',
+                        suffixIcon: Icon(Icons.search)),
+                  ),
+                  const SizedBox(
+                    height: 8,
+                  ),
                   Expanded(
                     child: SizedBox(
                       child: ListView.builder(
-                        itemCount: items.length,
+                        itemCount: founditems.length,
                         shrinkWrap: true,
                         scrollDirection: Axis.vertical,
                         itemBuilder: (BuildContext context, int index) {
                           return GestureDetector(
                             onTap: () {
-                              gotoEntryPage(items[index]);
+                              gotoEntryPage(founditems[index]);
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -119,7 +128,7 @@ class _ScreenRcptInspHeadState extends State<ScreenRcptInspHead> {
                                                     .width *
                                                 0.74,
                                             child: Text(
-                                              "Po Num: ${items[index]["RcvHead_PONum"]}",
+                                              "Po Num: ${founditems[index]["RcvHead_PONum"]}",
                                               style: TextStyles.getBold(
                                                 14,
                                                 color: AppColors.colorDataColor,
@@ -145,7 +154,7 @@ class _ScreenRcptInspHeadState extends State<ScreenRcptInspHead> {
                                         height: 4,
                                       ),
                                       Text(
-                                        "Pack Slip: ${items[index]["RcvHead_PackSlip"]}",
+                                        "Pack Slip: ${founditems[index]["RcvHead_PackSlip"]}",
                                         style: TextStyles.getBold(
                                           14,
                                           color: AppColors.colorDataColor,
@@ -155,7 +164,7 @@ class _ScreenRcptInspHeadState extends State<ScreenRcptInspHead> {
                                         height: 4,
                                       ),
                                       Text(
-                                        "Supplier Name: ${items[index]["Vendor_Name"]}",
+                                        "Supplier Name: ${founditems[index]["Vendor_Name"]}",
                                         style: TextStyles.getBold(
                                           14,
                                           color: AppColors.colorDataColor,
@@ -190,12 +199,34 @@ class _ScreenRcptInspHeadState extends State<ScreenRcptInspHead> {
     );
   }
 
+  void _runFilter(String enteredKeyword) {
+    List<dynamic> results = [];
+    if (enteredKeyword.isNotEmpty) {
+      results = items.where((item) {
+        final poNum = item["RcvHead_PONum"];
+        final packSlip = item["RcvHead_PackSlip"].toLowerCase();
+        final vendorName = item["Vendor_Name"].toLowerCase();
+
+        return poNum.toString().contains(enteredKeyword) ||
+            packSlip.contains(enteredKeyword.toLowerCase()) ||
+            vendorName.contains(enteredKeyword.toLowerCase());
+      }).toList();
+      // we use the toLowerCase() method to make it case-insensitive
+
+      // Refresh the UI
+      setState(() {
+        founditems = results;
+      });
+    }
+  }
+
   loadData() async {
     var response = await isnpServices.getRcptHead();
     items.clear();
     items = response['value'];
     setState(() {
       isLoading = false;
+      founditems = items;
     });
   }
 

@@ -15,6 +15,7 @@ class _ScreenIssueMtlListState extends State<ScreenIssueMtlList> {
   bool isLoading = true;
 
   List<dynamic> items = [];
+  List<dynamic> founditems = [];
 
   @override
   void initState() {
@@ -77,16 +78,25 @@ class _ScreenIssueMtlListState extends State<ScreenIssueMtlList> {
                   const SizedBox(
                     height: 8,
                   ),
+                  TextField(
+                    onChanged: (value) => _runFilter(value),
+                    decoration: const InputDecoration(
+                        labelText: 'Type here for search',
+                        suffixIcon: Icon(Icons.search)),
+                  ),
+                  const SizedBox(
+                    height: 8,
+                  ),
                   Expanded(
                     child: SizedBox(
                       child: ListView.builder(
-                        itemCount: items.length,
+                        itemCount: founditems.length,
                         shrinkWrap: true,
                         scrollDirection: Axis.vertical,
                         itemBuilder: (BuildContext context, int index) {
                           return GestureDetector(
                             onTap: () {
-                              gotoEntryPage(items[index]);
+                              gotoEntryPage(founditems[index]);
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -113,7 +123,7 @@ class _ScreenIssueMtlListState extends State<ScreenIssueMtlList> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            "Job No.: ${items[index]["JobHead_JobNum"]}",
+                                            "Job No.: ${founditems[index]["JobHead_JobNum"]}",
                                             style: TextStyles.getBold(
                                               14,
                                               color: AppColors.colorDataColor,
@@ -138,7 +148,7 @@ class _ScreenIssueMtlListState extends State<ScreenIssueMtlList> {
                                         height: 4,
                                       ),
                                       Text(
-                                        "Part No: ${items[index]["JobHead_PartNum"]}",
+                                        "Part No: ${founditems[index]["JobHead_PartNum"]}",
                                         style: TextStyles.getBold(
                                           14,
                                           color: AppColors.colorDataColor,
@@ -148,7 +158,7 @@ class _ScreenIssueMtlListState extends State<ScreenIssueMtlList> {
                                         height: 4,
                                       ),
                                       Text(
-                                        "Part Description: ${items[index]["JobHead_PartDescription"]}",
+                                        "Part Description: ${founditems[index]["JobHead_PartDescription"]}",
                                         style: TextStyles.getBold(
                                           14,
                                           color: AppColors.colorDataColor,
@@ -179,7 +189,28 @@ class _ScreenIssueMtlListState extends State<ScreenIssueMtlList> {
     items = response['value'];
     setState(() {
       isLoading = false;
+      founditems = items;
     });
+  }
+
+  void _runFilter(String enteredKeyword) {
+    List<dynamic> results = [];
+    if (enteredKeyword.isNotEmpty) {
+      results = items.where((item) {
+        final jobNum = item["JobHead_JobNum"].toLowerCase();
+        final partNum = item["JobHead_PartNum"].toLowerCase();
+        final desc = item["JobHead_PartDescription"].toLowerCase();
+        return jobNum.contains(enteredKeyword.toLowerCase()) ||
+            partNum.contains(enteredKeyword.toLowerCase()) ||
+            desc.contains(enteredKeyword.toLowerCase());
+      }).toList();
+      // we use the toLowerCase() method to make it case-insensitive
+
+      // Refresh the UI
+      setState(() {
+        founditems = results;
+      });
+    }
   }
 
   gotoEntryPage(item) async {

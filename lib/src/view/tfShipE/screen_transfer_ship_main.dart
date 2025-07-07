@@ -17,6 +17,7 @@ class _ScreenTransferShipMainState extends State<ScreenTransferShipMain> {
   bool isLoading = true;
 
   List<dynamic> items = [];
+  List<dynamic> founditems = [];
 
   @override
   void initState() {
@@ -79,16 +80,25 @@ class _ScreenTransferShipMainState extends State<ScreenTransferShipMain> {
                   const SizedBox(
                     height: 8,
                   ),
+                  TextField(
+                    onChanged: (value) => _runFilter(value),
+                    decoration: const InputDecoration(
+                        labelText: 'Type here for search',
+                        suffixIcon: Icon(Icons.search)),
+                  ),
+                  const SizedBox(
+                    height: 8,
+                  ),
                   Expanded(
                     child: SizedBox(
                       child: ListView.builder(
-                        itemCount: items.length,
+                        itemCount: founditems.length,
                         shrinkWrap: true,
                         scrollDirection: Axis.vertical,
                         itemBuilder: (BuildContext context, int index) {
                           return GestureDetector(
                             onTap: () {
-                              gotoEntryPage(items[index]);
+                              gotoEntryPage(founditems[index]);
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -115,7 +125,7 @@ class _ScreenTransferShipMainState extends State<ScreenTransferShipMain> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            "TFOrdNum: ${items[index]["TFOrdHed_TFOrdNum"]}",
+                                            "TFOrdNum: ${founditems[index]["TFOrdHed_TFOrdNum"]}",
                                             style: TextStyles.getBold(
                                               14,
                                               color: AppColors.colorDataColor,
@@ -140,7 +150,7 @@ class _ScreenTransferShipMainState extends State<ScreenTransferShipMain> {
                                         height: 4,
                                       ),
                                       Text(
-                                        "CFIL Transfer No: ${items[index]["TFOrdHed_Character01"]}",
+                                        "CFIL Transfer No: ${founditems[index]["TFOrdHed_Character01"]}",
                                         style: TextStyles.getBold(
                                           14,
                                           color: AppColors.colorDataColor,
@@ -150,7 +160,7 @@ class _ScreenTransferShipMainState extends State<ScreenTransferShipMain> {
                                         height: 4,
                                       ),
                                       Text(
-                                        "From Plant: ${items[index]["Plant_Name"]}",
+                                        "From Plant: ${founditems[index]["Plant_Name"]}",
                                         style: TextStyles.getBold(
                                           14,
                                           color: AppColors.colorDataColor,
@@ -160,7 +170,7 @@ class _ScreenTransferShipMainState extends State<ScreenTransferShipMain> {
                                         height: 4,
                                       ),
                                       Text(
-                                        "To Plant: ${items[index]["Plant1_Name"]}",
+                                        "To Plant: ${founditems[index]["Plant1_Name"]}",
                                         style: TextStyles.getBold(
                                           14,
                                           color: AppColors.colorDataColor,
@@ -182,7 +192,7 @@ class _ScreenTransferShipMainState extends State<ScreenTransferShipMain> {
                                       SizedBox(
                                         width: double.infinity,
                                         child: Text(
-                                          "Pack Slip: ${(items[index]["TFShipDtl_PackNum"]) ?? 'New Shipment'}",
+                                          "Pack Slip: ${(founditems[index]["TFShipDtl_PackNum"]) ?? 'New Shipment'}",
                                           style: TextStyles.getBold(
                                             14,
                                             color: AppColors.colorDataColor,
@@ -211,10 +221,33 @@ class _ScreenTransferShipMainState extends State<ScreenTransferShipMain> {
   loadData() async {
     var response = await transferServices.getTansferShipList();
     items.clear();
+    //founditems.clear();
     items = response['value'];
     setState(() {
       isLoading = false;
+      founditems = items;
     });
+  }
+
+  void _runFilter(String enteredKeyword) {
+    List<dynamic> results = [];
+    if (enteredKeyword.isNotEmpty) {
+      results = items.where((item) {
+        final ordernum = item["TFOrdHed_TFOrdNum"].toLowerCase();
+        final plant1 = item["Plant_Name"].toLowerCase();
+        final plant2 = item["Plant1_Name"].toLowerCase();
+
+        return ordernum.contains(enteredKeyword.toLowerCase()) ||
+            plant1.contains(enteredKeyword.toLowerCase()) ||
+            plant2.contains(enteredKeyword.toLowerCase());
+      }).toList();
+      // we use the toLowerCase() method to make it case-insensitive
+
+      // Refresh the UI
+      setState(() {
+        founditems = results;
+      });
+    }
   }
 
   gotoEntryPage(item) async {
