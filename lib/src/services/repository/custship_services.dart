@@ -39,7 +39,7 @@ class CustShipDelegate {
     String company = await sharedPref.getString("userCompnay");
 
     Uri url = Uri.parse(
-        "$apiUrl/BaqSvc/VSAPP_OpenShipment($company)?pr_custnum=$custnum&pr_Plant=$plant");
+        "$apiUrl/BaqSvc/VSAPP_OpenSOToShip($company)?pr_custnum=$custnum&pr_Plant=$plant");
     String basicAuth =
         'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
     Map<String, String> requestHeaders = {
@@ -179,6 +179,86 @@ class CustShipDelegate {
       headers: requestHeaders,
     );
     return json.decode(response.body);
+  }
+
+  patchSerialUpdate(String partNum, String serialNum) async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    String company = await sharedPref.getString("userCompnay");
+
+    Uri url = Uri.parse(
+        "$apiUrl/Erp.BO.SerialNoSvc/SerialNoes($company, $partNum, $serialNum)");
+
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.patch(
+      url,
+      headers: requestHeaders,
+    );
+    return response;
+  }
+
+  patchSerialNoAdd(body, String partNum, String serialNum) async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    String company = await sharedPref.getString("userCompnay");
+
+    Uri url = Uri.parse(
+        "$apiUrl/Erp.BO.SerialNoSvc/SerialNoes($company,$partNum,$serialNum)");
+
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.patch(
+      url,
+      headers: requestHeaders,
+      body: json.encode(body),
+    );
+    return response;
+  }
+
+  patchSerial(body, String partNum, String serialNum) async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    String company = await sharedPref.getString("userCompnay");
+
+    Uri url = Uri.parse(
+        "$apiUrl/Erp.BO.SerialNoSvc/SerialNoes($company,$partNum,$serialNum)");
+
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.patch(
+      url,
+      headers: requestHeaders,
+      body: json.encode(body),
+    );
+    return response;
   }
 
   createShipHead(body) async {

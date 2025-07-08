@@ -28,11 +28,11 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
 
   List<TextEditingController> itemQty = [];
 
-  dynamic customer = {};
   dynamic ord = {};
   dynamic whe = {};
   dynamic bin = {};
 
+  var txtPackNum = TextEditingController();
   var txtOrdNum = TextEditingController();
   var txtScan = TextEditingController();
   var txtWare = TextEditingController();
@@ -43,6 +43,8 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
   String serialNum = "";
   String partLot = "";
   String qrType = "";
+  String custNum = "";
+  String custID = "";
 
   bool isLoading = true;
   bool isCam = false;
@@ -115,6 +117,55 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.3,
+                                  child: Text(
+                                    "Pack Num: ",
+                                    style: TextStyles.getBold(
+                                      14,
+                                      color: AppColors.colorDataColor,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.54,
+                                  child: TextFormField(
+                                    controller: txtPackNum,
+                                    style: TextStyles.getBold(
+                                      12,
+                                      color: AppColors.colorBlack,
+                                    ),
+                                    decoration: InputDecoration(
+                                      hintText: "Pack Num",
+                                      hintStyle: TextStyles.getRegularScund(
+                                        14,
+                                        color: AppColors.colorGray600,
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                        vertical: 0,
+                                      ),
+                                      counterText: "",
+                                    ),
+                                    keyboardType: TextInputType.name,
+                                    autofocus: false,
+                                    readOnly: true,
+                                    validator: (value) {
+                                      if (value!.isEmpty) {
+                                        return "Please select pack num.";
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -488,19 +539,29 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
     });
     isCam = await sharedPref.getBool("isCam");
     if (widget.isNew) {
-      var selItem = json.decode(widget.item)["CustNum"];
+      var selItem = json.decode(widget.item);
+      custNum = selItem["CustNum"].toString();
+      custID = selItem["CustomerCustID"].toString();
+
+      txtPackNum.text = json.decode(widget.item)["PackNum"].toString();
       var resA =
-          await custShipServices.getOpenShipmentByCustomer(selItem.toString());
+          await custShipServices.getOpenShipmentByCustomer(custNum.toString());
       orders.clear();
       ordersFilter.clear();
       orders = resA['value'];
       ordersFilter = resA['value'];
     } else {
+      var res =
+          await custShipServices.getCustByName(widget.item["Customer_Name"]);
+      custNum = res["value"][0]["Customer_CustNum"].toString();
+      custID = res["value"][0]["Customer_CustID"].toString();
+
       orders.clear();
       ordersFilter.clear();
       orders.add(widget.item);
       ordersFilter.add(widget.item);
       txtOrdNum.text = widget.item["OrderHed_OrderNum"].toString();
+      txtPackNum.text = widget.item["ShipHead_PackNum"].toString();
     }
     if (txtOrdNum.text.isNotEmpty) {
       var resA = await custShipServices.getOpenShipmentItems(txtOrdNum.text);
@@ -511,7 +572,6 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
         it["shipQty"] = "0";
         it["scanLot"] = "-";
         it["serials"] = [];
-        it["qrType"] = "";
         it["prdTrack"] = "";
         items.add(it);
         itemQty.add(
@@ -632,8 +692,6 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
   }
 
   refreshOrderNumber(String custName) async {
-    var res = await custShipServices.getCustByName(custName);
-    customer = res["value"][0];
     if (txtOrdNum.text.isNotEmpty) {
       var resA = await custShipServices.getOpenShipmentItems(txtOrdNum.text);
       items.clear();
@@ -643,7 +701,6 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
         it["shipQty"] = "0";
         it["scanLot"] = "-";
         it["serials"] = [];
-        it["qrType"] = "";
         it["prdTrack"] = "";
         items.add(it);
         itemQty.add(
@@ -827,10 +884,10 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
       partLot = "";
       qrType = "";
 
-      if (val.length == 22) {
+      if (!val.contains("\n")) {
         qrType = "A";
         partNum = val.substring(0, 9);
-        serialNum = val.substring(13, 20);
+        serialNum = val.substring(13);
       } else {
         qrType = "B";
         String splitKey = "";
@@ -882,8 +939,11 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
         items[productIndex]["isSelect"] = true;
         items[productIndex]["shipQty"] =
             (int.parse(items[productIndex]["shipQty"]) + 1).toString();
-        items[productIndex]["serials"].add(serialNum);
-        items[productIndex]["qrType"] = qrType;
+        items[productIndex]["serials"].add({
+          "num": serialNum,
+          "lot": partLot,
+          "qrType": qrType,
+        });
         items[productIndex]["prdTrack"] = getType(prdDtl);
         itemQty[productIndex].text = items[productIndex]["shipQty"];
       }
@@ -948,11 +1008,11 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
     whe = {};
     bin = {};
     ord = {};
-    customer = {};
     partNum = "";
     serialNum = "";
     partLot = "";
     qrType = "";
+    custNum = "";
     loadData();
   }
 
@@ -968,9 +1028,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
       });
 
       for (var item in items) {
-        if (item["qrType"] != "") {
-          printLargeString(json.encode(item));
-
+        if (item["prdTrack"] != "") {
           isSubmit = true;
 
           double qTY = double.parse(item['shipQty'].toString());
@@ -984,109 +1042,157 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                 "QTY cannot be grater than reqQty at Orderline ${item["OrderRel_OrderLine"]}.");
           }
 
-          if (item["qrType"] == "A" && item["prdTrack"] != ["4"]) {
-            var apia = await custShipServices.getSerialAvail(
-                partNum, txtWare.text, txtBin.text);
-            printLargeString(json.encode(apia));
-          }
-
-          var body = {};
-
-          switch (item["prdTrack"]) {
-            case "4":
-            case "2":
-              body = {
-                "ds": {
-                  "ShipDtl": [
-                    {
-                      "Company": company,
-                      "CustNum": customer["Customer_CustNum"],
-                      "PackNum": ord["ShipHead_PackNum"],
-                      "PackLine": 0,
-                      "OrderNum": txtOrdNum.text,
-                      "OrderLine": item["OrderRel_OrderLine"],
-                      "OrderRelNum": item["OrderRel_OrderRelNum"],
-                      "PartNum": item["OrderRel_PartNum"],
-                      "LineDesc": item["OrderDtl_LineDesc"],
-                      "Plant": plant,
-                      "BinNum": txtBin.text,
-                      "LotNum": item['scanLot'],
-                      "WarehouseCode": txtWare.text,
-                      "InventoryShipUOM": item["OrderDtl_IUM"],
-                      "DisplayInvQty": item['shipQty'],
-                      "SellingInventoryShipQty": item['shipQty'],
-                      "SalesUM": item["OrderDtl_SalesUM"],
-                      "IUM": item["OrderDtl_IUM"],
-                      "RowMod": "A"
-                    }
-                  ],
-                  "SelectedSerialNumbers": []
-                }
-              };
-              break;
-            case "3":
-            case "1":
-              List<dynamic> serialBody = [];
-              for (var serial in item["serials"]) {
-                serialBody.add({
+          if (item["prdTrack"] == "1" || item["prdTrack"] == "3") {
+            String lot = item["scanLot"] == "-" ? "" : item["scanLot"];
+            for (var serialItem in item["serials"]) {
+              if (serialItem["qrType"] == "A") {
+                print("Call API A");
+                var apia = await custShipServices.getSerialAvail(
+                    item["OrderRel_PartNum"], txtWare.text, txtBin.text);
+                var serialdata = apia["value"][0];
+                printLargeString(json.encode(serialdata));
+                lot = serialdata["SerialNo_LotNum"];
+                print("Call API B");
+                Response apib = await custShipServices.patchSerialUpdate(
+                    serialdata["SerialNo_PartNum"],
+                    serialdata["SerialNo_SerialNumber"]);
+                printLargeString(apib.body);
+                print("Call API C");
+                var updBody = {
                   "Company": company,
-                  "SerialNumber": serial,
-                  "Scrapped": false,
-                  "ScrappedReasonCode": "",
-                  "Voided": false,
-                  "Reference": "",
-                  "ReasonCodeType": "",
-                  "ReasonCodeDesc": "",
                   "PartNum": item["OrderRel_PartNum"],
-                  "SNPrefix": "",
-                  "SNBaseNumber": serial,
-                  "XRefPartNum": "",
-                  "XRefPartType": "",
-                  "TransType": "STK-PCK",
-                  "RowMod": "A"
-                });
+                  "SerialNumber": serialItem["num"],
+                  "SNStatus": "Shipped",
+                  "SNReference": " Opening SerialNo",
+                  "TransactionSource": "SNMaint",
+                  "CustNum": int.parse(custNum),
+                  "CustID": custID,
+                  "LotNum": serialdata["SerialNo_LotNum"]
+                };
+                printLargeString(json.encode(updBody));
+                Response apic = await custShipServices.patchSerialNoAdd(
+                  updBody,
+                  serialdata["SerialNo_PartNum"],
+                  serialItem["num"],
+                );
+                print("Call API D");
+                printLargeString(apic.body);
+                var serBody = {
+                  "Company": company,
+                  "PartNum": item["OrderRel_PartNum"],
+                  "SerialNumber": serialItem["num"],
+                  "SNStatus": "Inventory",
+                  "SNReference": " Opening SerialNo",
+                  "TransactionSource": "SNMaint",
+                  "WareHouseCode": txtWare.text,
+                  "BinNum": txtBin.text
+                };
+                printLargeString(json.encode(serBody));
+                Response apid = await custShipServices.patchSerial(
+                  serBody,
+                  serialdata["SerialNo_PartNum"],
+                  serialItem["num"],
+                );
+                printLargeString(apid.body);
               }
+            }
 
-              body = {
-                "ds": {
-                  "ShipDtl": [
-                    {
-                      "Company": company,
-                      "CustNum": customer["Customer_CustNum"],
-                      "PackNum": ord["ShipHead_PackNum"],
-                      "PackLine": 0,
-                      "OrderNum": txtOrdNum.text,
-                      "OrderLine": item["OrderRel_OrderLine"],
-                      "OrderRelNum": item["OrderRel_OrderRelNum"],
-                      "PartNum": item["OrderRel_PartNum"],
-                      "LineDesc": item["OrderDtl_LineDesc"],
-                      "Plant": plant,
-                      "BinNum": txtBin.text,
-                      "LotNum": item["scanLot"] == "-" ? "" : item["scanLot"],
-                      "WarehouseCode": txtWare.text,
-                      "InventoryShipUOM": item["OrderDtl_IUM"],
-                      "DisplayInvQty": item['shipQty'],
-                      "SellingInventoryShipQty": item['shipQty'],
-                      "SalesUM": item["OrderDtl_SalesUM"],
-                      "IUM": item["OrderDtl_IUM"],
-                      "TrackSerialNum": true,
-                      "FromPlantTracking": true,
-                      "ToPlantTracking": true,
-                      "RowMod": "A"
-                    }
-                  ],
-                  "SelectedSerialNumbers": serialBody
-                }
-              };
-              break;
+            List<dynamic> serialBody = [];
+            for (var serial in item["serials"]) {
+              serialBody.add({
+                "Company": company,
+                "SerialNumber": serial["num"],
+                "Scrapped": false,
+                "ScrappedReasonCode": "",
+                "Voided": false,
+                "Reference": "",
+                "ReasonCodeType": "",
+                "ReasonCodeDesc": "",
+                "PartNum": item["OrderRel_PartNum"],
+                "SNPrefix": "",
+                "SNBaseNumber": serial["num"],
+                "XRefPartNum": "",
+                "XRefPartType": "",
+                "TransType": "STK-PCK",
+                "RowMod": "A"
+              });
+            }
+
+            var body = {
+              "ds": {
+                "ShipDtl": [
+                  {
+                    "Company": company,
+                    "CustNum": custNum,
+                    "PackNum": txtPackNum.text,
+                    "PackLine": 0,
+                    "OrderNum": txtOrdNum.text,
+                    "OrderLine": item["OrderRel_OrderLine"],
+                    "OrderRelNum": item["OrderRel_OrderRelNum"],
+                    "PartNum": item["OrderRel_PartNum"],
+                    "LineDesc": item["OrderDtl_LineDesc"],
+                    "Plant": plant,
+                    "BinNum": txtBin.text,
+                    "LotNum": lot,
+                    "WarehouseCode": txtWare.text,
+                    "InventoryShipUOM": item["OrderDtl_IUM"],
+                    "DisplayInvQty": item['shipQty'],
+                    "SellingInventoryShipQty": item['shipQty'],
+                    "SalesUM": item["OrderDtl_SalesUM"],
+                    "IUM": item["OrderDtl_IUM"],
+                    "TrackSerialNum": true,
+                    "FromPlantTracking": true,
+                    "ToPlantTracking": true,
+                    "RowMod": "A"
+                  }
+                ],
+                "SelectedSerialNumbers": serialBody
+              }
+            };
+            printLargeString(json.encode(body));
+            Response res = await custShipServices.submitShipment(body);
+            printLargeString(res.body);
+            print(res.statusCode);
+            if (res.statusCode != 201) {
+              throw Exception(json.decode(res.body)['ErrorMessage']);
+            }
+          } else {
+            var body = {
+              "ds": {
+                "ShipDtl": [
+                  {
+                    "Company": company,
+                    "CustNum": custNum,
+                    "PackNum": txtPackNum.text,
+                    "PackLine": 0,
+                    "OrderNum": txtOrdNum.text,
+                    "OrderLine": item["OrderRel_OrderLine"],
+                    "OrderRelNum": item["OrderRel_OrderRelNum"],
+                    "PartNum": item["OrderRel_PartNum"],
+                    "LineDesc": item["OrderDtl_LineDesc"],
+                    "Plant": plant,
+                    "BinNum": txtBin.text,
+                    "LotNum": item['scanLot'],
+                    "WarehouseCode": txtWare.text,
+                    "InventoryShipUOM": item["OrderDtl_IUM"],
+                    "DisplayInvQty": item['shipQty'],
+                    "SellingInventoryShipQty": item['shipQty'],
+                    "SalesUM": item["OrderDtl_SalesUM"],
+                    "IUM": item["OrderDtl_IUM"],
+                    "RowMod": "A"
+                  }
+                ],
+                "SelectedSerialNumbers": []
+              }
+            };
+
+            printLargeString(json.encode(body));
+            Response res = await custShipServices.submitShipment(body);
+
+            if (res.statusCode != 201) {
+              throw Exception(json.decode(res.body)['ErrorMessage']);
+            }
           }
-
-          printLargeString(json.encode(body));
-          // Response res = await custShipServices.submitShipment(body);
-
-          // if (res.statusCode != 200) {
-          //   throw Exception(json.decode(res.body)['ErrorMessage']);
-          // }
         }
       }
       if (isSubmit) {
