@@ -3,6 +3,7 @@ import 'package:epicor/core_packages.dart';
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:http/http.dart';
+import 'package:epicor/src/view/home/screen_qr_scan.dart';
 
 class ScreenInvEntry extends StatefulWidget {
   final dynamic item;
@@ -46,6 +47,7 @@ class _ScreenInvEntryState extends State<ScreenInvEntry> {
   bool isSubmit = false;
   bool isScan = true;
   bool isLot = false;
+  bool isCam = false;
 
   @override
   void initState() {
@@ -196,6 +198,11 @@ class _ScreenInvEntryState extends State<ScreenInvEntry> {
                                     ),
                                     onChanged: (val) {
                                       getPartAsync(val);
+                                    },
+                                    onTap: () {
+                                      if (isCam) {
+                                        getScan();
+                                      }
                                     },
                                     keyboardType: TextInputType.name,
                                     autofocus: false,
@@ -795,11 +802,22 @@ class _ScreenInvEntryState extends State<ScreenInvEntry> {
     );
   }
 
+  getScan() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ScreenQrScan(),
+      ),
+    );
+    if (result != null && result is String) {
+      getPartAsync(result);
+    }
+  }
+
   loadData() async {
     company = await sharedPref.getString("userCompnay");
     plant = await sharedPref.getString("userPlant");
     userId = await sharedPref.getString("userName");
-
+    isCam = await sharedPref.getBool("isCam");
     var response = await jobinvServices.getDocType();
     docTypes.clear();
     docTypes = response['value'];

@@ -858,7 +858,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
             .replaceAll(" ", "");
       }
 
-      if (partNum.isEmpty || serialNum.isEmpty) {
+      if (partNum.isEmpty && serialNum.isEmpty) {
         throw Exception("Invalid QR Code.");
       }
 
