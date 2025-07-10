@@ -803,6 +803,7 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
         "CustNum": customer["Customer_CustNum"],
         "OrderNum": 0,
         "TranDocTypeID": docType,
+        "CurrencyCode": customer["Customer_CurrencyCode"],
         "RowMod": "A"
       };
       Response res = await custShipServices.createShipHead(body);

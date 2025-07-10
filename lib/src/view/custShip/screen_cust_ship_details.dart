@@ -859,6 +859,18 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
   }
 
   getType(item) {
+    /*if (item['Part_TrackLots'] && item['Part_TrackSerialNum']) {
+      return "1";
+    }
+    if (item['Part_TrackLots']) {
+      return "2";
+    }
+    if (item['Part_TrackSerialNum']) {
+      return "3";
+    }
+    if (!item['Part_TrackLots'] && !item['Part_TrackSerialNum']) {
+      return "4";
+    }*/
     if (item['Part_TrackLots'] && item['Part_TrackSerialNum']) {
       return "1";
     }
@@ -884,22 +896,9 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
       partLot = "";
       qrType = "";
 
-      if (!val.contains("\n")) {
-        qrType = "A";
-        partNum = val.substring(0, 9);
-        serialNum = val.substring(13);
-      } else {
+      if (val.contains("Company Name")) {
         qrType = "B";
-        String splitKey = "";
-        if (val.contains("\r\n")) {
-          splitKey = "\r\n";
-        } else if (val.contains("\n")) {
-          splitKey = "\n";
-        } else if (val.contains("~")) {
-          splitKey = "~";
-        } else if (val.contains("~\n")) {
-          splitKey = "~\n";
-        }
+        String splitKey = "~";
 
         List<String> words = val.split(splitKey);
         if (words.length <= 2) {
@@ -913,6 +912,27 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
             .replaceAll("Lot No. -", '')
             .replaceAll("~", "")
             .replaceAll(" ", "");
+      } else {
+        qrType = "A";
+        partNum = val.substring(0, 9);
+        serialNum = val.substring(13);
+
+        // if (!val.contains("\n")) {
+        //   qrType = "A";
+        //   partNum = val.substring(0, 9);
+        //   serialNum = val.substring(13);
+        // } else {
+        //   qrType = "B";
+        //   String splitKey = "";
+        //   if (val.contains("\r\n")) {
+        //     splitKey = "\r\n";
+        //   } else if (val.contains("\n")) {
+        //     splitKey = "\n";
+        //   } else if (val.contains("~")) {
+        //     splitKey = "~";
+        //   } else if (val.contains("~\n")) {
+        //     splitKey = "~\n";
+        //   }
       }
 
       if (partNum.isEmpty && serialNum.isEmpty) {
@@ -1157,6 +1177,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
               throw Exception(json.decode(res.body)['ErrorMessage']);
             }
           } else {
+            String lot = item["scanLot"] == "-" ? "" : item["scanLot"];
             var body = {
               "ds": {
                 "ShipDtl": [
@@ -1172,7 +1193,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                     "LineDesc": item["OrderDtl_LineDesc"],
                     "Plant": plant,
                     "BinNum": txtBin.text,
-                    "LotNum": item['scanLot'],
+                    "LotNum": lot, //item['scanLot'],
                     "WarehouseCode": txtWare.text,
                     "InventoryShipUOM": item["OrderDtl_IUM"],
                     "DisplayInvQty": item['shipQty'],
@@ -1189,7 +1210,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
             printLargeString(json.encode(body));
             Response res = await custShipServices.submitShipment(body);
 
-            if (res.statusCode != 201) {
+            if (res.statusCode != 201 && res.statusCode != 200) {
               throw Exception(json.decode(res.body)['ErrorMessage']);
             }
           }
