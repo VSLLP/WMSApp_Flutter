@@ -120,6 +120,61 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
                                   width:
                                       MediaQuery.of(context).size.width * 0.3,
                                   child: Text(
+                                    "Pack Num: ",
+                                    style: TextStyles.getBold(
+                                      14,
+                                      color: AppColors.colorDataColor,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.54,
+                                  child: !isLot
+                                      ? SizedBox(
+                                          child: Text(
+                                            widget.packNum,
+                                            style: TextStyles.getBold(
+                                              14,
+                                              color: AppColors.colorDataColor,
+                                            ),
+                                          ),
+                                        )
+                                      : TextFormField(
+                                          controller: txtQty,
+                                          style: TextStyles.getBold(
+                                            12,
+                                            color: AppColors.colorBlack,
+                                          ),
+                                          decoration: InputDecoration(
+                                            hintText: "Qty",
+                                            hintStyle:
+                                                TextStyles.getRegularScund(
+                                              14,
+                                              color: AppColors.colorGray600,
+                                            ),
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                              horizontal: 4,
+                                              vertical: 0,
+                                            ),
+                                            counterText: "",
+                                          ),
+                                          keyboardType: TextInputType.number,
+                                        ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: !isLot ? 14 : 0,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.3,
+                                  child: Text(
                                     "Product Scan: ",
                                     style: TextStyles.getBold(
                                       14,
@@ -435,7 +490,7 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
                               ),
                             ),
                             const SizedBox(
-                              height: 40,
+                              height: 10,
                             ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -641,6 +696,10 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
     });
   }
 
+  String removeAlphabets(String input) {
+    return input.replaceAll(RegExp(r'[a-zA-Z]'), '');
+  }
+
   getPartAsync(val) async {
     try {
       if (val.length <= 3) {
@@ -704,7 +763,8 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
 
       List<int> itemIndexes = [];
       for (int i = 0; i < productItems.length; i++) {
-        if (productItems[i]['Part_PartNum'] == partCode) {
+        if (productItems[i]['Part_PartNum'].toString().toLowerCase() ==
+            partCode.toLowerCase()) {
           itemIndexes.add(i);
           isScnned = true;
         }
@@ -781,7 +841,9 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
 
             int existingSerials = srItems
                 .where((item) =>
-                    item["PartNum"] == partCode && item["LotNum"] == partLot)
+                    item["PartNum"].toString().toLowerCase() ==
+                        partCode.toLowerCase() &&
+                    item["LotNum"] == partLot)
                 .length;
 
             if (existingSerials >= requiredQty) {
@@ -793,10 +855,15 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
               "SerialNumber": partSerial,
               "PartNum": partCode,
               "LotNum": partLot,
-              "SNBaseNumber": partSerial.substring(0, 15),
+              "SNBaseNumber":
+                  removeAlphabets(partSerial), //partSerial.substring(
+              //partSerial.length - 5, partSerial.length),
               "TransType": "PUR-STK",
               "RawSerialNum": partSerial,
               "SNMask": payload['Part_SNMask'],
+              "RowSelected": true,
+              "Selected": true,
+              "Deselected": false,
               "RowMod": "A"
             });
 
@@ -914,8 +981,9 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
 
             isLot = false;
 
-            int snIndex =
-                snFormats.indexWhere((item) => item['PartNum'] == partCode);
+            int snIndex = snFormats.indexWhere((item) =>
+                item['PartNum'].toString().toLowerCase() ==
+                partCode.toLowerCase());
             if (snIndex == -1) {
               snFormats.add({
                 "Plant": plant,
@@ -1226,7 +1294,8 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
 
         List<dynamic> serialNumbersForLot = srItems
             .where((sItem) =>
-                sItem['PartNum'] == item['Part_PartNum'] &&
+                sItem['PartNum'].toString().toLowerCase() ==
+                    item['Part_PartNum'].toString().toLowerCase() &&
                 (item['Part_TrackLots']
                     ? sItem['LotNum'] == item['lotNum']
                     : true))
@@ -1261,8 +1330,11 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
                 "PartDescription": item['PODetail_LineDesc'],
                 // "VendorQty": item['PODetail_OrderQty'],
                 "VendorQty": item['ScanQty'],
+                "JobSeqType": "",
                 "ReceiptType": "P",
-                "ReceivedTo": "PUR-STK",
+                "ReceivedTo": item['PODetail_RcvInspectionReq'] == true
+                    ? "PUR-INS"
+                    : "PUR-STK",
                 "PUM": item['PODetail_IUM'],
                 "CostPerCode": item['Part_PricePerCode'],
                 // "ReceivedComplete": true,
@@ -1275,11 +1347,14 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
                 "InputOurQty": item['ScanQty'],
                 "Plant": plant,
                 "ThisTranUOM": item['PODetail_IUM'],
-                "TranType": "PUR-STK",
+                //"TranType": "PUR-STK",
                 "PartNumPricePerCode": item['Part_PricePerCode'],
                 "PartNumSellingFactor": sellingFactor,
                 "RowMod": "A",
-                "InspectionReq": isInsp,
+                "InspectionReq":
+                    item['PODetail_RcvInspectionReq'] == true ? true : false,
+                "InspectionPending":
+                    item['PODetail_RcvInspectionReq'] == true ? true : false,
               }
             ],
             "SelectedSerialNumbers": serialNumbersForLot,

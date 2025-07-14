@@ -15,6 +15,7 @@ import 'package:epicor/src/view/returnMtl/screen_return_mtl_list.dart';
 import 'package:epicor/src/view/tfReceipt/screen_transfer_receipt_main.dart';
 import 'package:epicor/src/view/tfShipE/screen_transfer_ship_main.dart';
 import 'package:epicor/src/view/returnMtl/screen_return_main.dart';
+import 'package:epicor/src/view/insp/screen_rcpt_insp_head.dart';
 
 class ScreenHome extends StatefulWidget {
   const ScreenHome({super.key});
@@ -382,7 +383,7 @@ class _ScreenHomeState extends State<ScreenHome> {
       case "Insp":
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => const ScreenInspMain(),
+            builder: (context) => const ScreenRcptInspHead(),
           ),
         );
         break;

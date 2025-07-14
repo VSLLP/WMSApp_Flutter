@@ -3,6 +3,7 @@ import 'package:epicor/core_packages.dart';
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:epicor/src/view/home/screen_qr_scan.dart';
+import 'package:intl/intl.dart';
 
 class ScreenQuantityAdjustment extends StatefulWidget {
   const ScreenQuantityAdjustment({super.key});
@@ -466,7 +467,7 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
                                         const SizedBox(
                                           width: 10,
                                         ),
-                                        _val == "2"
+                                        _val == "1" || _val == "3"
                                             ? Text(
                                                 "Qty: ${selectedIndex <= -1 ? 0 : productItems[selectedIndex]["QTY"]}",
                                                 style: TextStyles.getBold(14),
@@ -632,7 +633,7 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
                               boxShadow: [
                                 BoxShadow(
                                   color: AppColors.colorTansprent20,
-                                  blurRadius: 10,
+                                  blurRadius: 4,
                                   offset: const Offset(-4, 4),
                                 )
                               ],
@@ -825,6 +826,19 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
     setState(() {});
   }
 
+  getType(item) {
+    if (item['Part_TrackLots'] && item['Part_TrackSerialNum']) {
+      return "1";
+    }
+    if (item['Part_TrackLots']) {
+      return "2";
+    }
+    if (item['Part_TrackSerialNum']) {
+      return "3";
+    }
+    return '4';
+  }
+
   void getPartAsync(String val) async {
     try {
       if (val.length <= 3) {
@@ -866,19 +880,25 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
         throw Exception("No product found.");
       }
 
-      if (_val == '1') {
+      _val = getType(response['value'][0]);
+
+      if (_val == '2') {
         if (!response['value'][0]['Part_TrackLots']) {
           throw Exception("Please scan Part / Lot");
         }
-      } else {
+      }
+
+      if (_val == '3') {
         if (!response['value'][0]['Part_TrackSerialNum']) {
           throw Exception("Please scan Part / Serial");
         }
       }
 
-      if (_val == '1') {
+      if (_val == '2' || _val == "4") {
         int isProductExist = productItems.indexWhere(
-          (item) => item["Part_PartNum"] == partNumber,
+          (item) =>
+              item["Part_PartNum"].toString().toLowerCase() ==
+              partNumber.toLowerCase(),
         );
 
         if (isProductExist >= 0) {
@@ -916,6 +936,7 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
         var product = response['value'][0];
         product['QTY'] = 1;
         product['Serial'] = serialNumber;
+        product['Lot'] = lotNumber;
         product['isSelect'] = true;
         productItems.add(response['value'][0]);
         var serialPrd = {
@@ -929,8 +950,11 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
         wheres.clear();
         for (var item in items) {
           wheres.add(item["PartWhse_WarehouseCode"].toString());
+          selectedWh = item["PartPlant_PrimWhse"].toString();
         }
         selectedIndex = productItems.length - 1;
+        txtWere.text = selectedWh;
+        getPartBins(selectedWh);
       }
 
       // var responseD = await inventoryServices.getDefaultPartAsync(partNumber);
@@ -1203,7 +1227,7 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
         tableCell('Description'),
         tableCell('UOM'),
         tableCell('Adj Qty'),
-        _val == '1' ? tableCell('Lot') : tableCell('Serial'),
+        _val == '2' || _val == '4' ? tableCell('Lot') : tableCell('Serial'),
       ],
     ));
     for (var items in productItems) {
@@ -1216,7 +1240,9 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
           GestureDetector(
             onTap: () {
               makeSelect(
-                _val == "1" ? items["Part_PartNum"] : items["Serial"],
+                _val == "2" || _val == "4"
+                    ? items["Part_PartNum"]
+                    : items["Serial"],
               );
             },
             child: tableCellRow(items["Part_PartNum"]),
@@ -1224,7 +1250,7 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
           tableCellRow(items["Part_PartDescription"]),
           tableCellRow(items["Part_IUM"]),
           tableCellRow(items["QTY"].toString()),
-          _val == '1'
+          _val == '2' || _val == "4"
               ? tableCellRow(items["Lot"])
               : tableCellRow(items["Serial"]),
         ],
@@ -1237,7 +1263,9 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
     int isProductExist = -1;
     if (_val == "1") {
       isProductExist = productItems.indexWhere(
-        (item) => item["Part_PartNum"] == partNum,
+        (item) =>
+            item["Part_PartNum"].toString().toLowerCase() ==
+            partNum.toString().toLowerCase(),
       );
     } else {
       isProductExist = productItems.indexWhere(
@@ -1551,10 +1579,22 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
       setState(() {
         isLoading = true;
       });
-
+      var body = null;
       if (productItems.isEmpty) {
         throw Exception(
           "Please scan at least one product and then try to proceed.",
+        );
+      }
+
+      if (tranDoc == "") {
+        throw Exception(
+          "Please select document type and then try to proceed.",
+        );
+      }
+
+      if (reson == "") {
+        throw Exception(
+          "Please select Reason and then try to proceed.",
         );
       }
 
@@ -1564,8 +1604,10 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
         }
       }
 
-      if (_val == '1') {
-        var body = {
+      if (_val == '2' || _val == "4") {
+        var qty = productItems[0]['QTY'] * (tag == "1" ? 1 : -1);
+
+        body = {
           "ds": {
             "InventoryQtyAdj": [
               {
@@ -1573,15 +1615,14 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
                 "PartNum": productItems[0]['Part_PartNum'],
                 "WareHseCode": txtWere.text,
                 "BinNum": txtBin.text,
-                "AdjustQuantity":
-                    productItems[0]['QTY'] * (tag == "1" ? 1 : -1),
+                "AdjustQuantity": "$qty",
                 "ReasonCode": reson,
                 "LotNum": productItems[0]['Lot'],
                 "UnitOfMeasure": productItems[0]['Part_IUM'],
-                "TransDate": DateTime.now().toIso8601String(),
+                "TransDate": DateFormat("yyyy-MM-dd").format(DateTime.now()),
                 "ReasonType": "M",
                 "TranDocTypeID": tranDoc,
-                "RowMod": "U"
+                "RowMod": "A"
               }
             ],
             "LegalNumGenOpts": [],
@@ -1589,9 +1630,10 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
             "SNFormat": []
           }
         };
-        await inventoryServices.postQtyAdjustmentLot(body);
+        // var resW = await inventoryServices.postQtyAdjustmentLot(body);
       } else {
-        var body = {
+        var qty = productItems[0]['QTY'] * (tag == "1" ? 1 : -1);
+        body = {
           "ds": {
             "InventoryQtyAdj": [
               {
@@ -1599,16 +1641,15 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
                 "PartNum": productItems[0]['Part_PartNum'],
                 "WareHseCode": txtWere.text,
                 "BinNum": txtBin.text,
-                "AdjustQuantity":
-                    productItems[0]['QTY'] * (tag == "1" ? 1 : -1),
+                "AdjustQuantity": "$qty",
                 "ReasonCode": reson,
-                "LotNum": "",
+                "LotNum": productItems[0]['Lot'],
                 "UnitOfMeasure": productItems[0]['Part_IUM'],
-                "TransDate": DateTime.now().toIso8601String(),
+                "TransDate": DateFormat("yyyy-MM-dd").format(DateTime.now()),
                 "ReasonType": "M",
                 "SerialNoQty": productSerialItems.length,
                 "TranDocTypeID": tranDoc,
-                "RowMod": "U"
+                "RowMod": "A"
               },
             ],
             "LegalNumGenOpts": [],
@@ -1616,15 +1657,22 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
             "SNFormat": []
           }
         };
-        await inventoryServices.postQtyAdjustmentSearial(body);
+        // var resW = await inventoryServices.postQtyAdjustmentSearial(body);
+        // if(resW)
       }
 
-      await showError("Success", "Successfully set inventory qty adjustment.");
-      clearData();
+      var resW = await inventoryServices.postQtyAdjustmentLot(body);
+      if (resW.statusCode == 200) {
+        await showError(
+            "Success", "Successfully set inventory qty adjustment.");
+      } else {
+        await showError("error", "unable to adjust inventory qty.");
+      }
     } catch (ex) {
       showError('Error', ex.toString());
     } finally {
       txtScan.text = "";
+      clearData();
       setState(() {
         isLoading = false;
       });

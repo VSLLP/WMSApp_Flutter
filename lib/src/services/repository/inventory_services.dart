@@ -318,12 +318,12 @@ class InventoryDelegate {
       'Authorization': basicAuth,
     };
 
-    var response = await http.patch(
+    var response = await http.post(
       url,
       headers: requestHeaders,
       body: json.encode(body),
     );
-    return response.body;
+    return response;
   }
 
   postQtyAdjustmentSearial(body) async {

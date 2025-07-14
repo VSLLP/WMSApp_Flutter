@@ -251,6 +251,16 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
                                       height: 4,
                                     ),
                                     Text(
+                                      "Order Num: ${founditems[index]["OrderHed_OrderNum"]}",
+                                      style: TextStyles.getBold(
+                                        14,
+                                        color: AppColors.colorDataColor,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: 4,
+                                    ),
+                                    Text(
                                       "Entry Person: ${founditems[index]["OrderHed_EntryPerson"]}",
                                       style: TextStyles.getBold(
                                         14,
@@ -324,9 +334,11 @@ class _ScreenCustShipMainState extends State<ScreenCustShipMain> {
       results = orders.where((item) {
         final custName = item["Customer_Name"].toLowerCase();
         final packNum = item["ShipHead_PackNum"];
+        final orderNum = item["OrderHed_OrderNum"];
         final person = item["OrderHed_EntryPerson"].toLowerCase();
         return custName.contains(enteredKeyword.toLowerCase()) ||
             packNum.toString().contains(enteredKeyword) ||
+            orderNum.toString().contains(enteredKeyword) ||
             person.contains(enteredKeyword.toLowerCase());
       }).toList();
       // we use the toLowerCase() method to make it case-insensitive

@@ -481,6 +481,42 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                                 GestureDetector(
                                   onTap: () {
                                     if (!isLoading) {
+                                      shipped();
+                                    }
+                                  },
+                                  child: Container(
+                                    height: 38,
+                                    width: 100,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.colorWhite,
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.colorTansprent40,
+                                          blurRadius: 2,
+                                          offset: const Offset(-2, -2),
+                                        )
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0,
+                                        ),
+                                        child: Text(
+                                          'Shipped',
+                                          style: TextStyles.getBold(
+                                            16,
+                                            color: AppColors.colorAssent,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    if (!isLoading) {
                                       submit();
                                     }
                                   },
@@ -940,7 +976,9 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
       }
 
       int productIndex = items.indexWhere(
-        (item) => item["OrderRel_PartNum"] == partNum,
+        (item) =>
+            item["OrderRel_PartNum"].toString().toLowerCase() ==
+            partNum.toLowerCase(),
       );
 
       var resPrd = await custShipServices.getGetPart(partNum);
@@ -1173,7 +1211,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
             Response res = await custShipServices.submitShipment(body);
             printLargeString(res.body);
             print(res.statusCode);
-            if (res.statusCode != 201) {
+            if (res.statusCode != 201 && res.statusCode != 200) {
               throw Exception(json.decode(res.body)['ErrorMessage']);
             }
           } else {
@@ -1224,6 +1262,50 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
       } else {
         throw Exception("Please scan atleast one product to submit.");
       }
+    } catch (ex) {
+      showError('', ex.toString());
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  shipped() async {
+    try {
+      //String plant = await sharedPref.getString("userPlant");
+      String company = await sharedPref.getString("userCompnay");
+
+      bool isSubmit = false;
+
+      setState(() {
+        isLoading = true;
+      });
+
+      var updBody = {
+        "Company": company,
+        "PackNum": txtPackNum.text,
+        "ReadyToInvoice": true,
+        "RowMod": "A"
+      };
+
+      Response res = await custShipServices.submitShipped(updBody);
+
+      if (res.statusCode != 201 && res.statusCode != 200) {
+        throw Exception(json.decode(res.body)['ErrorMessage']);
+      } else {
+        isSubmit = true;
+      }
+
+      if (isSubmit) {
+        showSuccess(
+          'Success: ',
+          "Order Shipped successfully.",
+        );
+      }
+      // else {
+      //   throw Exception("Please scan atleast one product to submit.");
+      // }
     } catch (ex) {
       showError('', ex.toString());
     } finally {

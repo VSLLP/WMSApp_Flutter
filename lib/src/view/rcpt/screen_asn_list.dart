@@ -220,6 +220,16 @@ class _ScreenAsnListState extends State<ScreenAsnList> {
                                       const SizedBox(
                                         height: 4,
                                       ),
+                                      Text(
+                                        "Pack Num: ${founditems[index]["RcvHead_PackSlip"]}",
+                                        style: TextStyles.getBold(
+                                          14,
+                                          color: AppColors.colorDataColor,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 4,
+                                      ),
                                       SizedBox(
                                         width: double.infinity,
                                         child: Text(
