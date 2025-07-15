@@ -1237,15 +1237,28 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
               items['isSelect'] ? AppColors.colorCyan300 : AppColors.colorWhite,
         ),
         children: [
-          GestureDetector(
-            onTap: () {
-              makeSelect(
-                _val == "2" || _val == "4"
-                    ? items["Part_PartNum"]
-                    : items["Serial"],
-              );
-            },
-            child: tableCellRow(items["Part_PartNum"]),
+          TableCell(
+            child: GestureDetector(
+              onTap: () {
+                makeSelect(
+                  _val == "2" || _val == "4"
+                      ? items["Part_PartNum"]
+                      : items["Serial"],
+                );
+              },
+              child: SizedBox(
+                height: 60,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Center(
+                    child: Text(
+                      items["Part_PartNum"],
+                      style: TextStyles.getRegularScund(14),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
           tableCellRow(items["Part_PartDescription"]),
           tableCellRow(items["Part_IUM"]),
