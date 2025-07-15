@@ -1111,7 +1111,17 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
                 printLargeString(json.encode(serialdata));
                 lot = serialdata["SerialNo_LotNum"];
                 print("Call API B");
+                var srupdbody = {
+                  "Company": company,
+                  "PartNum": serialdata["SerialNo_PartNum"],
+                  "SerialNumber": serialdata["SerialNo_SerialNumber"],
+                  "SNStatus": "Shipped",
+                  "SNReference": "Test",
+                  "TransactionSource": "SNMaint"
+                };
+
                 Response apib = await custShipServices.patchSerialUpdate(
+                    srupdbody,
                     serialdata["SerialNo_PartNum"],
                     serialdata["SerialNo_SerialNumber"]);
                 printLargeString(apib.body);

@@ -366,46 +366,46 @@ class _ScreenTransferShipEntryState extends State<ScreenTransferShipEntry> {
                                 ),
                               ),
                             ),
-                            GestureDetector(
-                              onTap: () {
-                                if (!isSubmit) {
-                                  ship();
-                                }
-                              },
-                              child: Container(
-                                height: 38,
-                                width: 100,
-                                decoration: BoxDecoration(
-                                  color: AppColors.colorAssent,
-                                  borderRadius: BorderRadius.circular(8),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.colorTansprent40,
-                                      blurRadius: 2,
-                                      offset: const Offset(-2, -2),
-                                    )
-                                  ],
-                                ),
-                                child: Center(
-                                  child: isSubmit
-                                      ? Lottie.asset(
-                                          'assets/anim/anim-btnLoading.json',
-                                        )
-                                      : Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 8.0,
-                                          ),
-                                          child: Text(
-                                            'Shipped',
-                                            style: TextStyles.getBold(
-                                              16,
-                                              color: AppColors.colorWhite,
-                                            ),
-                                          ),
-                                        ),
-                                ),
-                              ),
-                            ),
+                            // GestureDetector(
+                            //   onTap: () {
+                            //     if (!isSubmit) {
+                            //       ship();
+                            //     }
+                            //   },
+                            //   child: Container(
+                            //     height: 38,
+                            //     width: 100,
+                            //     decoration: BoxDecoration(
+                            //       color: AppColors.colorAssent,
+                            //       borderRadius: BorderRadius.circular(8),
+                            //       boxShadow: [
+                            //         BoxShadow(
+                            //           color: AppColors.colorTansprent40,
+                            //           blurRadius: 2,
+                            //           offset: const Offset(-2, -2),
+                            //         )
+                            //       ],
+                            //     ),
+                            //     child: Center(
+                            //       child: isSubmit
+                            //           ? Lottie.asset(
+                            //               'assets/anim/anim-btnLoading.json',
+                            //             )
+                            //           : Padding(
+                            //               padding: const EdgeInsets.symmetric(
+                            //                 vertical: 8.0,
+                            //               ),
+                            //               child: Text(
+                            //                 'Shipped',
+                            //                 style: TextStyles.getBold(
+                            //                   16,
+                            //                   color: AppColors.colorWhite,
+                            //                 ),
+                            //               ),
+                            //             ),
+                            //     ),
+                            //   ),
+                            // ),
                           ],
                         ),
                         const SizedBox(

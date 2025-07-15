@@ -181,7 +181,7 @@ class CustShipDelegate {
     return json.decode(response.body);
   }
 
-  patchSerialUpdate(String partNum, String serialNum) async {
+  patchSerialUpdate(body, String partNum, String serialNum) async {
     HttpOverrides.global = MyHttpOverrides();
     String apiUrl = await sharedPref.getString("userUrl");
     String userId = await sharedPref.getString("userName");
@@ -203,6 +203,7 @@ class CustShipDelegate {
     var response = await http.patch(
       url,
       headers: requestHeaders,
+      body: json.encode(body),
     );
     return response;
   }

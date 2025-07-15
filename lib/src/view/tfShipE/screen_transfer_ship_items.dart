@@ -3,6 +3,7 @@ import 'package:epicor/core_packages.dart';
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:http/http.dart';
+import 'package:intl/intl.dart';
 
 class ScreenTransferShipItems extends StatefulWidget {
   final dynamic item;
@@ -454,6 +455,47 @@ class _ScreenTransferShipItemsState extends State<ScreenTransferShipItems> {
                                     ),
                                   ),
                                 ),
+                                GestureDetector(
+                                  onTap: () {
+                                    if (!isSubmit) {
+                                      ship();
+                                    }
+                                  },
+                                  child: Container(
+                                    height: 38,
+                                    width: 100,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.colorAssent,
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.colorTansprent40,
+                                          blurRadius: 2,
+                                          offset: const Offset(-2, -2),
+                                        )
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: isSubmit
+                                          ? Lottie.asset(
+                                              'assets/anim/anim-btnLoading.json',
+                                            )
+                                          : Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                vertical: 8.0,
+                                              ),
+                                              child: Text(
+                                                'Shipped',
+                                                style: TextStyles.getBold(
+                                                  16,
+                                                  color: AppColors.colorWhite,
+                                                ),
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(
@@ -527,6 +569,60 @@ class _ScreenTransferShipItemsState extends State<ScreenTransferShipItems> {
     });
   }
 
+  ship() async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+
+      String packNum = txtpackNum.text;
+
+      if (packNum.isEmpty) {
+        throw Exception(
+            "No valid PackNum found. Please submit the form first.");
+      }
+
+      // print("Shipping with PackNum: $packNum");
+
+      var body = {
+        "Company": company,
+        "PackNum": packNum,
+        "ShipDate": DateFormat('yyyy-mm-dd').format(DateTime.now()),
+        "Shipped": true,
+        "RowMod": "U"
+      };
+
+      // print("Company: $company");
+      // print("PackNum: $packNum");
+
+      Response res = await transferServices.patchTransOrderShips(
+        json.encode(body),
+        packNum,
+      );
+
+      if (res.statusCode == 204) {
+        // Clear the saved packNum by setting it to empty string
+        await sharedPref.setString("currentPackNum", "");
+
+        showSucess(
+          'Success: ',
+          "Shipment line created successfully.",
+        );
+      } else {
+        showError(
+          'Error',
+          json.decode(res.body)['ErrorMessage'],
+        );
+      }
+    } catch (ex) {
+      showError('Error', ex.toString());
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   getType(item) {
     if (item['Part_TrackLots'] && item['Part_TrackSerialNum']) {
       return "1";
@@ -590,7 +686,9 @@ class _ScreenTransferShipItemsState extends State<ScreenTransferShipItems> {
       String prdType = getType(resB['value'][0]);
 
       int productIndex = productItems.indexWhere(
-        (item) => item["TFOrdDtl_PartNum"] == partNumber,
+        (item) =>
+            item["TFOrdDtl_PartNum"].toString().toLowerCase() ==
+            partNumber.toLowerCase(),
       );
       if (productIndex != -1) {
         productItems[productIndex]['type'] = prdType;
