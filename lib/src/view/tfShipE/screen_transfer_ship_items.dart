@@ -587,8 +587,9 @@ class _ScreenTransferShipItemsState extends State<ScreenTransferShipItems> {
       var body = {
         "Company": company,
         "PackNum": packNum,
-        "ShipDate": DateFormat('yyyy-mm-dd').format(DateTime.now()),
+        "ShipDate": DateTime.now().toIso8601String(),
         "Shipped": true,
+        "ShipStatus": "SHIPPED",
         "RowMod": "U"
       };
 
@@ -606,7 +607,7 @@ class _ScreenTransferShipItemsState extends State<ScreenTransferShipItems> {
 
         showSucess(
           'Success: ',
-          "Shipment line created successfully.",
+          "Shipped successfully.",
         );
       } else {
         showError(
@@ -1241,6 +1242,7 @@ class _ScreenTransferShipItemsState extends State<ScreenTransferShipItems> {
               "OurStockShippedQty":
                   double.parse(item["scanQTY"].toString()).toStringAsFixed(2),
               "TFOrdNum": widget.item['orderNum'].toString(),
+              "TFLineNum": widget.item['orderNum'].toString(),
               "DisplayShipQty":
                   double.parse(item["scanQTY"].toString()).toStringAsFixed(2),
               "ShippedQty": "0",
@@ -1386,7 +1388,7 @@ class _ScreenTransferShipItemsState extends State<ScreenTransferShipItems> {
                     GestureDetector(
                       onTap: () {
                         Navigator.of(context).pop();
-                        Navigator.of(context).pop();
+                        //Navigator.of(context).pop();
                       },
                       child: SizedBox(
                         child: Text(
