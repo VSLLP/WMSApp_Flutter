@@ -1090,6 +1090,8 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
       }
     }
 
+    getType(items[0]);
+
     var resA = await materialServices.getDocType(
       widget.item['JobHead_PartNum'],
     );
@@ -1158,17 +1160,15 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
       items[0]['Calculated_DefaultFromWarehouse'],
       items[0]['Calculated_DefaultFrombin'],
     );
-    // print(res);
+
     List<dynamic> tempItems = res['value'];
     lotNums.clear();
 
-    for (int i = 0; i < tempItems.length; i++) {
-      if (tempItems[i]["PartBin_LotNum"] != "") {
-        lotNums.add(tempItems[i]["PartBin_LotNum"]);
-        // print(lotNum);
+    for (var item in tempItems) {
+      if (item["PartBin_LotNum"] != "") {
+        lotNums.add(item["PartBin_LotNum"]);
       }
     }
-    // print(tempItems);
 
     if (lotNums.isNotEmpty && prdType == "2") {
       lotNum = lotNums[0];
@@ -1191,7 +1191,6 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
     await updateLotNumbers();
 
     serItems.clear();
-    getType(items[0]);
     pricePerCode = items[0]['Part_PricePerCode'];
     sellingFactor = items[0]['Part_SellingFactor'];
 
@@ -1235,7 +1234,7 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
       });
 
       // Get the current part number - make sure to use the correct one
-      String currentPartNum = txtFPartNo.text;
+      String currentPartNum = widget.item['JobHead_PartNum'];
 
       // Only proceed if we have all required data
       if (currentPartNum.isEmpty || txtFWere.text.isEmpty) {
@@ -1252,25 +1251,23 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
       if (res['value'] != null) {
         List<dynamic> tempItems = res['value'];
 
-        setState(() {
-          lotNums.clear();
-          // Update lot numbers list
-          for (var item in tempItems) {
-            if (item["PartBin_LotNum"] != null &&
-                item["PartBin_LotNum"].toString().isNotEmpty) {
-              lotNums.add(item["PartBin_LotNum"]);
-            }
+        lotNums.clear();
+        // Update lot numbers list
+        for (var item in tempItems) {
+          if (item["PartBin_LotNum"] != null &&
+              item["PartBin_LotNum"].toString().isNotEmpty) {
+            lotNums.add(item["PartBin_LotNum"]);
           }
+        }
 
-          // Update the lot number field if needed
-          if (lotNums.isNotEmpty && prdType == "2") {
-            lotNum = lotNums[0];
-            txtLotNum.text = lotNums[0];
-          } else {
-            lotNum = "";
-            txtLotNum.text = "";
-          }
-        });
+        // Update the lot number field if needed
+        if (lotNums.isNotEmpty && prdType == "2") {
+          lotNum = lotNums[0];
+          txtLotNum.text = lotNums[0];
+        } else {
+          lotNum = "";
+          txtLotNum.text = "";
+        }
       }
     } catch (ex) {
       showError('Error', 'Failed to update lot numbers: ${ex.toString()}');
