@@ -809,6 +809,7 @@ class _ScreenMisIssueMainState extends State<ScreenMisIssueMain> {
     setState(() {
       isLoading = false;
     });
+    txtBin.text = bins[0]["WhseBin_BinNum"].toString();
   }
 
   resetProduct() {
@@ -890,7 +891,7 @@ class _ScreenMisIssueMainState extends State<ScreenMisIssueMain> {
   updateOtp(String title, dynamic option) {
     switch (title) {
       case "Warehouse":
-        txtWare.text = option["Warehse_Description"];
+        txtWare.text = option["PartWhse_WarehouseCode"];
         wareID = option["PartWhse_WarehouseCode"];
         txtBin.text = "";
         getBins(option["PartWhse_WarehouseCode"]);
@@ -1152,6 +1153,12 @@ class _ScreenMisIssueMainState extends State<ScreenMisIssueMain> {
         var resB = await materialServices.getGetPart(partNumber);
         whareHouses.clear();
         whareHouses = resB['value'];
+        var items = resB['value'];
+        for (var item in items) {
+          txtWare.text = item["PartPlant_PrimWhse"].toString();
+          wareID = item["PartPlant_PrimWhse"].toString();
+        }
+        getBins(wareID);
         productSerials.add(serialNum);
       } else {
         int itmIndex = productSerials.indexOf(serialNum);

@@ -1156,7 +1156,7 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
     txtFBin.text = items[0]['Calculated_DefaultFrombin'];
 
     var res = await materialServices.getProducts(
-      widget.item['JobHead_PartNum'],
+      items[0]['JobMtl_PartNum'],
       items[0]['Calculated_DefaultFromWarehouse'],
       items[0]['Calculated_DefaultFrombin'],
     );

@@ -926,7 +926,8 @@ class _ScreenInvEntryState extends State<ScreenInvEntry> {
             "Scrapped": false,
             "Voided": false,
             "PartNum": widget.item['JobHead_PartNum'],
-            "SNBaseNumber": partSerial.substring(0, 9),
+            "SNBaseNumber": partSerial
+                .substring(partSerial.length - 7), //partSerial.substring(0, 9),
             "PassedInspection": false,
             "Deselected": false,
             "RawSerialNum": partSerial,
@@ -945,7 +946,8 @@ class _ScreenInvEntryState extends State<ScreenInvEntry> {
             "Scrapped": false,
             "Voided": false,
             "PartNum": widget.item['JobHead_PartNum'],
-            "SNBaseNumber": partSerial.substring(0, 9),
+            "SNBaseNumber": partSerial
+                .substring(partSerial.length - 7), //partSerial.substring(0, 9),
             "PassedInspection": false,
             "Deselected": false,
             "RawSerialNum": partSerial,
@@ -1442,7 +1444,8 @@ class _ScreenInvEntryState extends State<ScreenInvEntry> {
                   "PartSellingFactor": productDetails['Part_SellingFactor'],
                   "PartPartDescription":
                       productDetails['JobHead_PartDescription'],
-                  "SerialMaskMaskType": 1
+                  "SerialMaskMaskType": 1,
+                  "SNFormat": productDetails['Part_SNFormat']
                 }
               ]
             },
@@ -1585,7 +1588,8 @@ class _ScreenInvEntryState extends State<ScreenInvEntry> {
                   "PartSellingFactor": productDetails['Part_SellingFactor'],
                   "PartPartDescription":
                       productDetails['JobHead_PartDescription'],
-                  "SerialMaskMaskType": 1
+                  "SerialMaskMaskType": 1,
+                  "SNFormat": productDetails['Part_SNFormat']
                 }
               ]
             },
@@ -1666,7 +1670,8 @@ class _ScreenInvEntryState extends State<ScreenInvEntry> {
                   "PartSellingFactor": productDetails['Part_SellingFactor'],
                   "PartPartDescription":
                       productDetails['JobHead_PartDescription'],
-                  "SerialMaskMaskType": 1
+                  "SerialMaskMaskType": 1,
+                  "SNFormat": productDetails['Part_SNFormat']
                 }
               ]
             },

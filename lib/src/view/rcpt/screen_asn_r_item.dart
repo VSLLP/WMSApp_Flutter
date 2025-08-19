@@ -4,6 +4,7 @@ import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:epicor/src/view/rcpt/screen_asn_line.dart';
 import 'package:http/http.dart';
+import 'package:epicor/src/view/home/screen_qr_scan.dart';
 
 class ScreenAsnRItem extends StatefulWidget {
   final dynamic item;
@@ -43,6 +44,8 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
   String wherId = "";
 
   String lotNum = "";
+
+  bool isCam = false;
 
   @override
   void initState() {
@@ -243,6 +246,11 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
                                     ),
                                     onChanged: (val) {
                                       getPartAsync(val);
+                                    },
+                                    onTap: () {
+                                      if (isCam) {
+                                        getScan();
+                                      }
                                     },
                                     keyboardType: TextInputType.name,
                                     autofocus: false,
@@ -589,7 +597,7 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
   loadData() async {
     plant = await sharedPref.getString("userPlant");
     company = await sharedPref.getString("userCompnay");
-
+    isCam = await sharedPref.getBool("isCam");
     var resB = await inventoryServices
         .getASNDtl(widget.item['POHeader_PONum'].toString());
     productItems = resB['value'];
@@ -601,6 +609,17 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
     setState(() {
       isLoading = false;
     });
+  }
+
+  getScan() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ScreenQrScan(),
+      ),
+    );
+    if (result != null && result is String) {
+      getPartAsync(result);
+    }
   }
 
   List<TableRow> getRows() {
