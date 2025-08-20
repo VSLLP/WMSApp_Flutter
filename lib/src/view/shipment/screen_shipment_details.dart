@@ -623,7 +623,8 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
         items.add(it);
         itemQty.add(
           TextEditingController(
-            text: it["shipQty"],
+            text: double.parse(it["ShipDtl_OurInventoryShipQty"])
+                .toStringAsFixed(0),
           ),
         );
       }
@@ -662,9 +663,21 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
       rowcolor =
           item['isSelect'] ? AppColors.colorYellow300 : Colors.transparent;
 
-      if (double.parse(item["ShipDtl_OurInventoryShipQty"].toString()) ==
-          double.parse(item["ShipDtl_VS_QtyToShip_c"].toString())) {
-        rowcolor = AppColors.colorCyan300;
+      if (item["ShipDtl_OurInventoryShipQty"] != "") {
+        if (double.parse(item["ShipDtl_OurInventoryShipQty"].toString()) ==
+            double.parse(item["ShipDtl_VS_QtyToShip_c"].toString())) {
+          rowcolor = AppColors.colorCyan300;
+        }
+      }
+
+      bool manualQty = false;
+
+      if (!item["Part_TrackLots"] && item["Part_TrackSerialNum"]) {
+        manualQty = false;
+      } else if (item["Part_TrackLots"] && !item["Part_TrackSerialNum"]) {
+        manualQty = true;
+      } else if (!item["Part_TrackLots"] && !item["Part_TrackSerialNum"]) {
+        manualQty = true;
       }
 
       rows.add(
@@ -676,13 +689,50 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
             tableCellRow(item["ShipDtl_PackLine"].toString()),
             tableCellRow("$ordernum/$orderline/$relnum"),
             tableCellRow(item["ShipDtl_PartNum"].toString()),
-            tableCellRow(
-              double.parse(item["ShipDtl_OurInventoryShipQty"].toString())
-                  .toStringAsFixed(2),
-            ),
+            manualQty
+                ? TableCell(
+                    child: Container(
+                      margin: const EdgeInsets.all(6),
+                      height: 28,
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: TextFormField(
+                          controller: itemQty[i],
+                          style: TextStyles.getBold(12),
+                          decoration: InputDecoration(
+                            hintText: "Qty",
+                            hintStyle: TextStyles.getRegularScund(
+                              12,
+                              color: AppColors.colorGray600,
+                            ),
+                            contentPadding: const EdgeInsets.only(
+                              left: 11,
+                              bottom: 16,
+                            ),
+                            counterText: "",
+                          ),
+                          keyboardType: TextInputType.number,
+                          onChanged: (val) {
+                            items[i]["ShipDtl_OurInventoryShipQty"] = val;
+                            items[i]["prdTrack"] = getType(items[i]);
+                            itemQty[i].text =
+                                items[i]["ShipDtl_OurInventoryShipQty"];
+                            setState(() {});
+                          },
+                          autofocus: false,
+                          readOnly: (item["prdTrack"] == "1" ||
+                              item["prdTrack"] == "3"),
+                        ),
+                      ),
+                    ),
+                  )
+                : tableCellRow(
+                    double.parse(item["ShipDtl_OurInventoryShipQty"].toString())
+                        .toStringAsFixed(0),
+                  ),
             tableCellRow(
               double.parse(item["ShipDtl_VS_QtyToShip_c"].toString())
-                  .toStringAsFixed(2),
+                  .toStringAsFixed(0),
             ),
             tableCellRow(item["ShipDtl_LineDesc"].toString()),
             tableCellRow("$warehouse/$bin"),
@@ -777,7 +827,7 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
         items.add(it);
         itemQty.add(
           TextEditingController(
-            text: it["shipQty"],
+            text: it["ShipDtl_OurInventoryShipQty"],
           ),
         );
       }
@@ -1129,6 +1179,7 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
       for (var item in items) {
         if (item["prdTrack"] != "") {
           isSubmit = true;
+          custNum = item["ShipDtl_CustNum"].toString();
 
           double qTY =
               double.parse(item['ShipDtl_OurInventoryShipQty'].toString());
@@ -1222,8 +1273,10 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
                 "ReasonCodeDesc": "",
                 "PartNum": item["ShipDtl_PartNum"],
                 "SNPrefix": "",
+                "SNFormat": "",
                 "SNBaseNumber": serial["num"],
-                "XRefPartNum": "",
+                "XRefPartNum":
+                    serial["num"].substring(serial["num"].length - 7),
                 "XRefPartType": "",
                 "TransType": "STK-PCK",
                 "RowMod": "A"
@@ -1238,25 +1291,28 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
                     "CustNum": custNum,
                     "PackNum": txtPackNum.text,
                     "PackLine": item["ShipDtl_PackLine"],
-                    "OrderNum": txtOrdNum.text,
+                    "OrderNum": item["ShipDtl_OrderNum"],
                     "OrderLine": item["ShipDtl_OrderLine"],
                     "OrderRelNum": item["ShipDtl_OrderRelNum"],
                     "PartNum": item["ShipDtl_PartNum"],
                     "LineDesc": item["ShipDtl_LineDesc"],
                     "Plant": plant,
-                    "BinNum": txtBin.text,
+                    "BinNum": item["ShipDtl_BinNum"],
                     "LotNum": lot,
-                    "WarehouseCode": txtWare.text,
-                    "InventoryShipUOM": item["ShipDtl_IUM"],
+                    "WarehouseCode": item["ShipDtl_WarehouseCode"],
+                    "InventoryShipUOM": item["ShipDtl_InventoryShipUOM"],
                     "DisplayInvQty": item['ShipDtl_OurInventoryShipQty'],
-                    "SellingInventoryShipQty":
-                        item['ShipDtl_OurInventoryShipQty'],
+                    "VS_QtyToShip_c": item['ShipDtl_VS_QtyToShip_c'],
                     "SalesUM": item["ShipDtl_SalesUM"],
                     "IUM": item["ShipDtl_IUM"],
-                    "TrackSerialNum": true,
-                    "FromPlantTracking": true,
-                    "ToPlantTracking": true,
-                    "RowMod": "A"
+                    "JobShipUOM": item["ShipDtl_JobShipUOM"],
+                    "PartNumTrackLots": item["Part_TrackLots"],
+                    "TrackSerialNum": item["Part_TrackSerialNum"],
+                    "SysRevID": item["ShipDtl_SysRevID"],
+                    "SysRowID": item["ShipDtl_SysRowID"],
+                    // "FromPlantTracking": true,
+                    // "ToPlantTracking": true,
+                    "RowMod": "U"
                   }
                 ],
                 "SelectedSerialNumbers": serialBody
@@ -1279,22 +1335,28 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
                     "CustNum": custNum,
                     "PackNum": txtPackNum.text,
                     "PackLine": item["ShipDtl_PackLine"],
-                    "OrderNum": txtOrdNum.text,
+                    "OrderNum": item["ShipDtl_OrderNum"],
                     "OrderLine": item["ShipDtl_OrderLine"],
                     "OrderRelNum": item["ShipDtl_OrderRelNum"],
                     "PartNum": item["ShipDtl_PartNum"],
                     "LineDesc": item["ShipDtl_LineDesc"],
                     "Plant": plant,
-                    "BinNum": txtBin.text,
-                    "LotNum": lot, //item['scanLot'],
-                    "WarehouseCode": txtWare.text,
-                    "InventoryShipUOM": item["ShipDtl_IUM"],
+                    "BinNum": item["ShipDtl_BinNum"],
+                    "LotNum": item["ShipDtl_LotNum"],
+                    "WarehouseCode": item["ShipDtl_WarehouseCode"],
+                    "InventoryShipUOM": item["ShipDtl_InventoryShipUOM"],
                     "DisplayInvQty": item['ShipDtl_OurInventoryShipQty'],
-                    "SellingInventoryShipQty":
-                        item['ShipDtl_OurInventoryShipQty'],
+                    "VS_QtyToShip_c": item['ShipDtl_VS_QtyToShip_c'],
                     "SalesUM": item["ShipDtl_SalesUM"],
                     "IUM": item["ShipDtl_IUM"],
-                    "RowMod": "A"
+                    "JobShipUOM": item["ShipDtl_JobShipUOM"],
+                    "PartNumTrackLots": item["Part_TrackLots"],
+                    "TrackSerialNum": item["Part_TrackSerialNum"],
+                    "SysRevID": item["ShipDtl_SysRevID"],
+                    "SysRowID": item["ShipDtl_SysRowID"],
+                    // "FromPlantTracking": true,
+                    // "ToPlantTracking": true,
+                    "RowMod": "U"
                   }
                 ],
                 "SelectedSerialNumbers": []
