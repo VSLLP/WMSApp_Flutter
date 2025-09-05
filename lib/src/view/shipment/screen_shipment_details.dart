@@ -452,9 +452,9 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
                                           scrollDirection: Axis.horizontal,
                                           child: Table(
                                             columnWidths: const {
-                                              0: FixedColumnWidth(40),
+                                              0: FixedColumnWidth(50),
                                               1: FixedColumnWidth(100),
-                                              2: FixedColumnWidth(80),
+                                              2: FixedColumnWidth(100),
                                               3: FixedColumnWidth(50),
                                               4: FixedColumnWidth(50),
                                               5: FixedColumnWidth(130),
@@ -642,9 +642,9 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
         tableCell('OrderNum/Line/Rel'),
         tableCell('PartNum'),
         tableCell("ShipQty"),
-        tableCell("QtyToShip"),
+        tableCell("PickQty"),
         tableCell('Desc'),
-        tableCell('Warehouse/Bin'),
+        tableCell('WH/Bin'),
         tableCell('Lot'),
         tableCell("IUM"),
         tableCell("Type"),

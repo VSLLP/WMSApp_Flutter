@@ -14,9 +14,11 @@ import 'package:epicor/src/view/rcpt/screen_asn_list.dart';
 import 'package:epicor/src/view/returnMtl/screen_return_mtl_list.dart';
 import 'package:epicor/src/view/shipment/screen_shipment_main.dart';
 import 'package:epicor/src/view/tfReceipt/screen_transfer_receipt_main.dart';
-import 'package:epicor/src/view/tfShipE/screen_transfer_ship_main.dart';
+//import 'package:epicor/src/view/tfShipE/screen_transfer_ship_main.dart';
+import 'package:epicor/src/view/TFShipment/screen_transfer_shipment_main.dart';
 import 'package:epicor/src/view/returnMtl/screen_return_main.dart';
 import 'package:epicor/src/view/insp/screen_rcpt_insp_head.dart';
+import 'package:epicor/src/view/scan/screen_open_scan.dart';
 
 class ScreenHome extends StatefulWidget {
   const ScreenHome({super.key});
@@ -164,6 +166,8 @@ class _ScreenHomeState extends State<ScreenHome> {
     switch (key) {
       case "TFShipE":
         return "assets/icons/ic_cycle.svg";
+      case "TFShipment":
+        return "assets/icons/ic_cycle.svg";
       case "QtyAdj":
         return "assets/icons/ic_cycle.svg";
       case "PltStp":
@@ -171,6 +175,8 @@ class _ScreenHomeState extends State<ScreenHome> {
       case "OrdPick":
         return "assets/icons/ic_cart.svg";
       case "Ship":
+        return "assets/icons/ic_dispatch.svg";
+      case "Shipment":
         return "assets/icons/ic_dispatch.svg";
       case "LocTrf":
         return "assets/icons/ic_location.svg";
@@ -233,7 +239,7 @@ class _ScreenHomeState extends State<ScreenHome> {
     if (isPresent) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => const ScreenTransferShipMain(),
+          builder: (context) => const ScreenTransferShipmentMain(),
         ),
       );
     } else {
@@ -300,7 +306,7 @@ class _ScreenHomeState extends State<ScreenHome> {
 
   gotoMenu(key) {
     switch (key) {
-      case "TFShipE":
+      case "TFShipment":
         gotoTF();
         break;
       case "QtyAdj":
@@ -385,6 +391,13 @@ class _ScreenHomeState extends State<ScreenHome> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => const ScreenRcptInspHead(),
+          ),
+        );
+        break;
+      case "OpScan":
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const ScreenOpenScan(),
           ),
         );
         break;
