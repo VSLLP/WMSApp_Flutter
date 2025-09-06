@@ -3,7 +3,6 @@ import 'package:epicor/core_packages.dart';
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:http/http.dart';
-import 'package:intl/intl.dart';
 
 class ScreenTransferShipItems extends StatefulWidget {
   final dynamic item;
@@ -516,7 +515,6 @@ class _ScreenTransferShipItemsState extends State<ScreenTransferShipItems> {
   }
 
   loadData() async {
-    print("Load Data");
     company = await sharedPref.getString("userCompnay");
     txtpackNum.text = widget.item['packNum'].toString();
     txtShipNo.text = widget.item['transferShipNo'].toString();

@@ -3,14 +3,14 @@ import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:epicor/src/view/home/screen_qr_scan.dart';
 
-class ScreenOpenScan extends StatefulWidget {
-  const ScreenOpenScan({super.key});
+class ScreenTransferScan extends StatefulWidget {
+  const ScreenTransferScan({super.key});
 
   @override
-  State<ScreenOpenScan> createState() => _ScreenOpenScanState();
+  State<ScreenTransferScan> createState() => _ScreenTransferScanState();
 }
 
-class _ScreenOpenScanState extends State<ScreenOpenScan> {
+class _ScreenTransferScanState extends State<ScreenTransferScan> {
   var txtScan = TextEditingController();
 
   List<dynamic> items = [];
@@ -70,7 +70,7 @@ class _ScreenOpenScanState extends State<ScreenOpenScan> {
                         Align(
                           alignment: Alignment.center,
                           child: Text(
-                            'Open Scan',
+                            'Transfer Receipt Scan',
                             style: TextStyles.getBold(
                               22,
                               color: AppColors.colorWhite,
@@ -443,7 +443,7 @@ class _ScreenOpenScanState extends State<ScreenOpenScan> {
         for (var item in items) {
           mItem.add({
             "Company": company,
-            "Key1": "OPScan",
+            "Key1": "TFReceipt",
             "Key2": plant,
             "Key3": "UK90",
             "Key4": "F",
@@ -459,7 +459,7 @@ class _ScreenOpenScanState extends State<ScreenOpenScan> {
         };
         var resW = await scanServices.postScanOpen(body);
         if (resW.statusCode == 200) {
-          await showError("Success", "Successfully submitted.");
+          await showSuccess("Success", "Successfully submitted.");
         } else {
           var response = json.decode(resW.body);
           if (response["ErrorMessage"] != null) {

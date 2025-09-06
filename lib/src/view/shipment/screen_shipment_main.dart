@@ -5,8 +5,6 @@ import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:intl/intl.dart';
 
-import 'package:epicor/src/view/custShip/screen_cust_ship_details.dart';
-
 class ScreenShipmentMain extends StatefulWidget {
   const ScreenShipmentMain({super.key});
 

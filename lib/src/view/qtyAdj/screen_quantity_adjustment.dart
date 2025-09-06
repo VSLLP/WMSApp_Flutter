@@ -1535,7 +1535,6 @@ class _ScreenQuantityAdjustmentState extends State<ScreenQuantityAdjustment> {
   }
 
   void getPartBins(String whe) async {
-    var selectedBin = "";
     try {
       setState(() {
         isLoading = true;

@@ -3,20 +3,18 @@ import 'package:epicor/src/services/model/menu.dart';
 
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
+import 'package:epicor/src/view/scan/screen_transfer_scan.dart';
 import 'package:epicor/src/view/shipment/screen_shipment_main.dart';
 import 'package:epicor/src/view/home/screen_profile.dart';
-import 'package:epicor/src/view/insp/screen_insp_main.dart';
 import 'package:epicor/src/view/issueMtl/screen_issue_mtl_list.dart';
 import 'package:epicor/src/view/misIssue/screen_mis_issue_main.dart';
 import 'package:epicor/src/view/prdRcpt/screen_job_list.dart';
 import 'package:epicor/src/view/qtyAdj/screen_quantity_adjustment.dart';
 import 'package:epicor/src/view/rcpt/screen_asn_list.dart';
 import 'package:epicor/src/view/returnMtl/screen_return_mtl_list.dart';
-import 'package:epicor/src/view/shipment/screen_shipment_main.dart';
 import 'package:epicor/src/view/tfReceipt/screen_transfer_receipt_main.dart';
 //import 'package:epicor/src/view/tfShipE/screen_transfer_ship_main.dart';
 import 'package:epicor/src/view/TFShipment/screen_transfer_shipment_main.dart';
-import 'package:epicor/src/view/returnMtl/screen_return_main.dart';
 import 'package:epicor/src/view/insp/screen_rcpt_insp_head.dart';
 import 'package:epicor/src/view/scan/screen_open_scan.dart';
 
@@ -398,6 +396,13 @@ class _ScreenHomeState extends State<ScreenHome> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => const ScreenOpenScan(),
+          ),
+        );
+        break;
+      case "TFReceiptScan":
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const ScreenTransferScan(),
           ),
         );
         break;

@@ -2,7 +2,6 @@ import 'package:epicor/core_packages.dart';
 
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
-import 'package:http/http.dart';
 import 'package:epicor/src/view/returnMtl/screen_return_mtl_list.dart';
 
 class ScreenReturnMain extends StatefulWidget {
