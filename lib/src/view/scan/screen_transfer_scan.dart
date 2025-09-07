@@ -12,8 +12,15 @@ class ScreenTransferScan extends StatefulWidget {
 
 class _ScreenTransferScanState extends State<ScreenTransferScan> {
   var txtScan = TextEditingController();
+  var txtWere = TextEditingController();
+  var txtBin = TextEditingController();
 
   List<dynamic> items = [];
+  List<dynamic> wheres = [];
+  List<dynamic> bins = [];
+
+  dynamic selWheres = [];
+  dynamic selBins = [];
 
   String company = "";
   String plant = "";
@@ -90,6 +97,110 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.3,
+                                  child: Text(
+                                    "Warehouse: ",
+                                    style: TextStyles.getBold(
+                                      14,
+                                      color: AppColors.colorDataColor,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.54,
+                                  child: TextFormField(
+                                    controller: txtWere,
+                                    style: TextStyles.getRegularScund(12),
+                                    decoration: InputDecoration(
+                                      hintText: "Select Warehouse",
+                                      hintStyle: TextStyles.getRegularScund(
+                                        14,
+                                        color: AppColors.colorGray600,
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                        vertical: 0,
+                                      ),
+                                      counterText: "",
+                                    ),
+                                    onTap: () {
+                                      choseWhae();
+                                    },
+                                    keyboardType: TextInputType.name,
+                                    autofocus: false,
+                                    readOnly: true,
+                                    validator: (value) {
+                                      if (value!.isEmpty) {
+                                        return "Please select warehouse.";
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 18,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.3,
+                                  child: Text(
+                                    "Bin: ",
+                                    style: TextStyles.getBold(
+                                      14,
+                                      color: AppColors.colorDataColor,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.54,
+                                  child: TextFormField(
+                                    controller: txtBin,
+                                    style: TextStyles.getRegularScund(12),
+                                    decoration: InputDecoration(
+                                      hintText: "Select Bin",
+                                      hintStyle: TextStyles.getRegularScund(
+                                        14,
+                                        color: AppColors.colorGray600,
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                        vertical: 0,
+                                      ),
+                                      counterText: "",
+                                    ),
+                                    onTap: () {
+                                      choseBins();
+                                    },
+                                    keyboardType: TextInputType.name,
+                                    autofocus: false,
+                                    readOnly: true,
+                                    validator: (value) {
+                                      if (value!.isEmpty) {
+                                        return "Please select bin.";
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 18,
+                            ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -324,6 +435,10 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
     company = await sharedPref.getString("userCompnay");
     plant = await sharedPref.getString("userPlant");
     isCam = await sharedPref.getBool("isCam");
+
+    var resB = await scanServices.getWarehouseAsync();
+    wheres.clear();
+    wheres = resB['value'];
     setState(() {
       isLoading = false;
     });
@@ -340,8 +455,278 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
     }
   }
 
+  choseWhae() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Select Wharehouse",
+                  style: TextStyles.getBold(18),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: SizedBox(
+                    child: wheres.isEmpty
+                        ? Container(
+                            color: Colors.transparent,
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 0,
+                              vertical: 10,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "No warehouse found.",
+                                  style: TextStyles.getRegularScund(
+                                    16,
+                                    color: AppColors.colorGray600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: wheres.length,
+                            shrinkWrap: true,
+                            scrollDirection: Axis.vertical,
+                            itemBuilder: (BuildContext context, int index) {
+                              return GestureDetector(
+                                onTap: () {
+                                  txtWere.text =
+                                      wheres[index]["Warehse_Description"];
+                                  selWheres = wheres[index];
+                                  Navigator.of(context).pop();
+                                  getPartBins(wheres[index]);
+                                  setState(() {});
+                                },
+                                child: Container(
+                                  color: Colors.transparent,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 0,
+                                    vertical: 10,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        wheres[index]["Warehse_Description"],
+                                        style: TextStyles.getRegularScund(
+                                          16,
+                                          color: AppColors.colorGray600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          "Cancel",
+                          style: TextStyles.getBold(14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  choseBins() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Select Bin",
+                  style: TextStyles.getBold(18),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: SizedBox(
+                    child: bins.isEmpty
+                        ? Container(
+                            color: Colors.transparent,
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 0,
+                              vertical: 10,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "No bins found.",
+                                  style: TextStyles.getRegularScund(
+                                    16,
+                                    color: AppColors.colorGray600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: bins.length,
+                            shrinkWrap: true,
+                            scrollDirection: Axis.vertical,
+                            itemBuilder: (BuildContext context, int index) {
+                              return GestureDetector(
+                                onTap: () {
+                                  txtBin.text = bins[index];
+                                  Navigator.of(context).pop();
+                                  setState(() {});
+                                },
+                                child: Container(
+                                  color: Colors.transparent,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 0,
+                                    vertical: 10,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        bins[index],
+                                        style: TextStyles.getRegularScund(
+                                          16,
+                                          color: AppColors.colorGray600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          "Cancel",
+                          style: TextStyles.getBold(14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void getPartBins(dynamic whe) async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+      var response =
+          await scanServices.getBinAsync(whe["Warehse_WarehouseCode"]);
+      var items = response['value'];
+      bins.clear();
+      for (var item in items) {
+        bins.add(item["WhseBin_BinNum"].toString());
+      }
+      txtBin.text = bins[0].toString();
+    } catch (ex) {
+      showError('', ex.toString());
+    } finally {
+      txtScan.text = "";
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   void getPartAsync(String val) async {
     try {
+      if (txtWere.text.isEmpty || txtBin.text.isEmpty) {
+        throw Exception("Please select warehouse and bin!");
+      }
+
       if (val.length <= 14) {
         return;
       }
@@ -359,7 +744,12 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
       if (isProductExist >= 0) {
         throw Exception("Product already scanned!");
       } else {
-        items.add({"PartNum": partNumber, "QR": fullQR});
+        items.add({
+          "PartNum": partNumber,
+          "QR": fullQR,
+          "whe": selWheres["Warehse_WarehouseCode"],
+          "bin": txtBin.text
+        });
       }
     } catch (ex) {
       showError('Error', ex.toString());
@@ -445,8 +835,8 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
             "Company": company,
             "Key1": "TFReceipt",
             "Key2": plant,
-            "Key3": "UK90",
-            "Key4": "F",
+            "Key3": item["whe"],
+            "Key4": item["bin"],
             "Key5": item["QR"],
             "Character01": item["PartNum"],
             "RowMod": "A"
