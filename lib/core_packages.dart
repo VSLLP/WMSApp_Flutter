@@ -7,6 +7,7 @@ import 'package:epicor/src/services/repository/material_services.dart';
 import 'package:epicor/src/services/repository/scan_services.dart';
 import 'package:epicor/src/services/repository/spref_services.dart';
 import 'package:epicor/src/services/repository/transfer_services.dart';
+import 'package:epicor/src/services/repository/transfer_shipment_services.dart';
 import 'package:epicor/src/services/repository/util_services.dart';
 
 export 'dart:async';
@@ -28,6 +29,8 @@ final SharedPref sharedPref = SharedPref();
 final AuthDelegate authServices = AuthDelegate();
 final InventoryDelegate inventoryServices = InventoryDelegate();
 final TransferDelegate transferServices = TransferDelegate();
+final TransferShipmentDelegate transferShipServices =
+    TransferShipmentDelegate();
 final MaterialDelegate materialServices = MaterialDelegate();
 final UtilDelegate utilServices = UtilDelegate();
 final IsnpDelegate isnpServices = IsnpDelegate();

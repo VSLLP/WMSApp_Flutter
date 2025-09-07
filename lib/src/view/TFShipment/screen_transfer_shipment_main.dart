@@ -83,7 +83,7 @@ class _ScreenTransferShipmentMainState
                     height: 8,
                   ),
                   TextField(
-                    onChanged: (value) => _runFilter(value),
+                    onChanged: (value) => runFilter(value),
                     decoration: const InputDecoration(
                         labelText: 'Type here for search',
                         suffixIcon: Icon(Icons.search)),
@@ -148,16 +148,6 @@ class _ScreenTransferShipmentMainState
                                           ),
                                         ],
                                       ),
-                                      // const SizedBox(
-                                      //   height: 4,
-                                      // ),
-                                      // Text(
-                                      //   "CFIL Transfer No: ${founditems[index]["TFOrdHed_Character01"]}",
-                                      //   style: TextStyles.getBold(
-                                      //     14,
-                                      //     color: AppColors.colorDataColor,
-                                      //   ),
-                                      // ),
                                       const SizedBox(
                                         height: 4,
                                       ),
@@ -191,16 +181,6 @@ class _ScreenTransferShipmentMainState
                                           ),
                                         ),
                                       ),
-                                      // SizedBox(
-                                      //   width: double.infinity,
-                                      //   child: Text(
-                                      //     "Pack Slip: ${(founditems[index]["TFShipHead_PackNum"]) ?? 'New Shipment'}",
-                                      //     style: TextStyles.getBold(
-                                      //       14,
-                                      //       color: AppColors.colorDataColor,
-                                      //     ),
-                                      //   ),
-                                      // ),
                                     ],
                                   ),
                                 ),
@@ -223,7 +203,6 @@ class _ScreenTransferShipmentMainState
   loadData() async {
     var response = await transferServices.getTansferShipmentList();
     items.clear();
-    //founditems.clear();
     items = response['value'];
     setState(() {
       isLoading = false;
@@ -231,21 +210,17 @@ class _ScreenTransferShipmentMainState
     });
   }
 
-  void _runFilter(String enteredKeyword) {
+  void runFilter(String enteredKeyword) {
     List<dynamic> results = [];
     if (enteredKeyword.isNotEmpty) {
       results = items.where((item) {
         final ordernum = item["TFShipHead_PackNum"].toString();
         final plant1 = item["Plant_Name"].toLowerCase();
         final plant2 = item["Plant1_Name"].toLowerCase();
-
         return ordernum.contains(enteredKeyword.toLowerCase()) ||
             plant1.contains(enteredKeyword.toLowerCase()) ||
             plant2.contains(enteredKeyword.toLowerCase());
       }).toList();
-      // we use the toLowerCase() method to make it case-insensitive
-
-      // Refresh the UI
       setState(() {
         founditems = results;
       });
@@ -253,9 +228,7 @@ class _ScreenTransferShipmentMainState
   }
 
   gotoEntryPage(item) async {
-    print("Item: $item");
     var packNum = item['TFShipHead_PackNum'] ?? "NEW";
-
     var itemP = {
       "PackId": item['TFShipHead_PackNum'],
       "packNum": packNum,
@@ -266,9 +239,7 @@ class _ScreenTransferShipmentMainState
       'toPlantName': item['Plant1_Name'],
       'shipDate': item['TFShipHead_ShipDate']
     };
-
     await sharedPref.setString("currentPackNum", packNum.toString());
-
     if (!mounted) return;
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -277,7 +248,6 @@ class _ScreenTransferShipmentMainState
         ),
       ),
     );
-
     loadData();
   }
 }
