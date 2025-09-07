@@ -818,15 +818,24 @@ class _ScreenInvEntryState extends State<ScreenInvEntry> {
     plant = await sharedPref.getString("userPlant");
     userId = await sharedPref.getString("userName");
     isCam = await sharedPref.getBool("isCam");
+    String jobno = widget.item['JobHead_JobNum'];
     var response = await jobinvServices.getDocType();
     docTypes.clear();
     docTypes = response['value'];
 
-    var resB = await jobinvServices.getWarehouseAsync();
+    var resB = await jobinvServices.getWarehouseAsync(jobno);
     whareHouses.clear();
     whareHouses = resB['value'];
 
-    await getBins(whareHouses[0]['Calculated_DefaultWarehouse']);
+    String whdefault = "", whdesc = "";
+    for (var wh in whareHouses) {
+      if (wh["Calculated_DefaultWarehouse"]) {
+        whdefault = wh['Warehse_WarehouseCode'];
+        whdesc = wh['Warehse_Description'];
+      }
+    }
+
+    await getBins(whdefault);
 
     var resC = await jobinvServices.getJobDetail(
       widget.item['JobHead_PartNum'],
@@ -837,8 +846,8 @@ class _ScreenInvEntryState extends State<ScreenInvEntry> {
     txtJobNo.text = widget.item['JobHead_JobNum'];
     txtPartNo.text = widget.item['JobHead_PartNum'];
     txtUom.text = widget.item['JobHead_IUM'];
-    txtFWere.text = whareHouses[0]['Warehse_Description'];
-    wereFId = whareHouses[0]['Calculated_DefaultWarehouse'];
+    txtFWere.text = whdesc;
+    wereFId = whdefault;
     txtFBin.text = bins[0]['Calculated_DefaultBinNum'];
     txtQty.text = "";
 
@@ -1838,7 +1847,7 @@ class _ScreenInvEntryState extends State<ScreenInvEntry> {
       children: [
         tableCell('Product'),
         tableCell('Bin'),
-        tableCell('Adj Qty'),
+        tableCell('Receipt Qty'),
         tableCell('Description'),
         tableCell('UOM'),
         isLot ? tableCell('Lot') : tableCell('Serial'),
@@ -1850,7 +1859,7 @@ class _ScreenInvEntryState extends State<ScreenInvEntry> {
           children: [
             tableCellRow(widget.item['JobHead_PartNum']),
             tableCellRow(txtFBin.text),
-            tableCellRow(jobDetails['JobHead_QtyCompleted']),
+            tableCellRow("1"),
             tableCellRow(productDetails['JobHead_PartDescription']),
             tableCellRow(productDetails['Part_IUM']),
             isLot

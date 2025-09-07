@@ -78,7 +78,7 @@ class JobToInvDelegate {
     return json.decode(response.body);
   }
 
-  getWarehouseAsync() async {
+  getWarehouseAsync(String jobno) async {
     HttpOverrides.global = MyHttpOverrides();
     String apiUrl = await sharedPref.getString("userUrl");
     String userId = await sharedPref.getString("userName");
@@ -86,8 +86,8 @@ class JobToInvDelegate {
 
     String plant = await sharedPref.getString("userPlant");
 
-    Uri url =
-        Uri.parse("$apiUrl/BaqSvc/VSAPP_jobtoinvGetWarehouses/?plant=$plant");
+    Uri url = Uri.parse(
+        "$apiUrl/BaqSvc/VSAPP_jobtoinvGetWarehouses/?plant=$plant&pr_JobNum=$jobno");
     String basicAuth =
         'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
     Map<String, String> requestHeaders = {

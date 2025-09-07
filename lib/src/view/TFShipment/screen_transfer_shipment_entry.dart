@@ -540,16 +540,16 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
         throw Exception("Please scan a valid PartNum.");
       } else {
         if (qrType == "B" && partLot.isNotEmpty) {
-          items[productIndex]["ShipDtl_LotNum"] = partLot;
+          items[productIndex]["TFShipDtl_LotNum"] = partLot;
         }
         items[productIndex]["isSelect"] = true;
-        items[productIndex]["ShipDtl_OurInventoryShipQty"] = (double.parse(
-                    items[productIndex]["ShipDtl_OurInventoryShipQty"]
+        items[productIndex]["TFShipDtl_OurStockShippedQty"] = (double.parse(
+                    items[productIndex]["TFShipDtl_OurStockShippedQty"]
                         .toString()) +
                 1)
             .toString();
         itemQty[productIndex].text =
-            items[productIndex]["ShipDtl_OurInventoryShipQty"];
+            items[productIndex]["TFShipDtl_OurStockShippedQty"];
         addProductToSubmit(items[productIndex], serialNum);
       }
     } catch (ex) {
@@ -609,6 +609,19 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
         printLargeString(json.encode(body));
         var resW =
             await transferShipServices.postTransShipOrder(json.encode(body));
+
+        for (var item in submitItem) {
+          var bodyD = {
+            "key1": item["Key1"].toString(),
+            "key2": item["Key2"].toString(),
+            "key3": item["Key3"].toString(),
+            "key4": item["Key4"].toString(),
+            "key5": item["Key5"].toString(),
+          };
+          var resD =
+              await transferShipServices.deleteStagging(json.encode(bodyD));
+        }
+
         if (resW.statusCode == 200) {
           await showError("Success", "Successfully submitted.");
         } else {
@@ -678,7 +691,7 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
           children: [
             tableCellRow(item["TFShipDtl_PackLine"].toString()),
             tableCellRow("$ordernum/$orderline"),
-            tableCellRow(item["TFShipDtl_PackNum"].toString()),
+            tableCellRow(item["TFShipDtl_PartNum"].toString()),
             tableCellRow(
               double.parse(item["TFShipDtl_OurStockShippedQty"].toString())
                   .toStringAsFixed(0),
