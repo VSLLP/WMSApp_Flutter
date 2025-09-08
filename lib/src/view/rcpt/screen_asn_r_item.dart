@@ -874,8 +874,8 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
               "SerialNumber": partSerial,
               "PartNum": partCode,
               "LotNum": partLot,
-              "SNBaseNumber":
-                  removeAlphabets(partSerial), //partSerial.substring(
+              "SNBaseNumber": partSerial.substring(partSerial.length - 7),
+              //removeAlphabets(partSerial), //partSerial.substring(
               //partSerial.length - 5, partSerial.length),
               "TransType": "PUR-STK",
               "RawSerialNum": partSerial,
@@ -987,7 +987,8 @@ class _ScreenAsnRItemState extends State<ScreenAsnRItem> {
               "Company": company,
               "SerialNumber": partSerial,
               "PartNum": partCode,
-              "SNBaseNumber": partSerial,
+              "SNBaseNumber":
+                  partSerial.substring(partSerial.length - 7), //partSerial,
               "TransType": "PUR-STK",
               "RawSerialNum": partSerial,
               "SNMask": payload['Part_SNMask'],
