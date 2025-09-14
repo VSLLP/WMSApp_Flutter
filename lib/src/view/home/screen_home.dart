@@ -1,5 +1,6 @@
 import 'package:epicor/core_packages.dart';
 import 'package:epicor/src/services/model/menu.dart';
+import 'package:epicor/src/view/TFShipment/screen_transfer_shipment_main_pcid.dart';
 
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
@@ -245,6 +246,26 @@ class _ScreenHomeState extends State<ScreenHome> {
     }
   }
 
+  gotoTFPCID() async {
+    var res = await transferServices.checkFirst();
+    var data = res['value'];
+    bool isPresent = true;
+    for (var plant in data) {
+      if (plant['Plant_Plant'] == plant) {
+        isPresent = false;
+      }
+    }
+    if (isPresent) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const ScreenTransferShipmentMainPcid(),
+        ),
+      );
+    } else {
+      showError("Alert", "Entry Not Allow in this Branch");
+    }
+  }
+
   showError(String title, String message) {
     showDialog(
       context: context,
@@ -306,6 +327,9 @@ class _ScreenHomeState extends State<ScreenHome> {
     switch (key) {
       case "TFShipment":
         gotoTF();
+        break;
+      case "TFShipPCID":
+        gotoTFPCID();
         break;
       case "QtyAdj":
         Navigator.of(context).push(

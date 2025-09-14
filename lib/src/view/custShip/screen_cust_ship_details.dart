@@ -25,6 +25,7 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
   List<dynamic> items = [];
   List<dynamic> wheres = [];
   List<dynamic> bins = [];
+  List<dynamic> tradqr = [];
 
   List<TextEditingController> itemQty = [];
 
@@ -949,6 +950,16 @@ class _ScreenCustShipDetailsState extends State<ScreenCustShipDetails> {
             .replaceAll("~", "")
             .replaceAll(" ", "");
       } else {
+        // var resTradQr = await transferShipServices.getTraditionalQRData(val);
+        // if (resTradQr == null) {
+        //   return;
+        // }
+        // tradqr.clear();
+        // tradqr = resTradQr["value"];
+        // qrType = "A";
+        // partNum = tradqr[0]["UD16_Character01"]; //val.substring(0, 9);
+        // serialNum = tradqr[0]["UD16_Character02"]; //val.substring(13);
+
         qrType = "A";
         partNum = val.substring(0, 9);
         serialNum = val.substring(13);

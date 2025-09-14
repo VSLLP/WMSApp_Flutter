@@ -6,25 +6,27 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
 
-class ScreenTransferShipmentEntry extends StatefulWidget {
+class ScreenTransferShipmentEntryPcid extends StatefulWidget {
   final dynamic item;
-  const ScreenTransferShipmentEntry({
+  const ScreenTransferShipmentEntryPcid({
     super.key,
     required this.item,
   });
 
   @override
-  State<ScreenTransferShipmentEntry> createState() =>
-      _ScreenTransferShipmentEntry();
+  State<ScreenTransferShipmentEntryPcid> createState() =>
+      _ScreenTransferShipmentEntryPcid();
 }
 
-class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
+class _ScreenTransferShipmentEntryPcid
+    extends State<ScreenTransferShipmentEntryPcid> {
   var txtScan = TextEditingController();
 
   List<dynamic> items = [];
   List<dynamic> submitItem = [];
   List<TextEditingController> itemQty = [];
   List<dynamic> tradqr = [];
+  List<dynamic> pCIDList = [];
 
   String packNum = "";
   String company = "";
@@ -361,7 +363,8 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
                                         6: FixedColumnWidth(110),
                                         7: FixedColumnWidth(40),
                                         8: FixedColumnWidth(50),
-                                        9: FixedColumnWidth(70)
+                                        9: FixedColumnWidth(70),
+                                        10: FixedColumnWidth(70)
                                       },
                                       border: const TableBorder.symmetric(
                                         inside: BorderSide(
@@ -531,6 +534,8 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
 
   getPartAsync(String val) async {
     try {
+      var resPCID = null;
+
       if (val.length <= 3) {
         return;
       }
@@ -548,14 +553,19 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
         if (words.length <= 2) {
           return;
         }
-
-        partNum = words[1].replaceAll("Part Code - ", '').replaceAll("~", "");
-        serialNum =
-            words[5].replaceAll("Serial No. - ", '').replaceAll("~", "");
-        partLot = words[4]
-            .replaceAll("Lot No. -", '')
-            .replaceAll("~", "")
-            .replaceAll(" ", "");
+        if (words[2].contains("PCID")) {
+          qrType = "C";
+          resPCID =
+              await transferShipServices.getDataFromPCID(words[3].toString());
+        } else {
+          partNum = words[1].replaceAll("Part Code - ", '').replaceAll("~", "");
+          serialNum =
+              words[5].replaceAll("Serial No. - ", '').replaceAll("~", "");
+          partLot = words[4]
+              .replaceAll("Lot No. -", '')
+              .replaceAll("~", "")
+              .replaceAll(" ", "");
+        }
       } else {
         var resTradQr = await transferShipServices.getTraditionalQRData(val);
         if (resTradQr == null) {
@@ -568,38 +578,50 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
         serialNum = tradqr[0]["UD16_Character02"]; //val.substring(13);
       }
 
-      if (partNum.isEmpty && serialNum.isEmpty) {
-        throw Exception("Invalid QR Code.");
-      }
+      if (qrType == "A" || qrType == "B") {
+        AddScanProduct(partNum, serialNum, "-");
+        // if (partNum.isEmpty && serialNum.isEmpty) {
+        //   throw Exception("Invalid QR Code.");
+        // }
 
-      int productIndex = items.indexWhere(
-        (item) =>
-            item["TFShipDtl_PartNum"].toString().toLowerCase() ==
-                partNum.toLowerCase() &&
-            double.parse(item["TFShipDtl_OurStockShippedQty"].toString()) <
-                double.parse(item["TFShipDtl_VS_QtyToShip_c"].toString()),
-      );
+        // int productIndex = items.indexWhere(
+        //   (item) =>
+        //       item["TFShipDtl_PartNum"].toString().toLowerCase() ==
+        //           partNum.toLowerCase() &&
+        //       double.parse(item["TFShipDtl_OurStockShippedQty"].toString()) <
+        //           double.parse(item["TFShipDtl_VS_QtyToShip_c"].toString()) &&
+        //       item["TFShipDtl_PCID"] == null,
+        // );
 
-      var resPrd = await custShipServices.getGetPart(partNum);
-      if (resPrd["value"].length == 0) {
-        throw Exception("Invalid partnum no details found.");
-      }
+        // var resPrd = await custShipServices.getGetPart(partNum);
+        // if (resPrd["value"].length == 0) {
+        //   throw Exception("Invalid partnum no details found.");
+        // }
 
-      if (productIndex == -1) {
-        throw Exception("Please scan a valid PartNum.");
+        // if (productIndex == -1) {
+        //   throw Exception("Please scan a valid PartNum.");
+        // } else {
+        //   if (qrType == "B" && partLot.isNotEmpty) {
+        //     items[productIndex]["TFShipDtl_LotNum"] = partLot;
+        //   }
+        //   items[productIndex]["isSelect"] = true;
+        //   items[productIndex]["TFShipDtl_OurStockShippedQty"] = (double.parse(
+        //               items[productIndex]["TFShipDtl_OurStockShippedQty"]
+        //                   .toString()) +
+        //           1)
+        //       .toString();
+        //   itemQty[productIndex].text =
+        //       items[productIndex]["TFShipDtl_OurStockShippedQty"];
+        //   addProductToSubmit(items[productIndex], serialNum);
+        // }
       } else {
-        if (qrType == "B" && partLot.isNotEmpty) {
-          items[productIndex]["TFShipDtl_LotNum"] = partLot;
+        pCIDList = resPCID["value"];
+        for (var pacidItem in pCIDList) {
+          AddScanProduct(
+              pacidItem["PkgControlItem_ItemPartNum"].toString(),
+              pacidItem["SerialNo_SerialNumber"].toString(),
+              pacidItem["PkgControlItem_PCID"].toString());
         }
-        items[productIndex]["isSelect"] = true;
-        items[productIndex]["TFShipDtl_OurStockShippedQty"] = (double.parse(
-                    items[productIndex]["TFShipDtl_OurStockShippedQty"]
-                        .toString()) +
-                1)
-            .toString();
-        itemQty[productIndex].text =
-            items[productIndex]["TFShipDtl_OurStockShippedQty"];
-        addProductToSubmit(items[productIndex], serialNum);
       }
     } catch (ex) {
       showError('Error', ex.toString());
@@ -608,6 +630,91 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  AddScanProduct(String partNum, String serialNum, String pcidVal) async {
+    if (partNum.isEmpty && serialNum.isEmpty) {
+      throw Exception("Invalid QR Code.");
+    }
+
+    double shipSum = 0;
+    double pickSum = 0;
+    items.forEach((i) {
+      shipSum += double.parse(i["TFShipDtl_OurStockShippedQty"].toString());
+      pickSum += double.parse(i["TFShipDtl_VS_QtyToShip_c"].toString());
+    });
+
+    if (shipSum < pickSum) {
+      throw Exception("Quantity exceeding...");
+    }
+
+    int productIndex = items.indexWhere(
+      (item) =>
+          item["TFShipDtl_PartNum"].toString().toLowerCase() ==
+              partNum.toLowerCase() &&
+          double.parse(item["TFShipDtl_OurStockShippedQty"].toString()) <
+              double.parse(item["TFShipDtl_VS_QtyToShip_c"].toString()) &&
+          item["TFShipDtl_PCID"] == null,
+    );
+
+    var resPrd = await custShipServices.getGetPart(partNum);
+    if (resPrd["value"].length == 0) {
+      throw Exception("Invalid partnum no details found.");
+    }
+
+    if (productIndex == -1) {
+      throw Exception("Please scan a valid PartNum.");
+    } else {
+      if (qrType == "B" && partLot.isNotEmpty) {
+        items[productIndex]["TFShipDtl_LotNum"] = partLot;
+      }
+      items[productIndex]["isSelect"] = true;
+      items[productIndex]["TFShipDtl_OurStockShippedQty"] = (double.parse(
+                  items[productIndex]["TFShipDtl_OurStockShippedQty"]
+                      .toString()) +
+              1)
+          .toString();
+      itemQty[productIndex].text =
+          items[productIndex]["TFShipDtl_OurStockShippedQty"];
+      addProductToSubmit(items[productIndex], serialNum);
+    }
+  }
+
+  AddPCIDScanProduct(String partNum, String serialNum, String pcidVal) async {
+    if (partNum.isEmpty && serialNum.isEmpty) {
+      throw Exception("Invalid QR Code.");
+    }
+
+    int productIndex = items.indexWhere(
+      (item) =>
+          item["TFShipDtl_PartNum"].toString().toLowerCase() ==
+              partNum.toLowerCase() &&
+          double.parse(item["TFShipDtl_OurStockShippedQty"].toString()) <
+              double.parse(item["TFShipDtl_VS_QtyToShip_c"].toString()) &&
+          item["TFShipDtl_PCID"].toString() == pcidVal.toString(),
+    );
+
+    var resPrd = await custShipServices.getGetPart(partNum);
+    if (resPrd["value"].length == 0) {
+      throw Exception("Invalid partnum no details found.");
+    }
+
+    if (productIndex == -1) {
+      throw Exception("Please scan a valid PartNum.");
+    } else {
+      if (qrType == "B" && partLot.isNotEmpty) {
+        items[productIndex]["TFShipDtl_LotNum"] = partLot;
+      }
+      items[productIndex]["isSelect"] = true;
+      items[productIndex]["TFShipDtl_OurStockShippedQty"] = (double.parse(
+                  items[productIndex]["TFShipDtl_OurStockShippedQty"]
+                      .toString()) +
+              1)
+          .toString();
+      itemQty[productIndex].text =
+          items[productIndex]["TFShipDtl_OurStockShippedQty"];
+      addProductToSubmit(items[productIndex], serialNum);
     }
   }
 
@@ -782,6 +889,7 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
         tableCell('Lot'),
         tableCell("IUM"),
         tableCell("Type"),
+        tableCell("PCID"),
       ],
     ));
 
@@ -823,6 +931,7 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
             tableCellRow(item["TFShipDtl_LotNum"].toString()),
             tableCellRow(item["TFShipDtl_IUM"].toString()),
             tableCellRow(item["Calculated_PartType"].toString()),
+            tableCellRow(item["TFShipDtl_PCID"].toString()),
           ],
         ),
       );
