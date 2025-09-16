@@ -553,10 +553,10 @@ class _ScreenTransferShipmentEntryPcid
         if (words.length <= 2) {
           return;
         }
-        if (words[2].contains("PCID")) {
+        if (words[1].contains("PCID")) {
           qrType = "C";
           resPCID =
-              await transferShipServices.getDataFromPCID(words[3].toString());
+              await transferShipServices.getDataFromPCID(words[2].toString());
         } else {
           partNum = words[1].replaceAll("Part Code - ", '').replaceAll("~", "");
           serialNum =
@@ -579,7 +579,7 @@ class _ScreenTransferShipmentEntryPcid
       }
 
       if (qrType == "A" || qrType == "B") {
-        AddScanProduct(partNum, serialNum, "-");
+        addScanProduct(partNum, serialNum, "");
         // if (partNum.isEmpty && serialNum.isEmpty) {
         //   throw Exception("Invalid QR Code.");
         // }
@@ -617,7 +617,7 @@ class _ScreenTransferShipmentEntryPcid
       } else {
         pCIDList = resPCID["value"];
         for (var pacidItem in pCIDList) {
-          AddScanProduct(
+          addScanProduct(
               pacidItem["PkgControlItem_ItemPartNum"].toString(),
               pacidItem["SerialNo_SerialNumber"].toString(),
               pacidItem["PkgControlItem_PCID"].toString());
@@ -633,14 +633,21 @@ class _ScreenTransferShipmentEntryPcid
     }
   }
 
-  AddScanProduct(String partNum, String serialNum, String pcidVal) async {
+  addScanProduct(String partNum, String serialNum, String pcidVal) async {
     if (partNum.isEmpty && serialNum.isEmpty) {
       throw Exception("Invalid QR Code.");
     }
 
     double shipSum = 0;
     double pickSum = 0;
-    items.forEach((i) {
+
+    List<dynamic> itemFilter = items
+        .where((item) =>
+            item["TFShipDtl_PartNum"].toString().toLowerCase() ==
+            partNum.toLowerCase())
+        .toList();
+
+    itemFilter.forEach((i) {
       shipSum += double.parse(i["TFShipDtl_OurStockShippedQty"].toString());
       pickSum += double.parse(i["TFShipDtl_VS_QtyToShip_c"].toString());
     });
@@ -664,7 +671,37 @@ class _ScreenTransferShipmentEntryPcid
     }
 
     if (productIndex == -1) {
-      throw Exception("Please scan a valid PartNum.");
+      //throw Exception("Please scan a valid PartNum.");
+      int productIndexnew = items.indexWhere((item) =>
+          item["TFShipDtl_PartNum"].toString().toLowerCase() ==
+          partNum.toLowerCase());
+
+      dynamic itemNew = null;
+
+      itemNew["TFShipDtl_TFOrdNum"] =
+          items[productIndexnew]["TFShipDtl_TFOrdNum"];
+      itemNew["TFShipDtl_TFOrdLine"] =
+          items[productIndexnew]["TFShipDtl_TFOrdLine"];
+      itemNew["TFShipDtl_WarehouseCode"] =
+          items[productIndexnew]["TFShipDtl_WarehouseCode"];
+      itemNew["TFShipDtl_BinNum"] = items[productIndexnew]["TFShipDtl_BinNum"];
+
+      itemNew["TFShipDtl_VS_QtyToShip_c"] = "0";
+      itemNew["TFShipDtl_PackLine"] = "0";
+      itemNew["TFShipDtl_PartNum"] = partNum;
+      itemNew["TFShipDtl_LineDesc"] =
+          items[productIndexnew]["TFShipDtl_LineDesc"];
+      itemNew["TFShipDtl_LotNum"] = items[productIndexnew]["TFShipDtl_LotNum"];
+      itemNew["TFShipDtl_IUM"] = items[productIndexnew]["TFShipDtl_IUM"];
+      itemNew["Calculated_PartType"] =
+          items[productIndexnew]["Calculated_PartType"];
+      itemNew["isSelect"] = true;
+      itemNew["TFShipDtl_OurStockShippedQty"] = "1";
+      itemNew["TFShipDtl_PCID"] = pcidVal;
+
+      //itemQty[productIndex].text = items[productIndex]["TFShipDtl_OurStockShippedQty"];
+      addProductToSubmit(itemNew, serialNum);
+      items.add(itemNew);
     } else {
       if (qrType == "B" && partLot.isNotEmpty) {
         items[productIndex]["TFShipDtl_LotNum"] = partLot;
@@ -675,6 +712,8 @@ class _ScreenTransferShipmentEntryPcid
                       .toString()) +
               1)
           .toString();
+      items[productIndex]["TFShipDtl_PCID"] = pcidVal;
+
       itemQty[productIndex].text =
           items[productIndex]["TFShipDtl_OurStockShippedQty"];
       addProductToSubmit(items[productIndex], serialNum);

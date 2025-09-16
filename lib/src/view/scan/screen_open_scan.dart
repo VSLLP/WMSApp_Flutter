@@ -374,7 +374,7 @@ class _ScreenOpenScanState extends State<ScreenOpenScan> {
                                       child: Table(
                                         columnWidths: const {
                                           0: FixedColumnWidth(80),
-                                          1: FixedColumnWidth(200),
+                                          //1: FixedColumnWidth(200),
                                           2: FixedColumnWidth(200),
                                         },
                                         border: const TableBorder.symmetric(
@@ -766,7 +766,7 @@ class _ScreenOpenScanState extends State<ScreenOpenScan> {
     rows.add(TableRow(
       children: [
         tableCell('Sr No.'),
-        tableCell('Product'),
+        //tableCell('Product'),
         tableCell('Scan value'),
       ],
     ));
@@ -775,7 +775,7 @@ class _ScreenOpenScanState extends State<ScreenOpenScan> {
       rows.add(TableRow(
         children: [
           tableCellRow((count + 1).toString()),
-          tableCellRow(item["PartNum"]),
+          //tableCellRow(item["PartNum"]),
           tableCellRow(item["QR"].toString()),
         ],
       ));
