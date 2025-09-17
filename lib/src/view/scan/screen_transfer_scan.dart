@@ -4,7 +4,12 @@ import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:epicor/src/view/home/screen_qr_scan.dart';
 
 class ScreenTransferScan extends StatefulWidget {
-  const ScreenTransferScan({super.key});
+  final dynamic item;
+
+  const ScreenTransferScan({
+    super.key,
+    required this.item,
+  });
 
   @override
   State<ScreenTransferScan> createState() => _ScreenTransferScanState();
@@ -28,6 +33,8 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
   bool isLoading = true;
   bool isSubmit = false;
   bool isCam = false;
+
+  var txtPackNum = TextEditingController();
 
   @override
   void initState() {
@@ -97,6 +104,58 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.3,
+                                  child: Text(
+                                    "Pack Num: ",
+                                    style: TextStyles.getBold(
+                                      14,
+                                      color: AppColors.colorDataColor,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.54,
+                                  child: TextFormField(
+                                    controller: txtPackNum,
+                                    style: TextStyles.getBold(
+                                      12,
+                                      color: AppColors.colorBlack,
+                                    ),
+                                    decoration: InputDecoration(
+                                      hintText: "Pack Num",
+                                      hintStyle: TextStyles.getRegularScund(
+                                        14,
+                                        color: AppColors.colorGray600,
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                        vertical: 0,
+                                      ),
+                                      counterText: "",
+                                    ),
+                                    keyboardType: TextInputType.name,
+                                    autofocus: false,
+                                    readOnly: true,
+                                    validator: (value) {
+                                      if (value!.isEmpty) {
+                                        return "Please select pack num.";
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 16,
+                            ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -435,7 +494,7 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
     company = await sharedPref.getString("userCompnay");
     plant = await sharedPref.getString("userPlant");
     isCam = await sharedPref.getBool("isCam");
-
+    txtPackNum.text = widget.item["packNum"].toString();
     var resB = await scanServices.getWarehouseAsync();
     wheres.clear();
     wheres = resB['value'];
@@ -834,11 +893,12 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
           mItem.add({
             "Company": company,
             "Key1": "TFReceipt",
-            "Key2": plant,
+            "Key2": txtPackNum.text,
             "Key3": item["whe"],
             "Key4": item["bin"],
             "Key5": item["QR"],
             "Character01": item["PartNum"],
+            "Character02": plant,
             "RowMod": "A"
           });
         }

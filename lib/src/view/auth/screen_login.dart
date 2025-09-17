@@ -219,7 +219,7 @@ class _ScreenLoginState extends State<ScreenLogin> {
     txtUsername.text = "vswmsuk90";
     // txtPassword.text = "admin1234";
     // txtPassword.text = "vswmsdl09";
-    txtPassword.text = "Tru@123";
+    txtPassword.text = "2025@Tru";
   }
 
   loadData() {

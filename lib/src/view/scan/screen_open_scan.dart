@@ -375,7 +375,7 @@ class _ScreenOpenScanState extends State<ScreenOpenScan> {
                                         columnWidths: const {
                                           0: FixedColumnWidth(80),
                                           //1: FixedColumnWidth(200),
-                                          2: FixedColumnWidth(200),
+                                          1: FixedColumnWidth(200),
                                         },
                                         border: const TableBorder.symmetric(
                                           inside: BorderSide(

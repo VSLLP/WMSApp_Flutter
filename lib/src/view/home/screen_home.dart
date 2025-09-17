@@ -4,6 +4,7 @@ import 'package:epicor/src/view/TFShipment/screen_transfer_shipment_main_pcid.da
 
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
+import 'package:epicor/src/view/scan/screen_open_scan_main.dart';
 import 'package:epicor/src/view/scan/screen_transfer_scan.dart';
 import 'package:epicor/src/view/shipment/screen_shipment_main.dart';
 import 'package:epicor/src/view/home/screen_profile.dart';
@@ -426,7 +427,7 @@ class _ScreenHomeState extends State<ScreenHome> {
       case "TFReceiptScan":
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => const ScreenTransferScan(),
+            builder: (context) => const ScreenOpenScanMain(),
           ),
         );
         break;
