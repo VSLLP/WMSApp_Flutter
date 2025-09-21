@@ -27,6 +27,7 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
   List<dynamic> bins = [];
   List<dynamic> tradqr = [];
   List<TextEditingController> itemQty = [];
+  List<dynamic> scanitems = [];
 
   dynamic ord = {};
   dynamic whe = {};
@@ -583,6 +584,8 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
     setState(() {
       isLoading = true;
     });
+
+    scanitems.clear();
     isCam = await sharedPref.getBool("isCam");
     if (widget.isNew) {
       var selItem = json.decode(widget.item);
@@ -1071,6 +1074,17 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
         throw Exception("Invalid QR Code.");
       }
 
+      int isProductExist = scanitems.indexWhere(
+        (item) =>
+            item["partnum"].toString().toLowerCase() == partNum.toLowerCase() &&
+            item["serialnum"].toString().toLowerCase() ==
+                serialNum.toLowerCase(),
+      );
+
+      if (isProductExist >= 0) {
+        throw Exception("Product already scanned!");
+      }
+
       int productIndex = items.indexWhere(
         (item) =>
             item["ShipDtl_PartNum"].toString().toLowerCase() ==
@@ -1084,30 +1098,41 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
         throw Exception("Invalid partnum no details found.");
       }
 
-      var prdDtl = resPrd["value"][0];
+      var resStatus =
+          await transferShipServices.getSerialStatus(partNum, serialNum);
+      List<dynamic> statusList = resStatus["value"];
 
-      if (productIndex == -1) {
-        throw Exception("Please scan a valid PartNum.");
-      } else {
-        if (qrType == "B" && partLot.isNotEmpty) {
-          items[productIndex]["ShipDtl_LotNum"] = partLot;
+      if (statusList[0]["SerialNo_SNStatus"].toString() == "INVENTORY") {
+        var prdDtl = resPrd["value"][0];
+
+        if (productIndex == -1) {
+          throw Exception("Please scan a valid PartNum.");
+        } else {
+          if (qrType == "B" && partLot.isNotEmpty) {
+            items[productIndex]["ShipDtl_LotNum"] = partLot;
+          }
+          items[productIndex]["isSelect"] = true;
+          items[productIndex]["ShipDtl_OurInventoryShipQty"] = (double.parse(
+                      items[productIndex]["ShipDtl_OurInventoryShipQty"]) +
+                  1)
+              .toString();
+          items[productIndex]["serials"].add({
+            "num": serialNum,
+            "lot": partLot,
+            "qrType": qrType,
+          });
+          items[productIndex]["prdTrack"] = getType(prdDtl);
+          itemQty[productIndex].text =
+              items[productIndex]["ShipDtl_OurInventoryShipQty"];
+
+          scanitems.add({"partnum": partNum, "serialnum": serialNum});
         }
-        items[productIndex]["isSelect"] = true;
-        items[productIndex]["ShipDtl_OurInventoryShipQty"] =
-            (double.parse(items[productIndex]["ShipDtl_OurInventoryShipQty"]) +
-                    1)
-                .toString();
-        items[productIndex]["serials"].add({
-          "num": serialNum,
-          "lot": partLot,
-          "qrType": qrType,
-        });
-        items[productIndex]["prdTrack"] = getType(prdDtl);
-        itemQty[productIndex].text =
-            items[productIndex]["ShipDtl_OurInventoryShipQty"];
-      }
 
-      getWhere(partNum);
+        getWhere(partNum);
+      } else {
+        throw Exception(
+            " Invalid Part/Serial No scanned. Please scan a valid Part/Serial No.");
+      }
     } catch (ex) {
       showError('Error', ex.toString());
     } finally {
@@ -1285,8 +1310,8 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
                 "SNPrefix": "",
                 "SNFormat": "",
                 "SNBaseNumber": serial["num"],
-                "XRefPartNum":
-                    serial["num"].substring(serial["num"].length - 7),
+                "XRefPartNum": "",
+                //serial["num"].substring(serial["num"].length - 7),
                 "XRefPartType": "",
                 "TransType": "STK-PCK",
                 "RowMod": "A"

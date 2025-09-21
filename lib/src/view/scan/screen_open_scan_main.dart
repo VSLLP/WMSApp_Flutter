@@ -237,10 +237,12 @@ class _ScreenOpenScanMain extends State<ScreenOpenScanMain> {
         final ordernum = item["TFOrdHed_TFOrdNum"].toLowerCase();
         final plant1 = item["Plant_Name"].toLowerCase();
         final plant2 = item["Plant1_Name"].toLowerCase();
+        final PackNum = item["TFShipDtl_PackNum"].toString();
 
         return ordernum.contains(enteredKeyword.toLowerCase()) ||
             plant1.contains(enteredKeyword.toLowerCase()) ||
-            plant2.contains(enteredKeyword.toLowerCase());
+            plant2.contains(enteredKeyword.toLowerCase()) ||
+            PackNum.contains(enteredKeyword.toLowerCase());
       }).toList();
       // we use the toLowerCase() method to make it case-insensitive
 

@@ -22,6 +22,7 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
   var txtScan = TextEditingController();
 
   List<dynamic> items = [];
+  List<dynamic> scanitems = [];
   List<dynamic> submitItem = [];
   List<TextEditingController> itemQty = [];
   List<dynamic> tradqr = [];
@@ -490,6 +491,8 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
         isLoading = true;
       });
 
+      scanitems.clear();
+      submitItem.clear();
       isCam = await sharedPref.getBool("isCam");
       company = await sharedPref.getString("userCompnay");
 
@@ -572,6 +575,17 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
         throw Exception("Invalid QR Code.");
       }
 
+      int isProductExist = scanitems.indexWhere(
+        (item) =>
+            item["partnum"].toString().toLowerCase() == partNum.toLowerCase() &&
+            item["serialnum"].toString().toLowerCase() ==
+                serialNum.toLowerCase(),
+      );
+
+      if (isProductExist >= 0) {
+        throw Exception("Product already scanned!");
+      }
+
       int productIndex = items.indexWhere(
         (item) =>
             item["TFShipDtl_PartNum"].toString().toLowerCase() ==
@@ -585,21 +599,32 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
         throw Exception("Invalid partnum no details found.");
       }
 
-      if (productIndex == -1) {
-        throw Exception("Please scan a valid PartNum.");
-      } else {
-        if (qrType == "B" && partLot.isNotEmpty) {
-          items[productIndex]["TFShipDtl_LotNum"] = partLot;
+      var resStatus =
+          await transferShipServices.getSerialStatus(partNum, serialNum);
+      List<dynamic> statusList = resStatus["value"];
+      if (statusList[0]["SerialNo_SNStatus"].toString() == "INVENTORY") {
+        if (productIndex == -1) {
+          throw Exception("Please scan a valid PartNum.");
+        } else {
+          if (qrType == "B" && partLot.isNotEmpty) {
+            items[productIndex]["TFShipDtl_LotNum"] = partLot;
+          }
+          items[productIndex]["isSelect"] = true;
+          items[productIndex]["TFShipDtl_OurStockShippedQty"] = (double.parse(
+                      items[productIndex]["TFShipDtl_OurStockShippedQty"]
+                          .toString()) +
+                  1)
+              .toString();
+          itemQty[productIndex].text =
+              items[productIndex]["TFShipDtl_OurStockShippedQty"];
+
+          scanitems.add({"partnum": partNum, "serialnum": serialNum});
+
+          addProductToSubmit(items[productIndex], serialNum);
         }
-        items[productIndex]["isSelect"] = true;
-        items[productIndex]["TFShipDtl_OurStockShippedQty"] = (double.parse(
-                    items[productIndex]["TFShipDtl_OurStockShippedQty"]
-                        .toString()) +
-                1)
-            .toString();
-        itemQty[productIndex].text =
-            items[productIndex]["TFShipDtl_OurStockShippedQty"];
-        addProductToSubmit(items[productIndex], serialNum);
+      } else {
+        throw Exception(
+            " Invalid Part/Serial No scanned. Please scan a valid Part/Serial No.");
       }
     } catch (ex) {
       showError('Error', ex.toString());
@@ -673,6 +698,7 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
 
         if (resW.statusCode == 200) {
           await showError("Success", "Successfully submitted.");
+          submitItem.clear();
         } else {
           var response = json.decode(resW.body);
           if (response["ErrorMessage"] != null) {
@@ -720,24 +746,29 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
 
       // print("Shipping with PackNum: $packNum");
 
-      var body = {
-        "Company": company,
-        "PackNum": packNum,
-        "ShipDate": DateTime.now().toIso8601String(),
-        "Shipped": true,
-        "ShipStatus": "SHIPPED",
-        "RowMod": "U"
-      };
+      // var body = {
+      //   "Company": company,
+      //   "PackNum": packNum,
+      //   "ShipDate": DateTime.now().toIso8601String(),
+      //   "Shipped": true,
+      //   "ShipStatus": "SHIPPED",
+      //   "RowMod": "U"
+      // };
 
       // print("Company: $company");
       // print("PackNum: $packNum");
 
-      Response res = await transferServices.patchTransOrderShips(
-        json.encode(body),
-        packNum,
-      );
+      // Response res = await transferServices.patchTransOrderShips(
+      //   json.encode(body),
+      //   packNum,
+      // );
 
-      if (res.statusCode == 204) {
+      String rowid = widget.item['TFShipHead_SysRowID'].toString();
+
+      var body = {"ipTFShipHeadRowid": rowid, "ipReturn": true};
+      Response res = await transferServices.shipPickSlip(json.encode(body));
+
+      if (res.statusCode == 200) {
         // Clear the saved packNum by setting it to empty string
         await sharedPref.setString("currentPackNum", "");
 

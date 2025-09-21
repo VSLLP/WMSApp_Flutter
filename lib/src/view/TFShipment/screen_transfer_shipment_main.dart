@@ -237,7 +237,8 @@ class _ScreenTransferShipmentMainState
       'toPlant': item['Plant1_Name'],
       'fromPlantName': item['Plant_Name'],
       'toPlantName': item['Plant1_Name'],
-      'shipDate': item['TFShipHead_ShipDate']
+      'shipDate': item['TFShipHead_ShipDate'],
+      'TFShipHead_SysRowID': item['TFShipHead_SysRowID']
     };
     await sharedPref.setString("currentPackNum", packNum.toString());
     if (!mounted) return;

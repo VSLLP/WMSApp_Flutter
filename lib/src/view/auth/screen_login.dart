@@ -213,13 +213,14 @@ class _ScreenLoginState extends State<ScreenLogin> {
   void setDefaultData() {
     // txtUrl.text = "https://epicor.ceasefire.asia/CFILPilot/api/v1";
     txtUrl.text = "https://epicor.ceasefire.asia/E11INP/api/v1";
+    // txtUrl.text =        "https://epicor.ceasefire.asia/E11INLIVE/api/v1"; //commented and added by shraddha 19-sep-2025
     txtCompany.text = "CTEMP1";
     // txtUsername.text = "manager";
     // txtUsername.text = "vswmsdl09";
-    txtUsername.text = "vswmsuk90";
-    // txtPassword.text = "admin1234";
+    //txtUsername.text = "vswmsuk90";
+    // txtPassword.text = "2025@Tru";
     // txtPassword.text = "vswmsdl09";
-    txtPassword.text = "2025@Tru";
+    //txtPassword.text = "2025@Tru";
   }
 
   loadData() {

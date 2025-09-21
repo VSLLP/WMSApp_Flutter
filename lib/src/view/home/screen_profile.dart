@@ -1,5 +1,6 @@
 import 'package:epicor/core_packages.dart';
 
+import 'package:epicor/src/view/auth/screen_login.dart';
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 
@@ -264,22 +265,22 @@ class _ScreenProfileState extends State<ScreenProfile> {
                     "@Copyright 2022 All Rights resserve",
                     style: TextStyles.getRegularScund(14),
                   ),
-                  const SizedBox(
-                    height: 16,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Image(
-                        image: AssetImage('assets/images/aadya_logo.png'),
-                        width: 100,
-                      ),
-                      Text(
-                        "Aadya Web Services",
-                        style: TextStyles.getRegularScund(14),
-                      ),
-                    ],
-                  ),
+                  // const SizedBox(
+                  //   height: 16,
+                  // ),
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.center,
+                  //   children: [
+                  //     const Image(
+                  //       image: AssetImage('assets/images/aadya_logo.png'),
+                  //       width: 100,
+                  //     ),
+                  //     Text(
+                  //       "Aadya Web Services",
+                  //       style: TextStyles.getRegularScund(14),
+                  //     ),
+                  //   ],
+                  // ),
                   const SizedBox(
                     height: 16,
                   ),
@@ -295,6 +296,7 @@ class _ScreenProfileState extends State<ScreenProfile> {
   loadData() async {
     userId = await sharedPref.getString("userName");
     isCam = await sharedPref.getBool("isCam");
+
     setState(() {
       isLoading = false;
     });
@@ -374,6 +376,15 @@ class _ScreenProfileState extends State<ScreenProfile> {
   }
 
   logout() async {
-    await sharedPref.deleteAll();
+    //await sharedPref.deleteAll();
+    await sharedPref.delete("userStatus");
+    await sharedPref.delete("userPass");
+    await sharedPref.delete("profile");
+    await sharedPref.delete("userPlant");
+    await sharedPref.delete("isCam");
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const ScreenLogin()),
+    );
   }
 }

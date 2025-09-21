@@ -481,6 +481,34 @@ class TransferDelegate {
     return response;
   }
 
+  shipPickSlip(body) async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    String company = await sharedPref.getString("userCompnay");
+
+    Uri url = Uri.parse("$apiUrl/Erp.BO.TransOrderShipSvc/ShipPackingSlip");
+
+    // String basicAuth =
+    //     'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.post(
+      url,
+      headers: requestHeaders,
+      body: body,
+    );
+    return response;
+  }
+
   getTansferReceiptItems(String packnum) async {
     HttpOverrides.global = MyHttpOverrides();
     String apiUrl = await sharedPref.getString("userUrl");

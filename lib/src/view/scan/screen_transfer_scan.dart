@@ -23,6 +23,7 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
   List<dynamic> items = [];
   List<dynamic> wheres = [];
   List<dynamic> bins = [];
+  List<dynamic> tradqr = [];
 
   dynamic selWheres = [];
   dynamic selBins = [];
@@ -435,6 +436,7 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
                                           0: FixedColumnWidth(80),
                                           1: FixedColumnWidth(200),
                                           2: FixedColumnWidth(200),
+                                          3: FixedColumnWidth(200),
                                         },
                                         border: const TableBorder.symmetric(
                                           inside: BorderSide(
@@ -786,11 +788,50 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
         throw Exception("Please select warehouse and bin!");
       }
 
-      if (val.length <= 14) {
+      // if (val.length <= 14) {
+      //   return;
+      // }
+      if (val.length <= 3) {
         return;
       }
 
-      String partNumber = val.substring(0, 9);
+      String partNumber = "";
+      String serialNum = "";
+      String partLot = "";
+      String qrType = "";
+
+      if (val.contains("Company Name")) {
+        qrType = "B";
+        String splitKey = "~";
+
+        List<String> words = val.split(splitKey);
+        if (words.length <= 2) {
+          return;
+        }
+
+        partNumber =
+            words[1].replaceAll("Part Code - ", '').replaceAll("~", "");
+        serialNum =
+            words[5].replaceAll("Serial No. - ", '').replaceAll("~", "");
+        partLot = words[4]
+            .replaceAll("Lot No. -", '')
+            .replaceAll("~", "")
+            .replaceAll(" ", "");
+      } else {
+        var resTradQr = await transferShipServices.getTraditionalQRData(val);
+        if (resTradQr == null) {
+          return;
+        }
+        tradqr.clear();
+        tradqr = resTradQr["value"];
+        //qrType = "A";
+        partNumber = tradqr[0]["UD16_Character01"]; //val.substring(0, 9);
+        serialNum = tradqr[0]["UD16_Character02"];
+      }
+
+      // String partNumber = val.substring(0, 9);
+      // String serialNum =
+      //     words[5].replaceAll("Serial No. - ", '').replaceAll("~", "");
       String fullQR = val;
 
       int isProductExist = items.indexWhere(
@@ -807,7 +848,9 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
           "PartNum": partNumber,
           "QR": fullQR,
           "whe": selWheres["Warehse_WarehouseCode"],
-          "bin": txtBin.text
+          "bin": txtBin.text,
+          "serialNum": serialNum,
+          "partLot": partLot,
         });
       }
     } catch (ex) {
@@ -826,6 +869,7 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
       children: [
         tableCell('Sr No.'),
         tableCell('Product'),
+        tableCell('SerialNumber'),
         tableCell('Scan value'),
       ],
     ));
@@ -835,6 +879,7 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
         children: [
           tableCellRow((count + 1).toString()),
           tableCellRow(item["PartNum"]),
+          tableCellRow(item["serialNum"]),
           tableCellRow(item["QR"].toString()),
         ],
       ));
@@ -896,9 +941,11 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
             "Key2": txtPackNum.text,
             "Key3": item["whe"],
             "Key4": item["bin"],
-            "Key5": item["QR"],
+            "Key5": item["serialNum"],
             "Character01": item["PartNum"],
-            "Character02": plant,
+            "Character02": item["QR"],
+            "Character03": item["partLot"],
+            "Character04": plant,
             "RowMod": "A"
           });
         }

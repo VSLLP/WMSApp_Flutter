@@ -2,6 +2,7 @@ import 'package:epicor/core_packages.dart';
 
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
+import 'package:epicor/src/view/home/screen_qr_scan.dart';
 import 'package:http/http.dart';
 
 class ScreenIssueMtlEntry extends StatefulWidget {
@@ -60,6 +61,7 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
 
   bool isLoading = true;
   bool isLot = false;
+  bool isCam = false;
 
   @override
   void initState() {
@@ -751,6 +753,11 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
                                             onChanged: (val) {
                                               getPartAsync(val);
                                             },
+                                            onTap: () {
+                                              if (isCam) {
+                                                getScan();
+                                              }
+                                            },
                                             keyboardType: TextInputType.name,
                                             autofocus: false,
                                           ),
@@ -1063,9 +1070,21 @@ class _ScreenIssueMtlEntryState extends State<ScreenIssueMtlEntry> {
     );
   }
 
+  getScan() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ScreenQrScan(),
+      ),
+    );
+    if (result != null && result is String) {
+      getPartAsync(result);
+    }
+  }
+
   loadData() async {
     company = await sharedPref.getString("userCompnay");
     plant = await sharedPref.getString("userPlant");
+    isCam = await sharedPref.getBool("isCam");
 
     var response = await materialServices.getIssueMaterialDetail(
       widget.item['JobHead_JobNum'],
