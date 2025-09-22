@@ -799,6 +799,7 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
       String serialNum = "";
       String partLot = "";
       String qrType = "";
+      String QrStr = "";
 
       if (val.contains("Company Name")) {
         qrType = "B";
@@ -818,7 +819,8 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
             .replaceAll("~", "")
             .replaceAll(" ", "");
       } else {
-        var resTradQr = await transferShipServices.getTraditionalQRData(val);
+        //commented by shraddha 22-sep-2025
+        /* var resTradQr = await transferShipServices.getTraditionalQRData(val);
         if (resTradQr == null) {
           return;
         }
@@ -826,7 +828,11 @@ class _ScreenTransferScanState extends State<ScreenTransferScan> {
         tradqr = resTradQr["value"];
         //qrType = "A";
         partNumber = tradqr[0]["UD16_Character01"]; //val.substring(0, 9);
-        serialNum = tradqr[0]["UD16_Character02"];
+        serialNum = tradqr[0]["UD16_Character02"];*/
+        List<String> qrcode1 = val.split(",");
+        partNumber = qrcode1[0].toString();
+        QrStr = val.toString();
+        serialNum = qrcode1[1].substring(qrcode1[1].length - 7);
       }
 
       // String partNumber = val.substring(0, 9);
