@@ -27,6 +27,8 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
   List<TextEditingController> itemQty = [];
   List<dynamic> tradqr = [];
 
+  final FocusNode _focusNode = FocusNode();
+
   String packNum = "";
   String company = "";
   String txtFromPlant = "";
@@ -42,7 +44,7 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
   bool isLoading = true;
   bool isSubmit = false;
   bool isCam = false;
-
+  final bool _isGestureEnabled = false;
   @override
   void initState() {
     super.initState();
@@ -306,11 +308,15 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
                                       counterText: "",
                                     ),
                                     onChanged: (val) {
-                                      getPartAsync(val);
+                                      if (!isLoading) {
+                                        getPartAsync(val);
+                                      }
                                     },
                                     onTap: () {
                                       if (isCam) {
-                                        getScan();
+                                        if (!isLoading) {
+                                          getScan();
+                                        }
                                       }
                                     },
                                     keyboardType: TextInputType.name,
@@ -390,55 +396,19 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
                           children: [
                             GestureDetector(
                               onTap: () {
-                                if (!isSubmit) {
-                                  submit();
+                                if (_isGestureEnabled) {
+                                  if (!isSubmit) {
+                                    ship();
+                                  }
                                 }
                               },
                               child: Container(
                                 height: 38,
                                 width: 100,
                                 decoration: BoxDecoration(
-                                  color: AppColors.colorAssent,
-                                  borderRadius: BorderRadius.circular(8),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.colorTansprent40,
-                                      blurRadius: 2,
-                                      offset: const Offset(-2, -2),
-                                    )
-                                  ],
-                                ),
-                                child: Center(
-                                  child: isSubmit
-                                      ? Lottie.asset(
-                                          'assets/anim/anim-btnLoading.json',
-                                        )
-                                      : Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 8.0,
-                                          ),
-                                          child: Text(
-                                            'Submit',
-                                            style: TextStyles.getBold(
-                                              16,
-                                              color: AppColors.colorWhite,
-                                            ),
-                                          ),
-                                        ),
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                if (!isSubmit) {
-                                  ship();
-                                }
-                              },
-                              child: Container(
-                                height: 38,
-                                width: 100,
-                                decoration: BoxDecoration(
-                                  color: AppColors.colorAssent,
+                                  color: _isGestureEnabled
+                                      ? AppColors.colorWhite
+                                      : AppColors.colorGray100,
                                   borderRadius: BorderRadius.circular(8),
                                   boxShadow: [
                                     BoxShadow(
@@ -461,7 +431,47 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
                                             'Shipped',
                                             style: TextStyles.getBold(
                                               16,
-                                              color: AppColors.colorWhite,
+                                              color: AppColors.colorAssent,
+                                            ),
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                if (!isSubmit) {
+                                  submit();
+                                }
+                              },
+                              child: Container(
+                                height: 38,
+                                width: 100,
+                                decoration: BoxDecoration(
+                                  color: AppColors.colorWhite,
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.colorTansprent40,
+                                      blurRadius: 2,
+                                      offset: const Offset(-2, -2),
+                                    )
+                                  ],
+                                ),
+                                child: Center(
+                                  child: isSubmit
+                                      ? Lottie.asset(
+                                          'assets/anim/anim-btnLoading.json',
+                                        )
+                                      : Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8.0,
+                                          ),
+                                          child: Text(
+                                            'Submit',
+                                            style: TextStyles.getBold(
+                                              16,
+                                              color: AppColors.colorAssent,
                                             ),
                                           ),
                                         ),
@@ -534,6 +544,10 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
 
   getPartAsync(String val) async {
     try {
+      setState(() {
+        isLoading = true;
+      });
+
       if (val.length <= 3) {
         return;
       }
@@ -653,6 +667,7 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
         "RowMod": "A"
       });
     }
+
     submitItem.add({
       "Company": company,
       "Key1": "TFShipDtl",
@@ -675,16 +690,18 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
         setState(() {
           isLoading = true;
         });
+        List<dynamic> distinctList = submitItem.toSet().toList();
+
         var body = {
           "ds": {
-            "UD16": submitItem,
+            "UD16": distinctList,
           }
         };
         printLargeString(json.encode(body));
         var resW =
             await transferShipServices.postTransShipOrder(json.encode(body));
 
-        for (var item in submitItem) {
+        for (var item in distinctList) {
           var bodyD = {
             "key1": item["Key1"].toString(),
             "key2": item["Key2"].toString(),
@@ -699,6 +716,7 @@ class _ScreenTransferShipmentEntry extends State<ScreenTransferShipmentEntry> {
         if (resW.statusCode == 200) {
           await showError("Success", "Successfully submitted.");
           submitItem.clear();
+          distinctList.clear();
         } else {
           var response = json.decode(resW.body);
           if (response["ErrorMessage"] != null) {

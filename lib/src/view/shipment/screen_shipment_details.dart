@@ -50,6 +50,8 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
   bool isLoading = true;
   bool isCam = false;
 
+  final bool _isGestureEnabled = false;
+
   @override
   void initState() {
     super.initState();
@@ -451,30 +453,34 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
                                         color: Colors.transparent,
                                         child: SingleChildScrollView(
                                           scrollDirection: Axis.horizontal,
-                                          child: Table(
-                                            columnWidths: const {
-                                              0: FixedColumnWidth(50),
-                                              1: FixedColumnWidth(100),
-                                              2: FixedColumnWidth(100),
-                                              3: FixedColumnWidth(50),
-                                              4: FixedColumnWidth(50),
-                                              5: FixedColumnWidth(130),
-                                              6: FixedColumnWidth(70),
-                                              7: FixedColumnWidth(50),
-                                              8: FixedColumnWidth(50),
-                                              9: FixedColumnWidth(70)
-                                            },
-                                            border: const TableBorder.symmetric(
-                                              inside: BorderSide(
-                                                width: 1,
-                                                color: Colors.black,
+                                          child: SingleChildScrollView(
+                                            scrollDirection: Axis.vertical,
+                                            child: Table(
+                                              columnWidths: const {
+                                                0: FixedColumnWidth(50),
+                                                1: FixedColumnWidth(100),
+                                                2: FixedColumnWidth(100),
+                                                3: FixedColumnWidth(50),
+                                                4: FixedColumnWidth(50),
+                                                5: FixedColumnWidth(130),
+                                                6: FixedColumnWidth(70),
+                                                7: FixedColumnWidth(50),
+                                                8: FixedColumnWidth(50),
+                                                9: FixedColumnWidth(70)
+                                              },
+                                              border:
+                                                  const TableBorder.symmetric(
+                                                inside: BorderSide(
+                                                  width: 1,
+                                                  color: Colors.black,
+                                                ),
+                                                outside: BorderSide(
+                                                  width: 1,
+                                                  color: Colors.black,
+                                                ),
                                               ),
-                                              outside: BorderSide(
-                                                width: 1,
-                                                color: Colors.black,
-                                              ),
+                                              children: getRows(),
                                             ),
-                                            children: getRows(),
                                           ),
                                         ),
                                       ),
@@ -491,15 +497,19 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    if (!isLoading) {
-                                      shipped();
+                                    if (_isGestureEnabled) {
+                                      if (!isLoading) {
+                                        shipped();
+                                      }
                                     }
                                   },
                                   child: Container(
                                     height: 38,
                                     width: 100,
                                     decoration: BoxDecoration(
-                                      color: AppColors.colorWhite,
+                                      color: _isGestureEnabled
+                                          ? AppColors.colorWhite
+                                          : AppColors.colorGray100,
                                       borderRadius: BorderRadius.circular(8),
                                       boxShadow: [
                                         BoxShadow(
@@ -1345,6 +1355,15 @@ class _ScreenShipmentDetails extends State<ScreenShipmentDetails> {
                     "TrackSerialNum": item["Part_TrackSerialNum"],
                     "SysRevID": item["ShipDtl_SysRevID"],
                     "SysRowID": item["ShipDtl_SysRowID"],
+                    "BinType": item["ShipDtl_BinType"],
+                    "WUM": item["ShipDtl_WUM"],
+                    "ShipCmpl":
+                        double.parse(item["Calculated_TotShipQty"].toString()) +
+                                    qTY >=
+                                double.parse(
+                                    item["Calculated_TotOrderQty"].toString())
+                            ? true
+                            : false,
                     // "FromPlantTracking": true,
                     // "ToPlantTracking": true,
                     "RowMod": "U"

@@ -248,14 +248,14 @@ class _ScreenProfileState extends State<ScreenProfile> {
                     ),
                   ),
                   Text(
-                    "App Version v1.0.12",
+                    "App Version v1.0.08",
                     style: TextStyles.getRegularScund(12),
                   ),
                   const SizedBox(
                     height: 2,
                   ),
                   Text(
-                    "Build Date: 07, Sep 2025",
+                    "Build Date: 24, Sep 2025",
                     style: TextStyles.getRegularScund(12),
                   ),
                   const SizedBox(
