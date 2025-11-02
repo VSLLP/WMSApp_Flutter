@@ -19,6 +19,7 @@ import 'package:epicor/src/view/tfReceipt/screen_transfer_receipt_main.dart';
 import 'package:epicor/src/view/TFShipment/screen_transfer_shipment_main.dart';
 import 'package:epicor/src/view/insp/screen_rcpt_insp_head.dart';
 import 'package:epicor/src/view/scan/screen_open_scan.dart';
+import 'package:epicor/src/view/RMA/screen_rma_header.dart';
 
 class ScreenHome extends StatefulWidget {
   const ScreenHome({super.key});
@@ -428,6 +429,13 @@ class _ScreenHomeState extends State<ScreenHome> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => const ScreenOpenScanMain(),
+          ),
+        );
+        break;
+      case "RMAPrc":
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const ScreenRMAHeader(),
           ),
         );
         break;

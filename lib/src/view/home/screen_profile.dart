@@ -255,14 +255,14 @@ class _ScreenProfileState extends State<ScreenProfile> {
                     height: 2,
                   ),
                   Text(
-                    "Build Date: 24, Sep 2025",
+                    "Build Date: 07, Oct 2025",
                     style: TextStyles.getRegularScund(12),
                   ),
                   const SizedBox(
                     height: 2,
                   ),
                   Text(
-                    "@Copyright 2022 All Rights resserve",
+                    "@Copyright 2025 All Rights resserve",
                     style: TextStyles.getRegularScund(14),
                   ),
                   // const SizedBox(
