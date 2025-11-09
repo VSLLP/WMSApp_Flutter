@@ -23,6 +23,8 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
   List<dynamic> whareHouses = [];
   List<dynamic> bins = [];
   List<dynamic> serItems = [];
+  List<dynamic> tradqr = [];
+  List<dynamic> scanitems = [];
 
   dynamic jobDetails = {};
   dynamic productDetails = [];
@@ -45,6 +47,13 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
   String wereTId = "";
   String wereFId = "";
   String prdType = "";
+
+  String partNum = "";
+  String serialNum = "";
+  String partLot = "";
+  String qrType = "";
+  String custNum = "";
+  String custID = "";
 
   bool isLoading = true;
   bool isSubmit = false;
@@ -127,105 +136,6 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                                   width:
                                       MediaQuery.of(context).size.width * 0.3,
                                   child: Text(
-                                    "Product Scan: ",
-                                    style: TextStyles.getBold(
-                                      14,
-                                      color: AppColors.colorDataColor,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.colorBlue300,
-                                    borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(16),
-                                      topRight: Radius.circular(2),
-                                      bottomLeft: Radius.circular(2),
-                                      bottomRight: Radius.circular(16),
-                                    ),
-                                  ),
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.54,
-                                  child: TextFormField(
-                                    controller: txtScan,
-                                    style: TextStyles.getRegularScund(12),
-                                    decoration: InputDecoration(
-                                      hintText: "Scan Product",
-                                      hintStyle: TextStyles.getRegularScund(
-                                        14,
-                                        color: AppColors.colorDataColor,
-                                      ),
-                                      border: InputBorder.none,
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 4,
-                                      ),
-                                      suffixIcon: txtScan.text.isNotEmpty
-                                          ? GestureDetector(
-                                              onTap: () {
-                                                isScan = true;
-                                                txtScan.text = "";
-                                                txtWere.text = "";
-                                                //wereTId = "";
-                                                txtBin.text = "";
-                                                //txtDocType.text = "";
-                                                setState(() {});
-                                              },
-                                              child: SizedBox(
-                                                width: 20,
-                                                height: 20,
-                                                child: Center(
-                                                  child: Icon(
-                                                    Icons.clear,
-                                                    color:
-                                                        AppColors.colorGray600,
-                                                    size: 20,
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          : SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: Center(
-                                                child: Icon(
-                                                  Icons.search,
-                                                  color: AppColors.colorGray600,
-                                                  size: 20,
-                                                ),
-                                              ),
-                                            ),
-                                      counterText: "",
-                                    ),
-                                    onChanged: (val) {
-                                      //getPartAsync(val);
-                                    },
-                                    onTap: () {
-                                      if (isCam) {
-                                        // getScan();
-                                      }
-                                    },
-                                    keyboardType: TextInputType.name,
-                                    autofocus: false,
-                                    validator: (value) {
-                                      if (value!.isEmpty) {
-                                        return "Please scan product.";
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.3,
-                                  child: Text(
                                     "RMA No.: ",
                                     style: TextStyles.getBold(
                                       14,
@@ -259,9 +169,9 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                                     autofocus: false,
                                     readOnly: true,
                                     validator: (value) {
-                                      if (value!.isEmpty) {
-                                        return "Please enter job no.";
-                                      }
+                                      // if (value!.isEmpty) {
+                                      //   return "Please enter job no.";
+                                      // }
                                       return null;
                                     },
                                   ),
@@ -519,12 +429,12 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                                       counterText: "",
                                     ),
                                     onChanged: (val) {
-                                      //getBins(val);
+                                      getBins(val);
                                     },
                                     onTap: () {
-                                      if (!isScan) {
-                                        //  choseWhae(false);
-                                      }
+                                      //if (!isScan) {
+                                      choseWhae(false);
+                                      //  }
                                     },
                                     keyboardType: TextInputType.name,
                                     autofocus: false,
@@ -576,9 +486,9 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                                       counterText: "",
                                     ),
                                     onTap: () {
-                                      if (!isScan) {
-                                        //choseBin(false);
-                                      }
+                                      // if (!isScan) {
+                                      choseBin(false);
+                                      //}
                                     },
                                     keyboardType: TextInputType.name,
                                     autofocus: false,
@@ -593,6 +503,122 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                                 ),
                               ],
                             ),
+                            Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  SizedBox(
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.3,
+                                    child: Text(
+                                      "",
+                                      style: TextStyles.getBold(
+                                        14,
+                                        color: AppColors.colorDataColor,
+                                      ),
+                                    ),
+                                  ),
+                                ]),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.3,
+                                  child: Text(
+                                    "Product Scan: ",
+                                    style: TextStyles.getBold(
+                                      14,
+                                      color: AppColors.colorDataColor,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.colorBlue300,
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(16),
+                                      topRight: Radius.circular(2),
+                                      bottomLeft: Radius.circular(2),
+                                      bottomRight: Radius.circular(16),
+                                    ),
+                                  ),
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.54,
+                                  child: TextFormField(
+                                    controller: txtScan,
+                                    style: TextStyles.getRegularScund(12),
+                                    decoration: InputDecoration(
+                                      hintText: "Scan Product",
+                                      hintStyle: TextStyles.getRegularScund(
+                                        14,
+                                        color: AppColors.colorDataColor,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 4,
+                                      ),
+                                      suffixIcon: txtScan.text.isNotEmpty
+                                          ? GestureDetector(
+                                              onTap: () {
+                                                isScan = true;
+                                                txtScan.text = "";
+                                                txtWere.text = "";
+                                                //wereTId = "";
+                                                txtBin.text = "";
+                                                //txtDocType.text = "";
+                                                setState(() {});
+                                              },
+                                              child: SizedBox(
+                                                width: 20,
+                                                height: 20,
+                                                child: Center(
+                                                  child: Icon(
+                                                    Icons.clear,
+                                                    color:
+                                                        AppColors.colorGray600,
+                                                    size: 20,
+                                                  ),
+                                                ),
+                                              ),
+                                            )
+                                          : SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: Center(
+                                                child: Icon(
+                                                  Icons.search,
+                                                  color: AppColors.colorGray600,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                            ),
+                                      counterText: "",
+                                    ),
+                                    onChanged: (val) {
+                                      getPartAsync(val);
+                                    },
+                                    onTap: () {
+                                      if (isCam) {
+                                        // getScan();
+                                      }
+                                    },
+                                    keyboardType: TextInputType.name,
+                                    autofocus: false,
+                                    validator: (value) {
+                                      if (value!.isEmpty) {
+                                        return "Please scan product.";
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+
                             //   // Row(
                             //   //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             //   //   children: [
@@ -751,7 +777,7 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                             GestureDetector(
                               onTap: () {
                                 if (!isSubmit) {
-                                  // submit();
+                                  //submit();
                                 }
                               },
                               child: Container(
@@ -768,24 +794,24 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                                     )
                                   ],
                                 ),
-                                // child: Center(
-                                //   child: isSubmit
-                                //       ? Lottie.asset(
-                                //           'assets/anim/anim-btnLoading.json',
-                                //         )
-                                //       : Padding(
-                                //           padding: const EdgeInsets.symmetric(
-                                //             vertical: 8.0,
-                                //           ),
-                                //           child: Text(
-                                //             'Submit',
-                                //             style: TextStyles.getBold(
-                                //               16,
-                                //               color: AppColors.colorWhite,
-                                //             ),
-                                //           ),
-                                //         ),
-                                // ),
+                                child: Center(
+                                  child: isSubmit
+                                      ? Lottie.asset(
+                                          'assets/anim/anim-btnLoading.json',
+                                        )
+                                      : Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8.0,
+                                          ),
+                                          child: Text(
+                                            'Submit',
+                                            style: TextStyles.getBold(
+                                              16,
+                                              color: AppColors.colorWhite,
+                                            ),
+                                          ),
+                                        ),
+                                ),
                               ),
                             ),
                           ],
@@ -909,5 +935,935 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
         ),
       ),
     );
+  }
+
+  getBins(String val) async {
+    var response = await jobinvServices.getBinAsync(val);
+    bins.clear();
+    bins = response['value'];
+  }
+
+  choseWhae(bool type) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Select Warehouse",
+                  style: TextStyles.getBold(18),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: SizedBox(
+                    child: whareHouses.isEmpty
+                        ? Container(
+                            color: Colors.transparent,
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 0,
+                              vertical: 10,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "No warehouse found.",
+                                  style: TextStyles.getRegularScund(
+                                    16,
+                                    color: AppColors.colorGray600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: whareHouses.length,
+                            shrinkWrap: true,
+                            scrollDirection: Axis.vertical,
+                            itemBuilder: (BuildContext context, int index) {
+                              return GestureDetector(
+                                onTap: () {
+                                  txtWere.text =
+                                      whareHouses[index]["Warehse_Description"];
+                                  wereTId = whareHouses[index]
+                                      ["Warehse_WarehouseCode"];
+                                  getBins(wereTId);
+                                  Navigator.of(context).pop();
+                                  setState(() {});
+                                },
+                                child: Container(
+                                  color: Colors.transparent,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 0,
+                                    vertical: 10,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        whareHouses[index]
+                                            ["Warehse_Description"],
+                                        style: TextStyles.getRegularScund(
+                                          16,
+                                          color: AppColors.colorGray600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          "Cancel",
+                          style: TextStyles.getBold(14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  choseBin(bool type) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Select Bin",
+                  style: TextStyles.getBold(18),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: SizedBox(
+                    child: bins.isEmpty
+                        ? Container(
+                            color: Colors.transparent,
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 0,
+                              vertical: 10,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "No bins found.",
+                                  style: TextStyles.getRegularScund(
+                                    16,
+                                    color: AppColors.colorGray600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: bins.length,
+                            shrinkWrap: true,
+                            scrollDirection: Axis.vertical,
+                            itemBuilder: (BuildContext context, int index) {
+                              return GestureDetector(
+                                onTap: () {
+                                  txtBin.text = bins[index]["WhseBin_BinNum"];
+                                  Navigator.of(context).pop();
+                                  setState(() {});
+                                },
+                                child: Container(
+                                  color: Colors.transparent,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 0,
+                                    vertical: 10,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        bins[index]["WhseBin_BinNum"],
+                                        style: TextStyles.getRegularScund(
+                                          16,
+                                          color: AppColors.colorGray600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          "Cancel",
+                          style: TextStyles.getBold(14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  getPartAsync(val) async {
+    try {
+      if (val.length <= 3) {
+        return;
+      }
+
+      partNum = "";
+      serialNum = "";
+      partLot = "";
+      qrType = "";
+
+      if (val.contains("Company Name")) {
+        qrType = "B";
+        String splitKey = "~";
+
+        List<String> words = val.split(splitKey);
+        if (words.length <= 2) {
+          return;
+        }
+
+        partNum = words[1].replaceAll("Part Code - ", '').replaceAll("~", "");
+        serialNum =
+            words[5].replaceAll("Serial No. - ", '').replaceAll("~", "");
+        partLot = words[4]
+            .replaceAll("Lot No. -", '')
+            .replaceAll("~", "")
+            .replaceAll(" ", "");
+      } else {
+        qrType = "A";
+        partNum = val.substring(0, 9);
+        serialNum = val.substring(13);
+      }
+
+      if (partNum.isEmpty && serialNum.isEmpty) {
+        throw Exception("Invalid QR Code.");
+      }
+
+      int productIndex = productDetails.indexWhere(
+        (item) =>
+            item["RMADtl_PartNum"].toString().toLowerCase() ==
+            partNum.toLowerCase(),
+      );
+
+      var resPrd = await custShipServices.getGetPart(partNum);
+      if (resPrd["value"].length == 0) {
+        throw Exception("Invalid partnum no details found.");
+      }
+
+      var prdDtl = resPrd["value"][0];
+
+      if (productIndex == -1) {
+        throw Exception("Please scan a valid PartNum.");
+      } else {
+        if (qrType == "B" && partLot.isNotEmpty) {
+          productDetails[productIndex]["scanLot"] = partLot;
+        }
+        productDetails[productIndex]["isSelect"] = true;
+        productDetails[productIndex]["RMADtl_ReturnQty"] =
+            (int.parse(productDetails[productIndex]["RMADtl_ReturnQty"]) + 1)
+                .toString();
+        productDetails[productIndex]["serials"].add({
+          "num": serialNum,
+          "lot": partLot,
+          "qrType": qrType,
+        });
+        productDetails[productIndex]["prdTrack"] = getType(prdDtl);
+        //itemQty[productIndex].text = items[productIndex]["shipQty"];
+      }
+
+      // if (val.length <= 3) {
+      //   return;
+      // }
+      // String splitKey = "";
+      // if (val.contains("\r\n")) {
+      //   splitKey = "\r\n";
+      // } else if (val.contains("\n")) {
+      //   splitKey = "\n";
+      // } else if (val.contains("~")) {
+      //   splitKey = "~";
+      // } else if (val.contains("~\n")) {
+      //   splitKey = "~\n";
+      // }
+
+      // List<String> words = val.split(splitKey);
+      // if (words.length <= 2) {
+      //   return;
+      // }
+
+      // String partCode = words[1].replaceAll("Part Code - ", '');
+      // String partLot = words[4].replaceAll("Lot No. -", '').replaceAll(" ", "");
+      // String partSerial = words[5].replaceAll("Serial No. - ", '');
+
+      // // if (partCode != txtPartNo.text) {
+      // //   throw Exception("Please scan the same product.");
+      // // }
+
+      // int productIndex = serItems.indexWhere(
+      //   (item) => item["SerialNumber"] == partSerial,
+      // );
+
+      // if (productIndex == -1) {
+      //   setState(() {
+      //     isLoading = true;
+      //   });
+
+      //   int prodIndex = productDetails.indexWhere(
+      //     (item) =>
+      //         item["RMADtl_PartNum"].toString().toLowerCase() ==
+      //             partNum.toLowerCase() &&
+      //         double.parse(item["RMADtl_VS_QtyToRMA_c"].toString()) <
+      //             double.parse(item["RMADtl_ReturnQty"].toString()),
+      //   );
+
+      //   productDetails[prodIndex]["ShipDtl_OurInventoryShipQty"] =
+      //       (double.parse(productDetails[productIndex]
+      //                   ["ShipDtl_OurInventoryShipQty"]) +
+      //               1)
+      //           .toString();
+      //   //productDetails[prodIndex]["prdTrack"] = getType(prdDtl);
+
+      //   serItems.add({
+      //     "Company": company,
+      //     "SerialNumber": partSerial,
+      //     //"LotNumber": partLot,
+      //     "Scrapped": false,
+      //     "ScrappedReasonCode": "",
+      //     "Voided": false,
+      //     "Reference": "",
+      //     "ReasonCodeType": "",
+      //     "ReasonCodeDesc": "",
+      //     "PartNum": partCode,
+      //     "SNPrefix": "",
+      //     "SNFormat": "<P18><D><M><YY>#######",
+      //     "SNBaseNumber": partSerial
+      //         .substring(partSerial.length - 7), //partSerial.substring(0, 9),
+      //     "XRefPartNum": "",
+      //     "XRefPartType": "",
+      //     "TransType": "SHIPPED",
+      //     "RowMod": "A"
+      //   });
+      // } else {
+      //   throw Exception("Product already scanned.");
+      // }
+      // isScan = false;
+    } catch (ex) {
+      showError('Error', ex.toString());
+    } finally {
+      txtScan.text = "";
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  showError(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyles.getRegularScund(16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: TextStyles.getRegularScund(14),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(child: Container()),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          'OK',
+                          style: TextStyles.getBold(
+                            14,
+                            color: AppColors.colorPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  getType(item) {
+    if (item['Part_TrackLots'] && item['Part_TrackSerialNum']) {
+      prdType = "1";
+    }
+    if (item['Part_TrackLots']) {
+      prdType = "2";
+    }
+    if (item['Part_TrackSerialNum']) {
+      prdType = "3";
+    }
+    if (!item['Part_TrackLots'] && !item['Part_TrackSerialNum']) {
+      prdType = "4";
+    }
+  }
+
+  submit() async {
+    try {
+      String plant = await sharedPref.getString("userPlant");
+      String company = await sharedPref.getString("userCompnay");
+      var body = null;
+      bool isSubmit = false;
+
+      setState(() {
+        isLoading = true;
+      });
+
+      for (var item in productDetails) {
+        isSubmit = true;
+
+        double qTY = double.parse(item['RMADtl_ReturnQty'].toString());
+        double rqTY = double.parse(item['RMADtl_VS_QtyToRMA_c'].toString());
+
+        if (qTY <= 0) {
+          throw Exception("Invalid QTY at ${item["RMADtl_OrderLine"]}.");
+        }
+        if (qTY > rqTY) {
+          throw Exception(
+              "QTY cannot be grater than reqQty at Orderline ${item["RMADtl_OrderLine"]}.");
+        }
+        List<dynamic> serialBody = [];
+
+        for (var serial in item["serials"]) {
+          serialBody.add({
+            "Company": company,
+            "SerialNumber": serial["num"],
+            "Scrapped": false,
+            "ScrappedReasonCode": "",
+            "Voided": false,
+            "Reference": "",
+            "ReasonCodeType": "",
+            "ReasonCodeDesc": "",
+            "PartNum": item["OrderRel_PartNum"],
+            "SNPrefix": "",
+            "SNFormat": "<P18><D><M><YY>#######",
+            "SNBaseNumber": serial["num"],
+            "XRefPartNum": "",
+            "XRefPartType": "",
+            "TransType": "SHIPPED",
+            "RowMod": "A"
+          });
+
+          body = {
+            "ds": {
+              "RMADtl": [
+                {
+                  "Company": company,
+                  "OpenRMA": true,
+                  "OpenDtl": true,
+                  // "CustNum": custNum,
+                  "RMANum": txtRmaNo.text,
+                  "RMALine": item["RMADtl_RMALine"],
+                  "OrderNum": item["RMADtl_OrderNum"],
+                  "OrderLine": item["RMADtl_OrderLine"],
+                  "ReturnReasonCode": "Defec",
+                  "PartNum": item["RMADtl_PartNum"],
+                  "LineDesc": item["RMADtl_LineDesc"],
+                  "RevisionNum": item["RMADtl_RevisionNum"],
+                  "ReturnQty": item["RMADtl_ReturnQty"],
+                  "ReturnQtyUOM": item["RMADtl_ReturnQtyUOM"],
+                  "CustNum": item["RMADtl_CustNum"],
+                  "OrderRelNum": item["RMADtl_OrderRelNum"],
+                  "ShipToCustNum": item["RMADtl_ShipToCustNum"],
+                  "InvoiceNum": item["RMADtl_InvoiceNum"],
+                  "InvoiceLine": item["RMADtl_InvoiceLine"],
+                  "SysRevID": item["RMADtl_SysRevID"],
+                  "SysRowID": item["RMADtl_SysRowID"],
+
+                  "EnableSN": true,
+                  "EnableUpdate": true,
+                  "LegalNumber": item["RMADtl_InvoiceNum"],
+                  "ShipToCustID": item["Customer_CustID"],
+                  "CustomerCustID": item["Customer_CustID"],
+                  "RowMod": "U",
+                  "CFIL_RefControlNum_c": item["RMADtl_CFIL_RefInvoiceNum_c"],
+                  "CFIL_RefInvoiceNum_c": item["RMADtl_CFIL_RefControlNum_c"],
+                  "VS_QtyToRMA_c": item["RMADtl_VS_QtyToRMA_c"]
+                }
+              ],
+              "SelectedSerialNumbers": serialBody
+            }
+          };
+        }
+      }
+
+      printLargeString(json.encode(body));
+      Response res = await rmaServices.submitrma(body);
+      printLargeString(res.body);
+      print(res.statusCode);
+      if (res.statusCode != 201 && res.statusCode != 200) {
+        throw Exception(json.decode(res.body)['ErrorMessage']);
+      }
+
+      // for (var item in productDetails) {
+
+      //   for (var serialItem in serItems) {
+      //         if (serialItem["qrType"] == "A") {
+      //           print("Call API A");
+      //           var apia = await custShipServices.getSerialAvail(
+      //               item["ShipDtl_PartNum"],
+      //               item["ShipDtl_WarehouseCode"],
+      //               item["ShipDtl_BinNum"]);
+      //           var serialdata = apia["value"][0];
+      //           printLargeString(json.encode(serialdata));
+      //           lot = serialdata["ShipDtl_LotNum"];
+      //           print("Call API B");
+      //           var srupdbody = {
+      //             "Company": company,
+      //             "PartNum": serialdata["SerialNo_PartNum"],
+      //             "SerialNumber": serialdata["SerialNo_SerialNumber"],
+      //             "SNStatus": "Shipped",
+      //             "SNReference": "Test",
+      //             "TransactionSource": "SNMaint"
+      //           };
+
+      //           Response apib = await custShipServices.patchSerialUpdate(
+      //               srupdbody,
+      //               serialdata["SerialNo_PartNum"],
+      //               serialdata["SerialNo_SerialNumber"]);
+      //           printLargeString(apib.body);
+      //           print("Call API C");
+      //           var updBody = {
+      //             "Company": company,
+      //             "PartNum": item["OrderRel_PartNum"],
+      //             "SerialNumber": serialItem["num"],
+      //             "SNStatus": "Shipped",
+      //             "SNReference": " Opening SerialNo",
+      //             "TransactionSource": "SNMaint",
+      //             "CustNum": int.parse(custNum),
+      //             "CustID": custID,
+      //             "LotNum": serialdata["SerialNo_LotNum"]
+      //           };
+      //           printLargeString(json.encode(updBody));
+      //           Response apic = await custShipServices.patchSerialNoAdd(
+      //             updBody,
+      //             serialdata["SerialNo_PartNum"],
+      //             serialItem["num"],
+      //           );
+      //           print("Call API D");
+      //           printLargeString(apic.body);
+      //           var serBody = {
+      //             "Company": company,
+      //             "PartNum": item["ShipDtl_PartNum"],
+      //             "SerialNumber": serialItem["num"],
+      //             "SNStatus": "Inventory",
+      //             "SNReference": " Opening SerialNo",
+      //             "TransactionSource": "SNMaint",
+      //             "WareHouseCode": item["ShipDtl_WarehouseCode"],
+      //             "BinNum": item["ShipDtl_BinNum"]
+      //           };
+      //           printLargeString(json.encode(serBody));
+      //           Response apid = await custShipServices.patchSerial(
+      //             serBody,
+      //             serialdata["SerialNo_PartNum"],
+      //             serialItem["num"],
+      //           );
+      //           printLargeString(apid.body);
+      //         }
+      //       }
+
+      //   var body = {
+      //         "ds": {
+      //           "ShipDtl": [
+      //             {
+      //               "Company": company,
+      //               "CustNum": custNum,
+      //               "PackNum": txtPackNum.text,
+      //               "PackLine": item["ShipDtl_PackLine"],
+      //               "OrderNum": item["ShipDtl_OrderNum"],
+      //               "OrderLine": item["ShipDtl_OrderLine"],
+      //               "OrderRelNum": item["ShipDtl_OrderRelNum"],
+      //               "PartNum": item["ShipDtl_PartNum"],
+      //               "LineDesc": item["ShipDtl_LineDesc"],
+      //               "Plant": plant,
+      //               "BinNum": item["ShipDtl_BinNum"],
+      //               "LotNum": lot,
+      //               "WarehouseCode": item["ShipDtl_WarehouseCode"],
+      //               "InventoryShipUOM": item["ShipDtl_InventoryShipUOM"],
+      //               "DisplayInvQty": item['ShipDtl_OurInventoryShipQty'],
+      //               "VS_QtyToShip_c": item['ShipDtl_VS_QtyToShip_c'],
+      //               "SalesUM": item["ShipDtl_SalesUM"],
+      //               "IUM": item["ShipDtl_IUM"],
+      //               "JobShipUOM": item["ShipDtl_JobShipUOM"],
+      //               "PartNumTrackLots": item["Part_TrackLots"],
+      //               "TrackSerialNum": item["Part_TrackSerialNum"],
+      //               "SysRevID": item["ShipDtl_SysRevID"],
+      //               "SysRowID": item["ShipDtl_SysRowID"],
+      //               "BinType": item["ShipDtl_BinType"],
+      //               "WUM": item["ShipDtl_WUM"],
+      //               "ShipCmpl":
+      //                   double.parse(item["Calculated_TotShipQty"].toString()) +
+      //                               qTY >=
+      //                           double.parse(
+      //                               item["Calculated_TotOrderQty"].toString())
+      //                       ? true
+      //                       : false,
+      //               // "FromPlantTracking": true,
+      //               // "ToPlantTracking": true,
+      //               "RowMod": "U"
+      //             }
+      //           ],
+      //           "SelectedSerialNumbers": serialBody
+      //         }
+      //       };
+      //       printLargeString(json.encode(body));
+      //       Response res = await custShipServices.submitShipment(body);
+      //       printLargeString(res.body);
+      //       print(res.statusCode);
+      //       if (res.statusCode != 201 && res.statusCode != 200) {
+      //         throw Exception(json.decode(res.body)['ErrorMessage']);
+      //       }
+
+      //   if (item["prdTrack"] != "") {
+      //     isSubmit = true;
+      //     custNum = item["ShipDtl_CustNum"].toString();
+
+      //     double qTY =
+      //         double.parse(item['ShipDtl_OurInventoryShipQty'].toString());
+      //     double rqTY = double.parse(item['ShipDtl_VS_QtyToShip_c'].toString());
+      //     if (qTY <= 0) {
+      //       throw Exception(
+      //           "Invalid QTY at Orderline ${item["ShipDtl_OrderLine"]}.");
+      //     }
+      //     if (qTY > rqTY) {
+      //       throw Exception(
+      //           "QTY cannot be grater than reqQty at Orderline ${item["ShipDtl_OrderLine"]}.");
+      //     }
+
+      //     if (item["prdTrack"] == "1" || item["prdTrack"] == "3") {
+      //       String lot = item["scanLot"] == "-" ? "" : item["scanLot"];
+      //       for (var serialItem in item["serials"]) {
+      //         if (serialItem["qrType"] == "A") {
+      //           print("Call API A");
+      //           var apia = await custShipServices.getSerialAvail(
+      //               item["ShipDtl_PartNum"],
+      //               item["ShipDtl_WarehouseCode"],
+      //               item["ShipDtl_BinNum"]);
+      //           var serialdata = apia["value"][0];
+      //           printLargeString(json.encode(serialdata));
+      //           lot = serialdata["ShipDtl_LotNum"];
+      //           print("Call API B");
+      //           var srupdbody = {
+      //             "Company": company,
+      //             "PartNum": serialdata["SerialNo_PartNum"],
+      //             "SerialNumber": serialdata["SerialNo_SerialNumber"],
+      //             "SNStatus": "Shipped",
+      //             "SNReference": "Test",
+      //             "TransactionSource": "SNMaint"
+      //           };
+
+      //           Response apib = await custShipServices.patchSerialUpdate(
+      //               srupdbody,
+      //               serialdata["SerialNo_PartNum"],
+      //               serialdata["SerialNo_SerialNumber"]);
+      //           printLargeString(apib.body);
+      //           print("Call API C");
+      //           var updBody = {
+      //             "Company": company,
+      //             "PartNum": item["OrderRel_PartNum"],
+      //             "SerialNumber": serialItem["num"],
+      //             "SNStatus": "Shipped",
+      //             "SNReference": " Opening SerialNo",
+      //             "TransactionSource": "SNMaint",
+      //             "CustNum": int.parse(custNum),
+      //             "CustID": custID,
+      //             "LotNum": serialdata["SerialNo_LotNum"]
+      //           };
+      //           printLargeString(json.encode(updBody));
+      //           Response apic = await custShipServices.patchSerialNoAdd(
+      //             updBody,
+      //             serialdata["SerialNo_PartNum"],
+      //             serialItem["num"],
+      //           );
+      //           print("Call API D");
+      //           printLargeString(apic.body);
+      //           var serBody = {
+      //             "Company": company,
+      //             "PartNum": item["ShipDtl_PartNum"],
+      //             "SerialNumber": serialItem["num"],
+      //             "SNStatus": "Inventory",
+      //             "SNReference": " Opening SerialNo",
+      //             "TransactionSource": "SNMaint",
+      //             "WareHouseCode": item["ShipDtl_WarehouseCode"],
+      //             "BinNum": item["ShipDtl_BinNum"]
+      //           };
+      //           printLargeString(json.encode(serBody));
+      //           Response apid = await custShipServices.patchSerial(
+      //             serBody,
+      //             serialdata["SerialNo_PartNum"],
+      //             serialItem["num"],
+      //           );
+      //           printLargeString(apid.body);
+      //         }
+      //       }
+
+      //       List<dynamic> serialBody = [];
+      //       for (var serial in item["serials"]) {
+      //         serialBody.add({
+      //           "Company": company,
+      //           "SerialNumber": serial["num"],
+      //           "Scrapped": false,
+      //           "ScrappedReasonCode": "",
+      //           "Voided": false,
+      //           "Reference": "",
+      //           "ReasonCodeType": "",
+      //           "ReasonCodeDesc": "",
+      //           "PartNum": item["ShipDtl_PartNum"],
+      //           "SNPrefix": "",
+      //           "SNFormat": "",
+      //           "SNBaseNumber": serial["num"],
+      //           "XRefPartNum": "",
+      //           //serial["num"].substring(serial["num"].length - 7),
+      //           "XRefPartType": "",
+      //           "TransType": "STK-PCK",
+      //           "RowMod": "A"
+      //         });
+      //       }
+
+      //     } else {
+      //       String lot = item["scanLot"] == "-" ? "" : item["scanLot"];
+      //       var body = {
+      //         "ds": {
+      //           "ShipDtl": [
+      //             {
+      //               "Company": company,
+      //               "CustNum": custNum,
+      //               "PackNum": txtPackNum.text,
+      //               "PackLine": item["ShipDtl_PackLine"],
+      //               "OrderNum": item["ShipDtl_OrderNum"],
+      //               "OrderLine": item["ShipDtl_OrderLine"],
+      //               "OrderRelNum": item["ShipDtl_OrderRelNum"],
+      //               "PartNum": item["ShipDtl_PartNum"],
+      //               "LineDesc": item["ShipDtl_LineDesc"],
+      //               "Plant": plant,
+      //               "BinNum": item["ShipDtl_BinNum"],
+      //               "LotNum": item["ShipDtl_LotNum"],
+      //               "WarehouseCode": item["ShipDtl_WarehouseCode"],
+      //               "InventoryShipUOM": item["ShipDtl_InventoryShipUOM"],
+      //               "DisplayInvQty": item['ShipDtl_OurInventoryShipQty'],
+      //               "VS_QtyToShip_c": item['ShipDtl_VS_QtyToShip_c'],
+      //               "SalesUM": item["ShipDtl_SalesUM"],
+      //               "IUM": item["ShipDtl_IUM"],
+      //               "JobShipUOM": item["ShipDtl_JobShipUOM"],
+      //               "PartNumTrackLots": item["Part_TrackLots"],
+      //               "TrackSerialNum": item["Part_TrackSerialNum"],
+      //               "SysRevID": item["ShipDtl_SysRevID"],
+      //               "SysRowID": item["ShipDtl_SysRowID"],
+      //               // "FromPlantTracking": true,
+      //               // "ToPlantTracking": true,
+      //               "RowMod": "U"
+      //             }
+      //           ],
+      //           "SelectedSerialNumbers": []
+      //         }
+      //       };
+
+      //       printLargeString(json.encode(body));
+      //       Response res = await custShipServices.submitShipment(body);
+
+      //       if (res.statusCode != 201 && res.statusCode != 200) {
+      //         throw Exception(json.decode(res.body)['ErrorMessage']);
+      //       }
+      //     }
+      //   }
+      // }
+
+      // if (isSubmit) {
+      //   showSuccess(
+      //     'Success: ',
+      //     "Customer shipment submitted successfully.",
+      //   );
+      // } else {
+      //   throw Exception("Please scan atleast one product to submit.");
+      // }
+    } catch (ex) {
+      showError('', ex.toString());
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  showSuccess(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyles.getRegularScund(16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: TextStyles.getRegularScund(14),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(child: Container()),
+                    GestureDetector(
+                      onTap: () {
+                        //clearData();
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          'OK',
+                          style: TextStyles.getBold(
+                            14,
+                            color: AppColors.colorPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void printLargeString(String text) {
+    const int chunkSize = 800;
+    for (int i = 0; i < text.length; i += chunkSize) {
+      debugPrint(text.substring(
+          i, i + chunkSize > text.length ? text.length : i + chunkSize));
+    }
   }
 }
