@@ -84,6 +84,30 @@ class RMADelegate {
     );
     return response;
   }
+
+  submitrcpt(body) async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    Uri url = Uri.parse("$apiUrl/Erp.BO.RMAProcSvc/Update");
+
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.post(
+      url,
+      headers: requestHeaders,
+      body: json.encode(body),
+    );
+    return response;
+  }
 }
 
 class MyHttpOverrides extends HttpOverrides {

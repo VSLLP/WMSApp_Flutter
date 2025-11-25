@@ -27,7 +27,7 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
   List<dynamic> scanitems = [];
 
   dynamic jobDetails = {};
-  dynamic productDetails = [];
+  List<dynamic> productDetails = [];
 
   var txtScan = TextEditingController();
   var txtRmaNo = TextEditingController();
@@ -777,7 +777,7 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                             GestureDetector(
                               onTap: () {
                                 if (!isSubmit) {
-                                  //submit();
+                                  submit();
                                 }
                               },
                               child: Container(
@@ -889,7 +889,18 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
 
     var resC = await rmaServices
         .getRMADetails(widget.item['RMAHead_RMANum'].toString());
-    productDetails = resC['value'];
+
+    productDetails.clear();
+
+    for (var it in resC['value']) {
+      it["isSelect"] = false;
+      it["shipQty"] = "0";
+      it["scanLot"] = "-";
+      it["serials"] = [];
+      it["prdTrack"] = "";
+      productDetails.add(it);
+      //productDetails = resC['value'];
+    }
 
     txtRmaNo.text = widget.item['RMAHead_RMANum'].toString();
     txtRmaDate.text = widget.item['RMAHead_RMADate'].toString();
@@ -1245,8 +1256,12 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
           productDetails[productIndex]["scanLot"] = partLot;
         }
         productDetails[productIndex]["isSelect"] = true;
-        productDetails[productIndex]["RMADtl_ReturnQty"] =
+        /* productDetails[productIndex]["RMADtl_ReturnQty"] =
             (int.parse(productDetails[productIndex]["RMADtl_ReturnQty"]) + 1)
+                .toString();*/
+
+        productDetails[productIndex]["RMADtl_ReturnQty"] =
+            (double.parse(productDetails[productIndex]["RMADtl_ReturnQty"]) + 1)
                 .toString();
         productDetails[productIndex]["serials"].add({
           "num": serialNum,
@@ -1419,6 +1434,7 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
       String plant = await sharedPref.getString("userPlant");
       String company = await sharedPref.getString("userCompnay");
       var body = null;
+      var rcptbody = null;
       bool isSubmit = false;
 
       setState(() {
@@ -1439,6 +1455,7 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
               "QTY cannot be grater than reqQty at Orderline ${item["RMADtl_OrderLine"]}.");
         }
         List<dynamic> serialBody = [];
+        List<dynamic> serialrcptBody = [];
 
         for (var serial in item["serials"]) {
           serialBody.add({
@@ -1450,348 +1467,131 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
             "Reference": "",
             "ReasonCodeType": "",
             "ReasonCodeDesc": "",
-            "PartNum": item["OrderRel_PartNum"],
+            "PartNum": item["RMADtl_PartNum"],
             "SNPrefix": "",
             "SNFormat": "<P18><D><M><YY>#######",
-            "SNBaseNumber": serial["num"],
+            "SNBaseNumber": serial["num"].substring(serial["num"].length - 5),
             "XRefPartNum": "",
             "XRefPartType": "",
             "TransType": "SHIPPED",
             "RowMod": "A"
           });
 
-          body = {
-            "ds": {
-              "RMADtl": [
-                {
-                  "Company": company,
-                  "OpenRMA": true,
-                  "OpenDtl": true,
-                  // "CustNum": custNum,
-                  "RMANum": txtRmaNo.text,
-                  "RMALine": item["RMADtl_RMALine"],
-                  "OrderNum": item["RMADtl_OrderNum"],
-                  "OrderLine": item["RMADtl_OrderLine"],
-                  "ReturnReasonCode": "Defec",
-                  "PartNum": item["RMADtl_PartNum"],
-                  "LineDesc": item["RMADtl_LineDesc"],
-                  "RevisionNum": item["RMADtl_RevisionNum"],
-                  "ReturnQty": item["RMADtl_ReturnQty"],
-                  "ReturnQtyUOM": item["RMADtl_ReturnQtyUOM"],
-                  "CustNum": item["RMADtl_CustNum"],
-                  "OrderRelNum": item["RMADtl_OrderRelNum"],
-                  "ShipToCustNum": item["RMADtl_ShipToCustNum"],
-                  "InvoiceNum": item["RMADtl_InvoiceNum"],
-                  "InvoiceLine": item["RMADtl_InvoiceLine"],
-                  "SysRevID": item["RMADtl_SysRevID"],
-                  "SysRowID": item["RMADtl_SysRowID"],
-
-                  "EnableSN": true,
-                  "EnableUpdate": true,
-                  "LegalNumber": item["RMADtl_InvoiceNum"],
-                  "ShipToCustID": item["Customer_CustID"],
-                  "CustomerCustID": item["Customer_CustID"],
-                  "RowMod": "U",
-                  "CFIL_RefControlNum_c": item["RMADtl_CFIL_RefInvoiceNum_c"],
-                  "CFIL_RefInvoiceNum_c": item["RMADtl_CFIL_RefControlNum_c"],
-                  "VS_QtyToRMA_c": item["RMADtl_VS_QtyToRMA_c"]
-                }
-              ],
-              "SelectedSerialNumbers": serialBody
-            }
-          };
+          serialrcptBody.add({
+            "Company": company,
+            "SerialNumber": serial["num"],
+            "Scrapped": false,
+            "ScrappedReasonCode": "",
+            "Voided": false,
+            "Reference": "",
+            "ReasonCodeType": "",
+            "ReasonCodeDesc": "",
+            "PartNum": item["RMADtl_PartNum"],
+            "SNPrefix": "",
+            "SNFormat": "<P18><D><M><YY>#######",
+            "SNBaseNumber": serial["num"].substring(serial["num"].length - 5),
+            "XRefPartNum": "",
+            "XRefPartType": "",
+            "TransType": "INSPECTION",
+            "RowMod": "A"
+          });
         }
+
+        body = {
+          "ds": {
+            "RMADtl": [
+              {
+                "Company": company,
+                "OpenRMA": true,
+                "OpenDtl": true,
+                // "CustNum": custNum,
+                "RMANum": txtRmaNo.text,
+                "RMALine": item["RMADtl_RMALine"],
+                "OrderNum": item["RMADtl_OrderNum"],
+                "OrderLine": item["RMADtl_OrderLine"],
+                "ReturnReasonCode": "Defec",
+                "PartNum": item["RMADtl_PartNum"],
+                "LineDesc": item["RMADtl_LineDesc"],
+                "RevisionNum": item["RMADtl_RevisionNum"],
+                "ReturnQty": item["RMADtl_ReturnQty"],
+                "ReturnQtyUOM": item["RMADtl_ReturnQtyUOM"],
+                "CustNum": item["RMADtl_CustNum"],
+                "OrderRelNum": item["RMADtl_OrderRelNum"],
+                "ShipToCustNum": item["RMADtl_ShipToCustNum"],
+                "InvoiceNum": item["RMADtl_InvoiceNum"],
+                "InvoiceLine": item["RMADtl_InvoiceLine"],
+                "SysRevID": item["RMADtl_SysRevID"],
+                "SysRowID": item["RMADtl_SysRowID"],
+
+                "EnableSN": true,
+                "EnableUpdate": true,
+                "LegalNumber": item["RMADtl_InvoiceNum"],
+                "ShipToCustID": item["Customer_CustID"],
+                "CustomerCustID": item["Customer_CustID"],
+                "RowMod": "U",
+                "CFIL_RefControlNum_c": item["RMADtl_CFIL_RefControlNum_c"],
+                "CFIL_RefInvoiceNum_c": item["RMADtl_CFIL_RefInvoiceNum_c"],
+                "VS_QtyToRMA_c": item["RMADtl_VS_QtyToRMA_c"]
+              }
+            ],
+            "SelectedSerialNumbers": serialBody
+          }
+        };
+
+        rcptbody = {
+          "ds": {
+            "RMARcpt": [
+              {
+                "Company": company,
+                //"OpenRMA": true,
+                //"OpenDtl": true,
+                // "CustNum": custNum,
+                "RMANum": txtRmaNo.text,
+                "RMALine": item["RMADtl_RMALine"],
+                "RMAReceipt": 1,
+                "RcvDate": item["RMADtl_OrderNum"],
+                "WareHouseCode": txtWere.text,
+                "BinNum": txtBin.text,
+                "OpenReceipt": true,
+                "Plant": plant,
+                "ReceivedQty": qTY,
+                "CostUOM": "No.",
+                "ReceivedQtyUOM": "No.",
+                "LegalNumber": "",
+                "RequestMove": false,
+                "PartNum": item["RMADtl_PartNum"],
+                "CustNum": txtCustName.text,
+                "ThisRcptQty": qTY,
+                "DisposedQty": 0,
+                "ThisRcptQtyUOM": "No.",
+                "PartRevisionNum": item["RMADtl_RevisionNum"],
+                "EnableDelete": true,
+                "EnableUpdate": true,
+                "EnableSN": true,
+                "RowMod": "A"
+              }
+            ],
+            "SelectedSerialNumbers": serialrcptBody
+          }
+        };
       }
 
       printLargeString(json.encode(body));
       Response res = await rmaServices.submitrma(body);
       printLargeString(res.body);
+
       print(res.statusCode);
       if (res.statusCode != 201 && res.statusCode != 200) {
         throw Exception(json.decode(res.body)['ErrorMessage']);
       }
 
-      // for (var item in productDetails) {
+      Response res1 = await rmaServices.submitrcpt(rcptbody);
+      printLargeString(res1.body);
 
-      //   for (var serialItem in serItems) {
-      //         if (serialItem["qrType"] == "A") {
-      //           print("Call API A");
-      //           var apia = await custShipServices.getSerialAvail(
-      //               item["ShipDtl_PartNum"],
-      //               item["ShipDtl_WarehouseCode"],
-      //               item["ShipDtl_BinNum"]);
-      //           var serialdata = apia["value"][0];
-      //           printLargeString(json.encode(serialdata));
-      //           lot = serialdata["ShipDtl_LotNum"];
-      //           print("Call API B");
-      //           var srupdbody = {
-      //             "Company": company,
-      //             "PartNum": serialdata["SerialNo_PartNum"],
-      //             "SerialNumber": serialdata["SerialNo_SerialNumber"],
-      //             "SNStatus": "Shipped",
-      //             "SNReference": "Test",
-      //             "TransactionSource": "SNMaint"
-      //           };
-
-      //           Response apib = await custShipServices.patchSerialUpdate(
-      //               srupdbody,
-      //               serialdata["SerialNo_PartNum"],
-      //               serialdata["SerialNo_SerialNumber"]);
-      //           printLargeString(apib.body);
-      //           print("Call API C");
-      //           var updBody = {
-      //             "Company": company,
-      //             "PartNum": item["OrderRel_PartNum"],
-      //             "SerialNumber": serialItem["num"],
-      //             "SNStatus": "Shipped",
-      //             "SNReference": " Opening SerialNo",
-      //             "TransactionSource": "SNMaint",
-      //             "CustNum": int.parse(custNum),
-      //             "CustID": custID,
-      //             "LotNum": serialdata["SerialNo_LotNum"]
-      //           };
-      //           printLargeString(json.encode(updBody));
-      //           Response apic = await custShipServices.patchSerialNoAdd(
-      //             updBody,
-      //             serialdata["SerialNo_PartNum"],
-      //             serialItem["num"],
-      //           );
-      //           print("Call API D");
-      //           printLargeString(apic.body);
-      //           var serBody = {
-      //             "Company": company,
-      //             "PartNum": item["ShipDtl_PartNum"],
-      //             "SerialNumber": serialItem["num"],
-      //             "SNStatus": "Inventory",
-      //             "SNReference": " Opening SerialNo",
-      //             "TransactionSource": "SNMaint",
-      //             "WareHouseCode": item["ShipDtl_WarehouseCode"],
-      //             "BinNum": item["ShipDtl_BinNum"]
-      //           };
-      //           printLargeString(json.encode(serBody));
-      //           Response apid = await custShipServices.patchSerial(
-      //             serBody,
-      //             serialdata["SerialNo_PartNum"],
-      //             serialItem["num"],
-      //           );
-      //           printLargeString(apid.body);
-      //         }
-      //       }
-
-      //   var body = {
-      //         "ds": {
-      //           "ShipDtl": [
-      //             {
-      //               "Company": company,
-      //               "CustNum": custNum,
-      //               "PackNum": txtPackNum.text,
-      //               "PackLine": item["ShipDtl_PackLine"],
-      //               "OrderNum": item["ShipDtl_OrderNum"],
-      //               "OrderLine": item["ShipDtl_OrderLine"],
-      //               "OrderRelNum": item["ShipDtl_OrderRelNum"],
-      //               "PartNum": item["ShipDtl_PartNum"],
-      //               "LineDesc": item["ShipDtl_LineDesc"],
-      //               "Plant": plant,
-      //               "BinNum": item["ShipDtl_BinNum"],
-      //               "LotNum": lot,
-      //               "WarehouseCode": item["ShipDtl_WarehouseCode"],
-      //               "InventoryShipUOM": item["ShipDtl_InventoryShipUOM"],
-      //               "DisplayInvQty": item['ShipDtl_OurInventoryShipQty'],
-      //               "VS_QtyToShip_c": item['ShipDtl_VS_QtyToShip_c'],
-      //               "SalesUM": item["ShipDtl_SalesUM"],
-      //               "IUM": item["ShipDtl_IUM"],
-      //               "JobShipUOM": item["ShipDtl_JobShipUOM"],
-      //               "PartNumTrackLots": item["Part_TrackLots"],
-      //               "TrackSerialNum": item["Part_TrackSerialNum"],
-      //               "SysRevID": item["ShipDtl_SysRevID"],
-      //               "SysRowID": item["ShipDtl_SysRowID"],
-      //               "BinType": item["ShipDtl_BinType"],
-      //               "WUM": item["ShipDtl_WUM"],
-      //               "ShipCmpl":
-      //                   double.parse(item["Calculated_TotShipQty"].toString()) +
-      //                               qTY >=
-      //                           double.parse(
-      //                               item["Calculated_TotOrderQty"].toString())
-      //                       ? true
-      //                       : false,
-      //               // "FromPlantTracking": true,
-      //               // "ToPlantTracking": true,
-      //               "RowMod": "U"
-      //             }
-      //           ],
-      //           "SelectedSerialNumbers": serialBody
-      //         }
-      //       };
-      //       printLargeString(json.encode(body));
-      //       Response res = await custShipServices.submitShipment(body);
-      //       printLargeString(res.body);
-      //       print(res.statusCode);
-      //       if (res.statusCode != 201 && res.statusCode != 200) {
-      //         throw Exception(json.decode(res.body)['ErrorMessage']);
-      //       }
-
-      //   if (item["prdTrack"] != "") {
-      //     isSubmit = true;
-      //     custNum = item["ShipDtl_CustNum"].toString();
-
-      //     double qTY =
-      //         double.parse(item['ShipDtl_OurInventoryShipQty'].toString());
-      //     double rqTY = double.parse(item['ShipDtl_VS_QtyToShip_c'].toString());
-      //     if (qTY <= 0) {
-      //       throw Exception(
-      //           "Invalid QTY at Orderline ${item["ShipDtl_OrderLine"]}.");
-      //     }
-      //     if (qTY > rqTY) {
-      //       throw Exception(
-      //           "QTY cannot be grater than reqQty at Orderline ${item["ShipDtl_OrderLine"]}.");
-      //     }
-
-      //     if (item["prdTrack"] == "1" || item["prdTrack"] == "3") {
-      //       String lot = item["scanLot"] == "-" ? "" : item["scanLot"];
-      //       for (var serialItem in item["serials"]) {
-      //         if (serialItem["qrType"] == "A") {
-      //           print("Call API A");
-      //           var apia = await custShipServices.getSerialAvail(
-      //               item["ShipDtl_PartNum"],
-      //               item["ShipDtl_WarehouseCode"],
-      //               item["ShipDtl_BinNum"]);
-      //           var serialdata = apia["value"][0];
-      //           printLargeString(json.encode(serialdata));
-      //           lot = serialdata["ShipDtl_LotNum"];
-      //           print("Call API B");
-      //           var srupdbody = {
-      //             "Company": company,
-      //             "PartNum": serialdata["SerialNo_PartNum"],
-      //             "SerialNumber": serialdata["SerialNo_SerialNumber"],
-      //             "SNStatus": "Shipped",
-      //             "SNReference": "Test",
-      //             "TransactionSource": "SNMaint"
-      //           };
-
-      //           Response apib = await custShipServices.patchSerialUpdate(
-      //               srupdbody,
-      //               serialdata["SerialNo_PartNum"],
-      //               serialdata["SerialNo_SerialNumber"]);
-      //           printLargeString(apib.body);
-      //           print("Call API C");
-      //           var updBody = {
-      //             "Company": company,
-      //             "PartNum": item["OrderRel_PartNum"],
-      //             "SerialNumber": serialItem["num"],
-      //             "SNStatus": "Shipped",
-      //             "SNReference": " Opening SerialNo",
-      //             "TransactionSource": "SNMaint",
-      //             "CustNum": int.parse(custNum),
-      //             "CustID": custID,
-      //             "LotNum": serialdata["SerialNo_LotNum"]
-      //           };
-      //           printLargeString(json.encode(updBody));
-      //           Response apic = await custShipServices.patchSerialNoAdd(
-      //             updBody,
-      //             serialdata["SerialNo_PartNum"],
-      //             serialItem["num"],
-      //           );
-      //           print("Call API D");
-      //           printLargeString(apic.body);
-      //           var serBody = {
-      //             "Company": company,
-      //             "PartNum": item["ShipDtl_PartNum"],
-      //             "SerialNumber": serialItem["num"],
-      //             "SNStatus": "Inventory",
-      //             "SNReference": " Opening SerialNo",
-      //             "TransactionSource": "SNMaint",
-      //             "WareHouseCode": item["ShipDtl_WarehouseCode"],
-      //             "BinNum": item["ShipDtl_BinNum"]
-      //           };
-      //           printLargeString(json.encode(serBody));
-      //           Response apid = await custShipServices.patchSerial(
-      //             serBody,
-      //             serialdata["SerialNo_PartNum"],
-      //             serialItem["num"],
-      //           );
-      //           printLargeString(apid.body);
-      //         }
-      //       }
-
-      //       List<dynamic> serialBody = [];
-      //       for (var serial in item["serials"]) {
-      //         serialBody.add({
-      //           "Company": company,
-      //           "SerialNumber": serial["num"],
-      //           "Scrapped": false,
-      //           "ScrappedReasonCode": "",
-      //           "Voided": false,
-      //           "Reference": "",
-      //           "ReasonCodeType": "",
-      //           "ReasonCodeDesc": "",
-      //           "PartNum": item["ShipDtl_PartNum"],
-      //           "SNPrefix": "",
-      //           "SNFormat": "",
-      //           "SNBaseNumber": serial["num"],
-      //           "XRefPartNum": "",
-      //           //serial["num"].substring(serial["num"].length - 7),
-      //           "XRefPartType": "",
-      //           "TransType": "STK-PCK",
-      //           "RowMod": "A"
-      //         });
-      //       }
-
-      //     } else {
-      //       String lot = item["scanLot"] == "-" ? "" : item["scanLot"];
-      //       var body = {
-      //         "ds": {
-      //           "ShipDtl": [
-      //             {
-      //               "Company": company,
-      //               "CustNum": custNum,
-      //               "PackNum": txtPackNum.text,
-      //               "PackLine": item["ShipDtl_PackLine"],
-      //               "OrderNum": item["ShipDtl_OrderNum"],
-      //               "OrderLine": item["ShipDtl_OrderLine"],
-      //               "OrderRelNum": item["ShipDtl_OrderRelNum"],
-      //               "PartNum": item["ShipDtl_PartNum"],
-      //               "LineDesc": item["ShipDtl_LineDesc"],
-      //               "Plant": plant,
-      //               "BinNum": item["ShipDtl_BinNum"],
-      //               "LotNum": item["ShipDtl_LotNum"],
-      //               "WarehouseCode": item["ShipDtl_WarehouseCode"],
-      //               "InventoryShipUOM": item["ShipDtl_InventoryShipUOM"],
-      //               "DisplayInvQty": item['ShipDtl_OurInventoryShipQty'],
-      //               "VS_QtyToShip_c": item['ShipDtl_VS_QtyToShip_c'],
-      //               "SalesUM": item["ShipDtl_SalesUM"],
-      //               "IUM": item["ShipDtl_IUM"],
-      //               "JobShipUOM": item["ShipDtl_JobShipUOM"],
-      //               "PartNumTrackLots": item["Part_TrackLots"],
-      //               "TrackSerialNum": item["Part_TrackSerialNum"],
-      //               "SysRevID": item["ShipDtl_SysRevID"],
-      //               "SysRowID": item["ShipDtl_SysRowID"],
-      //               // "FromPlantTracking": true,
-      //               // "ToPlantTracking": true,
-      //               "RowMod": "U"
-      //             }
-      //           ],
-      //           "SelectedSerialNumbers": []
-      //         }
-      //       };
-
-      //       printLargeString(json.encode(body));
-      //       Response res = await custShipServices.submitShipment(body);
-
-      //       if (res.statusCode != 201 && res.statusCode != 200) {
-      //         throw Exception(json.decode(res.body)['ErrorMessage']);
-      //       }
-      //     }
-      //   }
-      // }
-
-      // if (isSubmit) {
-      //   showSuccess(
-      //     'Success: ',
-      //     "Customer shipment submitted successfully.",
-      //   );
-      // } else {
-      //   throw Exception("Please scan atleast one product to submit.");
-      // }
+      print(res1.statusCode);
+      if (res.statusCode != 201 && res.statusCode != 200) {
+        throw Exception(json.decode(res.body)['ErrorMessage']);
+      }
     } catch (ex) {
       showError('', ex.toString());
     } finally {
