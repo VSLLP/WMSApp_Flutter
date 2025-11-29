@@ -845,8 +845,21 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
       ],
     ));
     for (var item in productDetails) {
+      Color rowcolor =
+          item['isSelect'] ? AppColors.colorYellow300 : Colors.transparent;
+
+      if (item["RMADtl_ReturnQty"] != "") {
+        if (double.parse(item["RMADtl_ReturnQty"].toString()) ==
+            double.parse(item["RMADtl_VS_QtyToRMA_c"].toString())) {
+          rowcolor = AppColors.colorCyan300;
+        }
+      }
+
       rows.add(
         TableRow(
+          decoration: BoxDecoration(
+            color: rowcolor,
+          ),
           children: [
             tableCellRow(item['RMADtl_RMALine'].toString()),
             tableCellRow(item['RMADtl_PartNum'].toString()),
@@ -1269,6 +1282,7 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
           "qrType": qrType,
         });
         productDetails[productIndex]["prdTrack"] = getType(prdDtl);
+        productDetails[productIndex]["isSelect"] = true;
         //itemQty[productIndex].text = items[productIndex]["shipQty"];
       }
 
@@ -1549,8 +1563,8 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                 "RMANum": txtRmaNo.text,
                 "RMALine": item["RMADtl_RMALine"],
                 "RMAReceipt": 1,
-                "RcvDate": item["RMADtl_OrderNum"],
-                "WareHouseCode": txtWere.text,
+                "RcvDate": txtRmaDate.text,
+                "WareHouseCode": wereTId,
                 "BinNum": txtBin.text,
                 "OpenReceipt": true,
                 "Plant": plant,
@@ -1560,7 +1574,8 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                 "LegalNumber": "",
                 "RequestMove": false,
                 "PartNum": item["RMADtl_PartNum"],
-                "CustNum": txtCustName.text,
+                "CustNum": item["RMADtl_CustNum"], // txtCustName.text,
+                "PartPartDescription": item["RMADtl_LineDesc"],
                 "ThisRcptQty": qTY,
                 "DisposedQty": 0,
                 "ThisRcptQtyUOM": "No.",
@@ -1578,19 +1593,24 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
 
       printLargeString(json.encode(body));
       Response res = await rmaServices.submitrma(body);
-      printLargeString(res.body);
+      //printLargeString(res.body);
 
       print(res.statusCode);
       if (res.statusCode != 201 && res.statusCode != 200) {
         throw Exception(json.decode(res.body)['ErrorMessage']);
       }
-
+      printLargeString(json.encode(rcptbody));
       Response res1 = await rmaServices.submitrcpt(rcptbody);
-      printLargeString(res1.body);
+      //printLargeString(res1.body);
 
       print(res1.statusCode);
       if (res.statusCode != 201 && res.statusCode != 200) {
         throw Exception(json.decode(res.body)['ErrorMessage']);
+      } else {
+        showSuccess(
+          'Success: ',
+          "RMA processed successfully.",
+        );
       }
     } catch (ex) {
       showError('', ex.toString());
