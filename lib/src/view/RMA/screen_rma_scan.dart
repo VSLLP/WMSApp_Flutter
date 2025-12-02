@@ -1455,6 +1455,14 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
         isLoading = true;
       });
 
+      if (wereTId == "") {
+        throw Exception("Please select warehouse");
+      }
+
+      if (txtBin.text == "") {
+        throw Exception("Please select bin");
+      }
+
       for (var item in productDetails) {
         isSubmit = true;
 
@@ -1657,6 +1665,7 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                     GestureDetector(
                       onTap: () {
                         //clearData();
+                        Navigator.of(context).pop();
                         Navigator.of(context).pop();
                       },
                       child: SizedBox(
