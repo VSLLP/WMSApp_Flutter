@@ -4,6 +4,7 @@ import 'package:epicor/src/view/TFShipment/screen_transfer_shipment_main_pcid.da
 
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
+import 'package:epicor/src/view/nonconformance/screen_nc_main.dart';
 import 'package:epicor/src/view/scan/screen_open_scan_main.dart';
 import 'package:epicor/src/view/scan/screen_transfer_scan.dart';
 import 'package:epicor/src/view/shipment/screen_shipment_main.dart';
@@ -194,6 +195,8 @@ class _ScreenHomeState extends State<ScreenHome> {
       case "TFReceipt":
         return "assets/icons/ic_cycle.svg";
       case "IssueMtl":
+        return "assets/icons/ic_cycle.svg";
+      case "NonConfr":
         return "assets/icons/ic_cycle.svg";
       default:
         return "assets/icons/ic_cycle.svg";
@@ -436,6 +439,13 @@ class _ScreenHomeState extends State<ScreenHome> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => const ScreenRMAHeader(),
+          ),
+        );
+        break;
+      case "NonConfr":
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const ScreenNcMain(),
           ),
         );
         break;

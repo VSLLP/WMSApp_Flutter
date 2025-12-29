@@ -1282,13 +1282,18 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
         throw Exception("Invalid partnum no details found or Qty is exceeding");
       }
 
-      // var resoldqrmatch = await rmaServices.getSerialNoRMAInvc(
-      //     productDetails[productIndex]["RMADtl_InvoiceNum"].toString(),
-      //     productDetails[productIndex]["RMADtl_InvoiceLine"].toString(),
-      //     productDetails[productIndex]["RMADtl_RMANum"].toString(),
-      //     productDetails[productIndex]["RMADtl_RMALine"].toString());
+      var resoldqrmatch = await rmaServices.getSerialNoRMAInvc(
+          productDetails[productIndex]["RMADtl_InvoiceNum"].toString(),
+          productDetails[productIndex]["RMADtl_InvoiceLine"].toString(),
+          productDetails[productIndex]["RMADtl_RMANum"].toString(),
+          productDetails[productIndex]["RMADtl_RMALine"].toString(),
+          serialNum);
 
-      // var tempqr = resoldqrmatch['value'];
+      var tempqr = resoldqrmatch['value'];
+
+      if (tempqr == null) {
+        throw Exception("Invalid QR Code.");
+      }
 
       var prdDtl = resPrd["value"][0];
 
@@ -1354,7 +1359,8 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                 productDetails[productIndex]["RMADtl_InvoiceNum"].toString(),
                 productDetails[productIndex]["RMADtl_InvoiceLine"].toString(),
                 productDetails[productIndex]["RMADtl_RMANum"].toString(),
-                productDetails[productIndex]["RMADtl_RMALine"].toString());
+                productDetails[productIndex]["RMADtl_RMALine"].toString(),
+                "-1");
 
             var tempqr = resoldqrmatch['value'];
             if (tempqr != null) {
