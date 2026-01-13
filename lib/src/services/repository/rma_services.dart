@@ -223,7 +223,7 @@ class RMADelegate {
 
     if (pr_srno == "-1") {
       Uri url = Uri.parse(
-          "$apiUrl/BaqSvc/VSAPP_RMAInvc($company)?pr_InvoiceNum=$invoiceno&pr_InvoiceLine=$invoiceline&pr_RMANum=$rmanum&pr_RMALine=$rmaline");
+          "$apiUrl/BaqSvc/VSAPP_RMAInvcOldQR_V01($company)?pr_InvoiceNum=$invoiceno&pr_InvoiceLine=$invoiceline&pr_RMANum=$rmanum&pr_RMALine=$rmaline");
       String basicAuth =
           'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
       Map<String, String> requestHeaders = {
@@ -239,7 +239,7 @@ class RMADelegate {
       return json.decode(response.body);
     } else {
       Uri url = Uri.parse(
-          "$apiUrl/BaqSvc/VSAPP_RMAInvc($company)?pr_InvoiceNum=$invoiceno&pr_InvoiceLine=$invoiceline&pr_RMANum=$rmanum&pr_RMALine=$rmaline&@pr_srno=$pr_srno");
+          "$apiUrl/BaqSvc/VSAPP_RMAInvc($company)?pr_InvoiceNum=$invoiceno&pr_InvoiceLine=$invoiceline&pr_RMANum=$rmanum&pr_RMALine=$rmaline&pr_srno=$pr_srno");
       String basicAuth =
           'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
       Map<String, String> requestHeaders = {

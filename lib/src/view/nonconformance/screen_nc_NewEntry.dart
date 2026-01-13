@@ -18,7 +18,7 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
   var txtTBin = TextEditingController();
 
   List<dynamic> items = [];
-  List<dynamic> wheres = [];
+  List<dynamic> whareHouses = [];
   List<dynamic> bins = [];
 
   dynamic selWheres = [];
@@ -230,7 +230,8 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
                                       counterText: "",
                                     ),
                                     onTap: () {
-                                      //choseWhae();
+                                      choseOptions(
+                                          "From Warehouse", whareHouses);
                                     },
                                     keyboardType: TextInputType.name,
                                     autofocus: false,
@@ -334,7 +335,7 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
                                       counterText: "",
                                     ),
                                     onTap: () {
-                                      //choseWhae();
+                                      choseOptions("To Warehouse", whareHouses);
                                     },
                                     keyboardType: TextInputType.name,
                                     autofocus: false,
@@ -596,34 +597,71 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
 
   void getPartAsync(String val) async {
     try {
-      if (txtWere.text.isEmpty || txtBin.text.isEmpty) {
-        throw Exception("Please select warehouse and bin!");
-      }
-
-      if (val.length <= 14) {
+      if (val.length <= 3) {
         return;
       }
 
-      String partNumber = val.substring(0, 9);
-      String fullQR = val;
+      String partNum = "";
+      String serialNum = "";
+      String partLot = "";
 
-      int isProductExist = items.indexWhere(
-        (item) =>
-            item["PartNum"].toString().toLowerCase() ==
-                partNumber.toLowerCase() &&
-            item["QR"].toString().toLowerCase() == fullQR.toLowerCase(),
-      );
-
-      if (isProductExist >= 0) {
-        throw Exception("Product already scanned!");
+      if (val.length == 20) {
+        partNum = val.substring(0, 9);
+        serialNum = val.substring(13, 20);
       } else {
-        items.add({
-          "PartNum": partNumber,
-          "QR": fullQR,
-          "whe": selWheres["Warehse_WarehouseCode"],
-          "bin": txtBin.text
-        });
+        String splitKey = "";
+        if (val.contains("\r\n")) {
+          splitKey = "\r\n";
+        } else if (val.contains("\n")) {
+          splitKey = "\n";
+        } else if (val.contains("~")) {
+          splitKey = "~";
+        } else if (val.contains("~\n")) {
+          splitKey = "~\n";
+        }
+
+        List<String> words = val.split(splitKey);
+        if (words.length <= 2) {
+          return;
+        }
+
+        partNum = words[1].replaceAll("Part Code - ", '');
+        serialNum = words[5].replaceAll("Serial No. - ", '');
+        partLot = words[4].replaceAll("Lot No. -", '').replaceAll(" ", "");
       }
+
+      var response = await nonconfServices.getAvailableWarehouse(serialNum);
+      if (response.statusCode == 200) {
+        loadData();
+      }
+      // if (txtWere.text.isEmpty || txtBin.text.isEmpty) {
+      //   throw Exception("Please select warehouse and bin!");
+      // }
+
+      // if (val.length <= 14) {
+      //   return;
+      // }
+
+      // String partNumber = val.substring(0, 9);
+      // String fullQR = val;
+
+      // int isProductExist = items.indexWhere(
+      //   (item) =>
+      //       item["PartNum"].toString().toLowerCase() ==
+      //           partNumber.toLowerCase() &&
+      //       item["QR"].toString().toLowerCase() == fullQR.toLowerCase(),
+      // );
+
+      // if (isProductExist >= 0) {
+      //   throw Exception("Product already scanned!");
+      // } else {
+      //   items.add({
+      //     "PartNum": partNumber,
+      //     "QR": fullQR,
+      //     "whe": selWheres["Warehse_WarehouseCode"],
+      //     "bin": txtBin.text
+      //   });
+      // }
     } catch (ex) {
       showError('Error', ex.toString());
     } finally {
@@ -714,6 +752,212 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
     isLoading = false;
     txtScan.text = "";
     setState(() {});
+  }
+
+  choseOptions(String title, List<dynamic> options) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Select $title",
+                  style: TextStyles.getBold(18),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: SizedBox(
+                    child: options.isEmpty
+                        ? Container(
+                            color: Colors.transparent,
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 0,
+                              vertical: 10,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "No $title found.",
+                                  style: TextStyles.getRegularScund(
+                                    16,
+                                    color: AppColors.colorGray600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: options.length,
+                            shrinkWrap: true,
+                            scrollDirection: Axis.vertical,
+                            itemBuilder: (BuildContext context, int index) {
+                              return GestureDetector(
+                                onTap: () async {
+                                  updateOtp(title, options[index]);
+                                  Navigator.of(context).pop();
+                                  setState(() {
+                                    // await loadData();
+                                  });
+                                },
+                                child: Container(
+                                  color: Colors.transparent,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 0,
+                                    vertical: 10,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        getOptTitle(title, options[index]),
+                                        style: TextStyles.getRegularScund(
+                                          16,
+                                          color: AppColors.colorGray600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          "Cancel",
+                          style: TextStyles.getBold(14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  getOptTitle(String title, dynamic option) {
+    switch (title) {
+      case "Assembly":
+        return option['lable'];
+      case "MtlSeq":
+        return option['lable'];
+      case "Warehouse":
+        return option['Warehse_Description'];
+      case "From Warehouse":
+        return option['Warehse_Description'];
+      case "Bin":
+        return option['WhseBin_BinNum'];
+      case "From Bin":
+        return option['WhseBin_BinNum'];
+      case "Doc Type":
+        return option['TranDocType_Description'];
+      case "Lot Number":
+        return option;
+      default:
+        return "NA";
+    }
+  }
+
+  updateOtp(String title, dynamic option) async {
+    switch (title) {
+      case "From Warehouse":
+        setState(() {
+          txtWere.text = option['Warehse_Description'];
+          //= option['PartWhse_WarehouseCode'];
+          // print(txtFWere.text);
+          // print(wereFID);
+        });
+
+        // First update bins
+        await getBins(option['PartWhse_WarehouseCode']);
+
+        // Clear the bin selection since warehouse changed
+        txtBin.text = "";
+
+        // Then update lot numbers with current context
+        //await updateLotNumbers();
+        break;
+      case "To Warehouse":
+        setState(() {
+          txtTWere.text = option['Warehse_Description'];
+          //= option['PartWhse_WarehouseCode'];
+          // print(txtFWere.text);
+          // print(wereFID);
+        });
+
+        // First update bins
+        await getBins(option['PartWhse_WarehouseCode']);
+
+        // Clear the bin selection since warehouse changed
+        txtBin.text = "";
+
+        // Then update lot numbers with current context
+        //await updateLotNumbers();
+        break;
+      case "From Bin":
+        setState(() {
+          txtBin.text = option['WhseBin_BinNum'];
+        });
+        //await updateLotNumbers();
+        break;
+      case "To Bin":
+        setState(() {
+          txtTBin.text = option['WhseBin_BinNum'];
+        });
+        //await updateLotNumbers();
+        break;
+
+      default:
+        return "NA";
+    }
+    setState(() {});
+  }
+
+  getBins(String val) async {
+    var response = await materialServices.getGetPartBin("", val);
+    bins.clear();
+    bins = response['value'];
   }
 
   showSuccess(String title, String message) {
@@ -835,8 +1079,8 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
     clearData();
 
     var resB = await scanServices.getWarehouseAsync();
-    wheres.clear();
-    wheres = resB['value'];
+    whareHouses.clear();
+    whareHouses = resB['value'];
     setState(() {
       isLoading = false;
     });
