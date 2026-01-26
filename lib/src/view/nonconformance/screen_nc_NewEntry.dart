@@ -3,6 +3,8 @@ import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:epicor/src/view/home/screen_qr_scan.dart';
 
+import 'package:http/http.dart';
+
 class ScreenNcNewentry extends StatefulWidget {
   const ScreenNcNewentry({super.key});
 
@@ -16,10 +18,16 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
   var txtBin = TextEditingController();
   var txtTWere = TextEditingController();
   var txtTBin = TextEditingController();
+  var txtReason = TextEditingController();
+
+  String wereFId = "", fbinID = "", txtReasonId = "";
+  String wereTId = "", tbinId = "";
 
   List<dynamic> items = [];
   List<dynamic> whareHouses = [];
   List<dynamic> bins = [];
+  List<dynamic> defaultWhare = [];
+  List<dynamic> reasonList = [];
 
   dynamic selWheres = [];
   dynamic selBins = [];
@@ -230,8 +238,8 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
                                       counterText: "",
                                     ),
                                     onTap: () {
-                                      choseOptions(
-                                          "From Warehouse", whareHouses);
+                                      //choseOptions(
+                                      //    "From Warehouse", whareHouses);
                                     },
                                     keyboardType: TextInputType.name,
                                     autofocus: false,
@@ -335,7 +343,7 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
                                       counterText: "",
                                     ),
                                     onTap: () {
-                                      choseOptions("To Warehouse", whareHouses);
+                                      //choseOptions("To Warehouse", whareHouses);
                                     },
                                     keyboardType: TextInputType.name,
                                     autofocus: false,
@@ -423,7 +431,7 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
                                   width:
                                       MediaQuery.of(context).size.width * 0.54,
                                   child: TextFormField(
-                                    controller: txtTBin,
+                                    controller: txtReason,
                                     style: TextStyles.getRegularScund(12),
                                     decoration: InputDecoration(
                                       hintText: "Select Reason",
@@ -439,7 +447,7 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
                                       counterText: "",
                                     ),
                                     onTap: () {
-                                      // choseBins();
+                                      choseReason();
                                     },
                                     keyboardType: TextInputType.name,
                                     autofocus: false,
@@ -517,7 +525,7 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
                             GestureDetector(
                               onTap: () {
                                 if (!isLoading) {
-                                  //submit();
+                                  submit();
                                 }
                               },
                               child: Container(
@@ -630,10 +638,66 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
         partLot = words[4].replaceAll("Lot No. -", '').replaceAll(" ", "");
       }
 
-      var response = await nonconfServices.getAvailableWarehouse(serialNum);
-      if (response.statusCode == 200) {
-        loadData();
+      var resNc = await nonconfServices.getAvailableWarehouse(serialNum);
+      if (resNc["value"].length == 0) {
+        throw Exception("Invalid partnum no details found.");
       }
+      var data = resNc["value"];
+      if (items.isEmpty) {
+        txtWere.text = data[0]["Warehse_Description"];
+        wereFId = data[0]["SerialNo_WareHouseCode"];
+        txtBin.text = data[0]["WhseBin_Description"];
+        fbinID = data[0]["SerialNo_BinNum"];
+      }
+
+      if (wereFId != data[0]["SerialNo_WareHouseCode"] &&
+          fbinID != data[0]["SerialNo_BinNum"]) {
+        throw Exception(
+            "Please scan valid serial nume from same Wharehouse and Bin");
+      }
+
+      //int productDuplicate = 0;
+      for (var item in items) {
+        int indexDuplicate = item["serials"].indexWhere(
+          (i) =>
+              i["serialNum"].toString().toLowerCase() ==
+              serialNum.toLowerCase(),
+        );
+
+        if (indexDuplicate != -1) {
+          throw Exception("$serialNum already scanned");
+        }
+      }
+
+      int productIndex = items.indexWhere(
+        (item) =>
+            item["SerialNo_PartNum"].toString().toLowerCase() ==
+            partNum.toLowerCase(),
+      );
+
+      if (productIndex == -1) {
+        items.add({
+          "SerialNo_PartNum": data[0]["SerialNo_PartNum"],
+          "PartRev_RevisionNum": data[0]["PartRev_RevisionNum"],
+          "qty": "1",
+          "serials": []
+        });
+
+        int productIndex1 = items.indexWhere(
+          (item) =>
+              item["SerialNo_PartNum"].toString().toLowerCase() ==
+              partNum.toLowerCase(),
+        );
+        items[productIndex1]["serials"].add({
+          "serialNum": serialNum,
+          "SerialNo_SerialNumber": data[0]["SerialNo_SerialNumber"],
+        });
+      } else {
+        items[productIndex]["qty"] =
+            (int.parse(items[productIndex]["qty"]) + 1).toString();
+        items[productIndex]["serials"].add({"serialNum": serialNum});
+      }
+
       // if (txtWere.text.isEmpty || txtBin.text.isEmpty) {
       //   throw Exception("Please select warehouse and bin!");
       // }
@@ -672,6 +736,130 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
     }
   }
 
+  choseReason() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Select Reason",
+                  style: TextStyles.getBold(18),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: SizedBox(
+                    child: whareHouses.isEmpty
+                        ? Container(
+                            color: Colors.transparent,
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 0,
+                              vertical: 10,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "No reason found.",
+                                  style: TextStyles.getRegularScund(
+                                    16,
+                                    color: AppColors.colorGray600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: reasonList.length,
+                            shrinkWrap: true,
+                            scrollDirection: Axis.vertical,
+                            itemBuilder: (BuildContext context, int index) {
+                              return GestureDetector(
+                                onTap: () {
+                                  txtReason.text =
+                                      reasonList[index]["Reason_Description"];
+                                  txtReasonId =
+                                      reasonList[index]["Reason_ReasonCode"];
+                                  // getBins(wereTId);
+                                  Navigator.of(context).pop();
+                                  setState(() {});
+                                },
+                                child: Container(
+                                  color: Colors.transparent,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 0,
+                                    vertical: 10,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        reasonList[index]["Reason_Description"],
+                                        style: TextStyles.getRegularScund(
+                                          16,
+                                          color: AppColors.colorGray600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  color: AppColors.colorGray100,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: SizedBox(
+                        child: Text(
+                          "Cancel",
+                          style: TextStyles.getBold(14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   getScan() async {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
@@ -702,7 +890,7 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
           //tableCellRow(item["PartNum"]),
           tableCellRow(item["SerialNo_PartNum"].toString()),
           tableCellRow(item["PartRev_RevisionNum"].toString()),
-          tableCellRow("1"),
+          tableCellRow(item["qty"].toString()),
         ],
       ));
       count += 1;
@@ -910,7 +1098,7 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
         });
 
         // First update bins
-        await getBins(option['PartWhse_WarehouseCode']);
+        await getBins(option['Warehse_WarehouseCode']);
 
         // Clear the bin selection since warehouse changed
         txtBin.text = "";
@@ -1081,8 +1269,116 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
     var resB = await scanServices.getWarehouseAsync();
     whareHouses.clear();
     whareHouses = resB['value'];
+
+    var resD = await nonconfServices.getDefaultWarehouse();
+    defaultWhare = resD['value'];
+    txtTWere.text = defaultWhare[0]["Warehse_Description"].toString();
+    wereTId = defaultWhare[0]["PlantConfCtrl_DefInspWhse"].toString();
+    txtTBin.text = defaultWhare[0]["WhseBin_Description"].toString();
+    tbinId = defaultWhare[0]["PlantConfCtrl_DefInspBin"].toString();
+
+    var resReason = await nonconfServices.getReasons();
+    reasonList = resReason["value"];
+
     setState(() {
       isLoading = false;
     });
+  }
+
+  submit() async {
+    try {
+      String plant = await sharedPref.getString("userPlant");
+      String company = await sharedPref.getString("userCompnay");
+
+      bool isSubmit = false;
+      List<dynamic> serialBody = [];
+      List<dynamic> serialMainBody = [];
+
+      setState(() {
+        isLoading = true;
+      });
+
+      for (var item in items) {
+        for (var i in item["serials"]) {
+          serialBody.add({
+            "Company": company, //fixed
+            "SerialNumber": i["serialNum"],
+            "PartNum": item["SerialNo_PartNum"],
+            "SNBaseNumber": i["serialNum"].substring(i["serialNum"].length - 7),
+            "TransType": "STK-INS", //fixed
+            "PassedInspection": false, //fixed
+            "RowMod": "A"
+          });
+        }
+
+        serialMainBody.add({
+          "Company": company, //fixed
+          "Quantity": item["qty"], //scanned
+          "ReasonCode": "SCR01", //fixed
+          "PartNum": item["SerialNo_PartNum"],
+          "RevisionNum": item["PartRev_RevisionNum"],
+          "TrnTyp": "I", //fixed
+          //"Description": "Ceasefire Quick Response System (CA-HCFC-123) Direct - 9Kg- Container, Gas & Valve",
+          //"EntryPerson": "manager",
+          "EmpID": "manager",
+          "InspectionPending": true, //fixed
+          "SysDate": DateTime.now().toIso8601String(),
+          "WarehouseCode": wereFId,
+          "BinNum": fbinID,
+          "ScrapUM": "No.",
+          "PartNumIUM": "No.",
+          "TranID": 0, //fixed
+          "Plant": plant,
+          "ToWarehouseCode": wereTId,
+          "ToBinNum": tbinId,
+          "RequestMove": false, //fixed
+          // "ReasonDescription": "Parameter does not matched",
+          "TranQty": item["qty"], //scanned
+          "TranUOM": "No.",
+          "TrnTypDescription": "Inventory", //fixed
+          // "EmpIDName": "manager manager",
+          "PartNumTrackSerialNum": true, //fixed
+          // "PlantName": "FACTORY (UK90)", //loginplant
+          "RowMod": "A", //fixed
+          "EnableSN": true
+        });
+      }
+
+      var body = {
+        "pcNonConfType": "INVENTORY",
+        "ds": {"NonConf": serialMainBody, "SelectedSerialNumbers": serialBody}
+      };
+
+      printLargeString(json.encode(body));
+      Response res = await nonconfServices.submitNC(body);
+      if (res.statusCode == 200) {
+        isSubmit = true;
+      } else {
+        isSubmit = false;
+      }
+
+      if (isSubmit) {
+        showSuccess(
+          'Success: ',
+          "Submitted successfully.",
+        );
+      } else {
+        throw Exception("Unable to submit...");
+      }
+    } catch (ex) {
+      showError('', ex.toString());
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void printLargeString(String text) {
+    const int chunkSize = 800;
+    for (int i = 0; i < text.length; i += chunkSize) {
+      debugPrint(text.substring(
+          i, i + chunkSize > text.length ? text.length : i + chunkSize));
+    }
   }
 }
