@@ -1241,8 +1241,16 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
             .replaceAll(" ", "");
       } else {
         qrType = "A";
-        partNum = val.substring(0, 9);
-        serialNum = val.substring(13);
+
+        String splitKey = ",";
+
+        List<String> words = val.split(splitKey);
+        if (words.length <= 1) {
+          return;
+        }
+
+        partNum = words[0].toString();
+        serialNum = words[1].toString();
       }
 
       if (partNum.isEmpty && serialNum.isEmpty) {
@@ -1265,25 +1273,126 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
       if (productIndex == -1) {
         throw Exception("Please scan a valid PartNum.");
       } else {
-        if (qrType == "B" && partLot.isNotEmpty) {
+        if (qrType == "B") {
           productDetails[productIndex]["scanLot"] = partLot;
+          productDetails[productIndex]["isSelect"] = true;
+          productDetails[productIndex]["RMADtl_ReturnQty"] =
+              (double.parse(productDetails[productIndex]["RMADtl_ReturnQty"]) +
+                      1)
+                  .toString();
+          productDetails[productIndex]["serials"].add({
+            "num": serialNum,
+            "lot": partLot,
+            "qrType": qrType,
+          });
+          productDetails[productIndex]["prdTrack"] = getType(prdDtl);
+          productDetails[productIndex]["isSelect"] = true;
         }
-        productDetails[productIndex]["isSelect"] = true;
-        /* productDetails[productIndex]["RMADtl_ReturnQty"] =
-            (int.parse(productDetails[productIndex]["RMADtl_ReturnQty"]) + 1)
-                .toString();*/
-
-        productDetails[productIndex]["RMADtl_ReturnQty"] =
-            (double.parse(productDetails[productIndex]["RMADtl_ReturnQty"]) + 1)
-                .toString();
-        productDetails[productIndex]["serials"].add({
-          "num": serialNum,
-          "lot": partLot,
-          "qrType": qrType,
-        });
-        productDetails[productIndex]["prdTrack"] = getType(prdDtl);
-        productDetails[productIndex]["isSelect"] = true;
         //itemQty[productIndex].text = items[productIndex]["shipQty"];
+
+        if (qrType == "A") {
+          String company = await sharedPref.getString("userCompnay");
+          String plant = await sharedPref.getString("userPlant");
+
+          var oldqrbody = {
+            "ds": {
+              "UD16": [
+                {
+                  "Company": company, //Company
+                  "Key1": "RMAOldQR", //hardcoded string
+                  "Key2": txtRmaNo.text.toString(), //RMA num
+                  "Key3": productDetails[productIndex]["RMADtl_RMALine"]
+                      .toString(), //RMALineNum
+                  "Key4": productDetails[productIndex]["RMADtl_InvoiceNum"]
+                      .toString(), //InvoiceNum
+                  "Key5": serialNum
+                      .substring(serialNum.length - 7)
+                      .toString(), //serial num
+                  "Character01": partNum.toString(), //PartNum
+                  "Character02": val.toString(), //QR String
+                  "Character03": "", //lot
+                  "Character04": plant.toString(), //plant
+                  "Shortchar01": productDetails[productIndex]
+                          ["RMADtl_InvoiceLine"]
+                      .toString(), //InvoiceLine
+                  "Shortchar02": wereTId, //Warehouse
+                  "Shortchar03": txtBin.text, //Bin
+                  "RowMod": "A"
+                }
+              ]
+            }
+          };
+
+          Response resOldQr = await rmaServices.postOldQRRMA(oldqrbody);
+
+          if (resOldQr.statusCode != 200) {
+            throw Exception(json.decode(resOldQr.body)['ErrorMessage']);
+          } else {
+            var resoldqrmatch = await rmaServices.getSerialNoRMAInvc(
+                productDetails[productIndex]["RMADtl_InvoiceNum"].toString(),
+                productDetails[productIndex]["RMADtl_InvoiceLine"].toString(),
+                productDetails[productIndex]["RMADtl_RMANum"].toString(),
+                productDetails[productIndex]["RMADtl_RMALine"].toString());
+
+            var tempqr = resoldqrmatch['value'];
+            if (tempqr != null) {
+              var oldqrbody = {
+                "ds": {
+                  "UD16": [
+                    {
+                      "Company": company, //Company
+                      "Key1": "RMAOldQR", //hardcoded string
+                      "Key2": txtRmaNo.text.toString(), //RMA num
+                      "Key3": productDetails[productIndex]["RMADtl_RMALine"]
+                          .toString(), //RMALineNum
+                      "Key4": productDetails[productIndex]["RMADtl_InvoiceNum"]
+                          .toString(), //InvoiceNum
+                      "Key5": serialNum
+                          .substring(serialNum.length - 7)
+                          .toString(), //serial num
+                      "Character01": partNum.toString(), //PartNum
+                      "Character02": val.toString(), //QR String
+                      "Character03": "", //lot
+                      "Character04": plant.toString(), //plant
+                      "Shortchar01": productDetails[productIndex]
+                              ["RMADtl_InvoiceLine"]
+                          .toString(), //InvoiceLine
+                      "Shortchar02": wereTId, //Warehouse
+                      "Shortchar03": txtBin.text, //Bin
+                      "Shortchar04": tempqr[0]["SerialNo_SerialNumber"]
+                          .toString(), //InvoiceLine
+                      "SysRevID":
+                          tempqr[0]["UD16_SysRevID"].toString(), //Warehouse
+                      "SysRowID": tempqr[0]["UD16_SysRowID"].toString(), //Bin
+                      "RowMod": "U"
+                    }
+                  ]
+                }
+              };
+
+              Response resOldQr1 = await rmaServices.postOldQRRMA(oldqrbody);
+
+              if (resOldQr1.statusCode != 200) {
+                throw Exception(json.decode(resOldQr1.body)['ErrorMessage']);
+              } else {
+                productDetails[productIndex]["scanLot"] = partLot;
+                productDetails[productIndex]["isSelect"] = true;
+                productDetails[productIndex]
+                    ["RMADtl_ReturnQty"] = (double.parse(
+                            productDetails[productIndex]["RMADtl_ReturnQty"]) +
+                        1)
+                    .toString();
+                productDetails[productIndex]["serials"].add({
+                  "num": tempqr[0]["SerialNo_SerialNumber"],
+                  "lot": partLot,
+                  "qrType": qrType,
+                });
+                productDetails[productIndex]["prdTrack"] = getType(prdDtl);
+                productDetails[productIndex]["isSelect"] = true;
+              }
+            }
+          }
+        }
       }
 
       // if (val.length <= 3) {
@@ -1469,157 +1578,191 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
         double qTY = double.parse(item['RMADtl_ReturnQty'].toString());
         double rqTY = double.parse(item['RMADtl_VS_QtyToRMA_c'].toString());
 
-        if (qTY <= 0) {
-          throw Exception("Invalid QTY at ${item["RMADtl_OrderLine"]}.");
-        }
+        // if (qTY <= 0) {
+        //   throw Exception("Invalid QTY at ${item["RMADtl_OrderLine"]}.");
+        // }
         if (qTY > rqTY) {
           throw Exception(
               "QTY cannot be grater than reqQty at Orderline ${item["RMADtl_OrderLine"]}.");
         }
-        List<dynamic> serialBody = [];
-        List<dynamic> serialrcptBody = [];
 
-        for (var serial in item["serials"]) {
-          serialBody.add({
-            "Company": company,
-            "SerialNumber": serial["num"],
-            "Scrapped": false,
-            "ScrappedReasonCode": "",
-            "Voided": false,
-            "Reference": "",
-            "ReasonCodeType": "",
-            "ReasonCodeDesc": "",
-            "PartNum": item["RMADtl_PartNum"],
-            "SNPrefix": "",
-            "SNFormat": "<P18><D><M><YY>#######",
-            "SNBaseNumber": serial["num"].substring(serial["num"].length - 5),
-            "XRefPartNum": "",
-            "XRefPartType": "",
-            "TransType": "SHIPPED",
-            "RowMod": "A"
-          });
+        if (qTY > 0 && item["serials"] != null) {
+          List<dynamic> serialBody = [];
+          List<dynamic> serialrcptBody = [];
 
-          serialrcptBody.add({
-            "Company": company,
-            "SerialNumber": serial["num"],
-            "Scrapped": false,
-            "ScrappedReasonCode": "",
-            "Voided": false,
-            "Reference": "",
-            "ReasonCodeType": "",
-            "ReasonCodeDesc": "",
-            "PartNum": item["RMADtl_PartNum"],
-            "SNPrefix": "",
-            "SNFormat": "<P18><D><M><YY>#######",
-            "SNBaseNumber": serial["num"].substring(serial["num"].length - 5),
-            "XRefPartNum": "",
-            "XRefPartType": "",
-            "TransType": "INSPECTION",
-            "RowMod": "A"
-          });
+          var resSerial = await rmaServices.getRMASerialNoDetails(
+              txtRmaNo.text.toString(),
+              item["RMADtl_PartNum"].toString(),
+              item["RMADtl_RMALine"].toString());
+
+          for (var ser in resSerial['value']) {
+            item["serials"].add({
+              "num": ser["SerialNo_SerialNumber"],
+              "lot": "",
+              "qrType": "",
+            });
+          }
+
+          for (var serial in item["serials"]) {
+            serialBody.add({
+              "Company": company,
+              "SerialNumber": serial["num"],
+              "Scrapped": false,
+              "ScrappedReasonCode": "",
+              "Voided": false,
+              "Reference": "",
+              "ReasonCodeType": "",
+              "ReasonCodeDesc": "",
+              "PartNum": item["RMADtl_PartNum"],
+              "SNPrefix": "",
+              "SNFormat": "<P18><D><M><YY>#######",
+              "SNBaseNumber": serial["num"].substring(serial["num"].length - 5),
+              "XRefPartNum": "",
+              "XRefPartType": "",
+              "TransType": "SHIPPED",
+              "RowMod": "A"
+            });
+
+            serialrcptBody.add({
+              "Company": company,
+              "SerialNumber": serial["num"],
+              "Scrapped": false,
+              "ScrappedReasonCode": "",
+              "Voided": false,
+              "Reference": "",
+              "ReasonCodeType": "",
+              "ReasonCodeDesc": "",
+              "PartNum": item["RMADtl_PartNum"],
+              "SNPrefix": "",
+              "SNFormat": "<P18><D><M><YY>#######",
+              "SNBaseNumber": serial["num"].substring(serial["num"].length - 5),
+              "XRefPartNum": "",
+              "XRefPartType": "",
+              "TransType": "INSPECTION",
+              "RowMod": "A"
+            });
+          }
+
+          body = {
+            "ds": {
+              "RMADtl": [
+                {
+                  "Company": company,
+                  "OpenRMA": true,
+                  "OpenDtl": true,
+                  // "CustNum": custNum,
+                  "RMANum": txtRmaNo.text,
+                  "RMALine": item["RMADtl_RMALine"],
+                  "OrderNum": item["RMADtl_OrderNum"],
+                  "OrderLine": item["RMADtl_OrderLine"],
+                  "ReturnReasonCode": "Defec",
+                  "PartNum": item["RMADtl_PartNum"],
+                  "LineDesc": item["RMADtl_LineDesc"],
+                  "RevisionNum": item["RMADtl_RevisionNum"],
+                  "ReturnQty": item["RMADtl_ReturnQty"],
+                  "ReturnQtyUOM": item["RMADtl_ReturnQtyUOM"],
+                  "CustNum": item["RMADtl_CustNum"],
+                  "OrderRelNum": item["RMADtl_OrderRelNum"],
+                  "ShipToCustNum": item["RMADtl_ShipToCustNum"],
+                  "InvoiceNum": item["RMADtl_InvoiceNum"],
+                  "InvoiceLine": item["RMADtl_InvoiceLine"],
+                  "SysRevID": item["RMADtl_SysRevID"],
+                  "SysRowID": item["RMADtl_SysRowID"],
+
+                  "EnableSN": true,
+                  "EnableUpdate": true,
+                  "LegalNumber": item["RMADtl_InvoiceNum"],
+                  "ShipToCustID": item["Customer_CustID"],
+                  "CustomerCustID": item["Customer_CustID"],
+                  "RowMod": "U",
+                  "CFIL_RefControlNum_c": item["RMADtl_CFIL_RefControlNum_c"],
+                  "CFIL_RefInvoiceNum_c": item["RMADtl_CFIL_RefInvoiceNum_c"],
+                  "VS_QtyToRMA_c": item["RMADtl_VS_QtyToRMA_c"]
+                }
+              ],
+              "SelectedSerialNumbers": serialBody
+            }
+          };
+
+          rcptbody = {
+            "ds": {
+              "RMARcpt": [
+                {
+                  "Company": company,
+                  //"OpenRMA": true,
+                  //"OpenDtl": true,
+                  // "CustNum": custNum,
+                  "RMANum": txtRmaNo.text,
+                  "RMALine": item["RMADtl_RMALine"],
+                  "RMAReceipt": 1,
+                  "RcvDate": txtRmaDate.text,
+                  "WareHouseCode": wereTId,
+                  "BinNum": txtBin.text,
+                  "OpenReceipt": true,
+                  "Plant": plant,
+                  "ReceivedQty": qTY,
+                  "CostUOM": "No.",
+                  "ReceivedQtyUOM": "No.",
+                  "LegalNumber": "",
+                  "RequestMove": false,
+                  "PartNum": item["RMADtl_PartNum"],
+                  "CustNum": item["RMADtl_CustNum"], // txtCustName.text,
+                  "PartPartDescription": item["RMADtl_LineDesc"],
+                  "ThisRcptQty": qTY,
+                  "DisposedQty": 0,
+                  "ThisRcptQtyUOM": "No.",
+                  "PartRevisionNum": item["RMADtl_RevisionNum"],
+                  "EnableDelete": true,
+                  "EnableUpdate": true,
+                  "EnableSN": true,
+                  "RowMod": "A"
+                }
+              ],
+              "SelectedSerialNumbers": serialrcptBody
+            }
+          };
+
+          printLargeString(json.encode(body));
+          Response res = await rmaServices.submitrma(body);
+          //printLargeString(res.body);
+
+          print(res.statusCode);
+          if (res.statusCode != 201 && res.statusCode != 200) {
+            throw Exception(json.decode(res.body)['ErrorMessage']);
+          }
+          for (var serial in item["serials"]) {
+            var serialonebody = {
+              "Company": company,
+              "PartNum": item["RMADtl_PartNum"].toString(),
+              "SerialNumber": serial["num"].toString(),
+              "RMANum": txtRmaNo.text,
+              "RMALine": item["RMADtl_RMALine"],
+              "RowMod": "U",
+              "TransactionSource": "SNMaint"
+            };
+
+            Response resSerOne = await rmaServices.updateSerialNo(serialonebody,
+                item["RMADtl_PartNum"].toString(), serial["num"].toString());
+          }
+
+          printLargeString(json.encode(rcptbody));
+
+          if (qTY == rqTY) {
+            Response res1 = await rmaServices.submitrcpt(rcptbody);
+            //printLargeString(res1.body);
+
+            print(res1.statusCode);
+          }
+          if (res.statusCode != 201 && res.statusCode != 200) {
+            throw Exception(json.decode(res.body)['ErrorMessage']);
+          }
         }
-
-        body = {
-          "ds": {
-            "RMADtl": [
-              {
-                "Company": company,
-                "OpenRMA": true,
-                "OpenDtl": true,
-                // "CustNum": custNum,
-                "RMANum": txtRmaNo.text,
-                "RMALine": item["RMADtl_RMALine"],
-                "OrderNum": item["RMADtl_OrderNum"],
-                "OrderLine": item["RMADtl_OrderLine"],
-                "ReturnReasonCode": "Defec",
-                "PartNum": item["RMADtl_PartNum"],
-                "LineDesc": item["RMADtl_LineDesc"],
-                "RevisionNum": item["RMADtl_RevisionNum"],
-                "ReturnQty": item["RMADtl_ReturnQty"],
-                "ReturnQtyUOM": item["RMADtl_ReturnQtyUOM"],
-                "CustNum": item["RMADtl_CustNum"],
-                "OrderRelNum": item["RMADtl_OrderRelNum"],
-                "ShipToCustNum": item["RMADtl_ShipToCustNum"],
-                "InvoiceNum": item["RMADtl_InvoiceNum"],
-                "InvoiceLine": item["RMADtl_InvoiceLine"],
-                "SysRevID": item["RMADtl_SysRevID"],
-                "SysRowID": item["RMADtl_SysRowID"],
-
-                "EnableSN": true,
-                "EnableUpdate": true,
-                "LegalNumber": item["RMADtl_InvoiceNum"],
-                "ShipToCustID": item["Customer_CustID"],
-                "CustomerCustID": item["Customer_CustID"],
-                "RowMod": "U",
-                "CFIL_RefControlNum_c": item["RMADtl_CFIL_RefControlNum_c"],
-                "CFIL_RefInvoiceNum_c": item["RMADtl_CFIL_RefInvoiceNum_c"],
-                "VS_QtyToRMA_c": item["RMADtl_VS_QtyToRMA_c"]
-              }
-            ],
-            "SelectedSerialNumbers": serialBody
-          }
-        };
-
-        rcptbody = {
-          "ds": {
-            "RMARcpt": [
-              {
-                "Company": company,
-                //"OpenRMA": true,
-                //"OpenDtl": true,
-                // "CustNum": custNum,
-                "RMANum": txtRmaNo.text,
-                "RMALine": item["RMADtl_RMALine"],
-                "RMAReceipt": 1,
-                "RcvDate": txtRmaDate.text,
-                "WareHouseCode": wereTId,
-                "BinNum": txtBin.text,
-                "OpenReceipt": true,
-                "Plant": plant,
-                "ReceivedQty": qTY,
-                "CostUOM": "No.",
-                "ReceivedQtyUOM": "No.",
-                "LegalNumber": "",
-                "RequestMove": false,
-                "PartNum": item["RMADtl_PartNum"],
-                "CustNum": item["RMADtl_CustNum"], // txtCustName.text,
-                "PartPartDescription": item["RMADtl_LineDesc"],
-                "ThisRcptQty": qTY,
-                "DisposedQty": 0,
-                "ThisRcptQtyUOM": "No.",
-                "PartRevisionNum": item["RMADtl_RevisionNum"],
-                "EnableDelete": true,
-                "EnableUpdate": true,
-                "EnableSN": true,
-                "RowMod": "A"
-              }
-            ],
-            "SelectedSerialNumbers": serialrcptBody
-          }
-        };
       }
 
-      printLargeString(json.encode(body));
-      Response res = await rmaServices.submitrma(body);
-      //printLargeString(res.body);
-
-      print(res.statusCode);
-      if (res.statusCode != 201 && res.statusCode != 200) {
-        throw Exception(json.decode(res.body)['ErrorMessage']);
-      }
-      printLargeString(json.encode(rcptbody));
-      Response res1 = await rmaServices.submitrcpt(rcptbody);
-      //printLargeString(res1.body);
-
-      print(res1.statusCode);
-      if (res.statusCode != 201 && res.statusCode != 200) {
-        throw Exception(json.decode(res.body)['ErrorMessage']);
-      } else {
-        showSuccess(
-          'Success: ',
-          "RMA processed successfully.",
-        );
-      }
+      showSuccess(
+        'Success: ',
+        "RMA processed successfully.",
+      );
     } catch (ex) {
       showError('', ex.toString());
     } finally {
