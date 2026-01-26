@@ -3,6 +3,7 @@ import 'package:epicor/core_packages.dart';
 //import 'package:flutter/material.dart';
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
+import 'package:epicor/src/view/home/screen_qr_scan.dart';
 //import 'package:epicor/src/config/style/style.dart';
 import 'package:http/http.dart';
 
@@ -603,7 +604,7 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                                     },
                                     onTap: () {
                                       if (isCam) {
-                                        // getScan();
+                                        getScan();
                                       }
                                     },
                                     keyboardType: TextInputType.name,
@@ -967,6 +968,17 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
     bins = response['value'];
   }
 
+  getScan() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ScreenQrScan(),
+      ),
+    );
+    if (result != null && result is String) {
+      getPartAsync(result);
+    }
+  }
+
   choseWhae(bool type) {
     showDialog(
       context: context,
@@ -1260,12 +1272,14 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
       int productIndex = productDetails.indexWhere(
         (item) =>
             item["RMADtl_PartNum"].toString().toLowerCase() ==
-            partNum.toLowerCase(),
+                partNum.toLowerCase() &&
+            double.parse(item["RMADtl_ReturnQty"].toString()) <
+                double.parse(item["RMADtl_VS_QtyToRMA_c"].toString()),
       );
 
       var resPrd = await custShipServices.getGetPart(partNum);
       if (resPrd["value"].length == 0) {
-        throw Exception("Invalid partnum no details found.");
+        throw Exception("Invalid partnum no details found or Qty is exceeding");
       }
 
       var prdDtl = resPrd["value"][0];
@@ -1274,6 +1288,19 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
         throw Exception("Please scan a valid PartNum.");
       } else {
         if (qrType == "B") {
+          var resoldqrmatch = await rmaServices.getSerialNoRMAInvc(
+              productDetails[productIndex]["RMADtl_InvoiceNum"].toString(),
+              productDetails[productIndex]["RMADtl_InvoiceLine"].toString(),
+              productDetails[productIndex]["RMADtl_RMANum"].toString(),
+              productDetails[productIndex]["RMADtl_RMALine"].toString(),
+              serialNum);
+
+          var tempqr = resoldqrmatch['value'];
+
+          if (tempqr.length == 0) {
+            throw Exception("Please validate scan serial no.");
+          }
+
           productDetails[productIndex]["scanLot"] = partLot;
           productDetails[productIndex]["isSelect"] = true;
           productDetails[productIndex]["RMADtl_ReturnQty"] =
@@ -1332,7 +1359,8 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                 productDetails[productIndex]["RMADtl_InvoiceNum"].toString(),
                 productDetails[productIndex]["RMADtl_InvoiceLine"].toString(),
                 productDetails[productIndex]["RMADtl_RMANum"].toString(),
-                productDetails[productIndex]["RMADtl_RMALine"].toString());
+                productDetails[productIndex]["RMADtl_RMALine"].toString(),
+                "-1");
 
             var tempqr = resoldqrmatch['value'];
             if (tempqr != null) {

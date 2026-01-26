@@ -213,28 +213,47 @@ class RMADelegate {
   }
 
   getSerialNoRMAInvc(String invoiceno, String invoiceline, String rmanum,
-      String rmaline) async {
+      String rmaline, String pr_srno) async {
     HttpOverrides.global = MyHttpOverrides();
     String apiUrl = await sharedPref.getString("userUrl");
     String userId = await sharedPref.getString("userName");
     String password = await sharedPref.getString("userPass");
 
     String company = await sharedPref.getString("userCompnay");
-    Uri url = Uri.parse(
-        "$apiUrl/BaqSvc/VSAPP_RMAInvc($company)?pr_InvoiceNum=$invoiceno&pr_InvoiceLine=$invoiceline&pr_RMANum=$rmanum&pr_RMALine=$rmaline");
-    String basicAuth =
-        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
-    Map<String, String> requestHeaders = {
-      'Content-type': 'application/json',
-      'Accept': '*/*',
-      'Authorization': basicAuth,
-    };
 
-    var response = await http.get(
-      url,
-      headers: requestHeaders,
-    );
-    return json.decode(response.body);
+    if (pr_srno == "-1") {
+      Uri url = Uri.parse(
+          "$apiUrl/BaqSvc/VSAPP_RMAInvcOldQR_V01($company)?pr_InvoiceNum=$invoiceno&pr_InvoiceLine=$invoiceline&pr_RMANum=$rmanum&pr_RMALine=$rmaline");
+      String basicAuth =
+          'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+      Map<String, String> requestHeaders = {
+        'Content-type': 'application/json',
+        'Accept': '*/*',
+        'Authorization': basicAuth,
+      };
+
+      var response = await http.get(
+        url,
+        headers: requestHeaders,
+      );
+      return json.decode(response.body);
+    } else {
+      Uri url = Uri.parse(
+          "$apiUrl/BaqSvc/VSAPP_RMAInvc($company)?pr_InvoiceNum=$invoiceno&pr_InvoiceLine=$invoiceline&pr_RMANum=$rmanum&pr_RMALine=$rmaline&pr_srno=$pr_srno");
+      String basicAuth =
+          'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+      Map<String, String> requestHeaders = {
+        'Content-type': 'application/json',
+        'Accept': '*/*',
+        'Authorization': basicAuth,
+      };
+
+      var response = await http.get(
+        url,
+        headers: requestHeaders,
+      );
+      return json.decode(response.body);
+    }
   }
 }
 
