@@ -3,6 +3,7 @@ import 'package:epicor/core_packages.dart';
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
 import 'package:epicor/src/view/nonconformance/screen_nc_NewEntry.dart';
+import 'package:epicor/src/view/nonconformance/screen_nc_view.dart';
 
 class ScreenNcMain extends StatefulWidget {
   const ScreenNcMain({super.key});
@@ -118,7 +119,7 @@ class _ScreenNcMain extends State<ScreenNcMain> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              gotoNewEntry();
+                              gotoView();
                             },
                             child: Container(
                               height: 48,
@@ -175,12 +176,10 @@ class _ScreenNcMain extends State<ScreenNcMain> {
   }
 
   gotoView() {
-    // Navigator.of(context).push(
-    //   MaterialPageRoute(
-    //     builder: (context) => const ScreenAsnList(
-    //       type: true,
-    //     ),
-    //   ),
-    // );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ScreenNcView(),
+      ),
+    );
   }
 }

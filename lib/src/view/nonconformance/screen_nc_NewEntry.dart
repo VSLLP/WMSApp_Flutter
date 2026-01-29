@@ -1265,7 +1265,7 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
 
   loadData() async {
     clearData();
-
+    isCam = await sharedPref.getBool("isCam");
     var resB = await scanServices.getWarehouseAsync();
     whareHouses.clear();
     whareHouses = resB['value'];

@@ -106,6 +106,32 @@ class NonConfDelegate {
     );
     return response;
   }
+
+  getNonConformanceHeaderView() async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    String plant = await sharedPref.getString("userPlant");
+    String company = await sharedPref.getString("userCompnay");
+
+    Uri url = Uri.parse(
+        "$apiUrl/BaqSvc/VSAPP_NonConformanceHeader($company)?pr_Plant=$plant&pr_Company=$company");
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.get(
+      url,
+      headers: requestHeaders,
+    );
+    return json.decode(response.body);
+  }
 }
 
 class MyHttpOverrides extends HttpOverrides {
