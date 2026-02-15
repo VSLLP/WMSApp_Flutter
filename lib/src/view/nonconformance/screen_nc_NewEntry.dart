@@ -1285,6 +1285,9 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
     var resReason = await nonconfServices.getReasons();
     reasonList = resReason["value"];
 
+    txtReason.text = reasonList[0]["Reason_Description"].toString();
+    txtReasonId = reasonList[0]["Reason_ReasonCode"].toString();
+
     setState(() {
       isLoading = false;
     });

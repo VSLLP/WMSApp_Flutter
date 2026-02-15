@@ -21,6 +21,7 @@ import 'package:epicor/src/view/TFShipment/screen_transfer_shipment_main.dart';
 import 'package:epicor/src/view/insp/screen_rcpt_insp_head.dart';
 import 'package:epicor/src/view/scan/screen_open_scan.dart';
 import 'package:epicor/src/view/RMA/screen_rma_header.dart';
+import 'package:epicor/src/view/inspectioninventory/screen_insp_inv_main.dart';
 
 class ScreenHome extends StatefulWidget {
   const ScreenHome({super.key});
@@ -446,6 +447,13 @@ class _ScreenHomeState extends State<ScreenHome> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => const ScreenNcMain(),
+          ),
+        );
+        break;
+      case "InspInventory":
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const ScreenInspInvMain(),
           ),
         );
         break;
