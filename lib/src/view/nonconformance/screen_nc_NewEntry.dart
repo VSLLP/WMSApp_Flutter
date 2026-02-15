@@ -640,9 +640,14 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
 
       var resNc = await nonconfServices.getAvailableWarehouse(serialNum);
       if (resNc["value"].length == 0) {
-        throw Exception("Invalid partnum no details found.");
+        throw Exception("Invalid partnum. no details found.");
       }
+
       var data = resNc["value"];
+      if (data[0]["SerialNo_SNStatus"] != "INVENTORY") {
+        throw Exception("Invalid partnum. no details found.");
+      }
+
       if (items.isEmpty) {
         txtWere.text = data[0]["Warehse_Description"];
         wereFId = data[0]["SerialNo_WareHouseCode"];
@@ -650,10 +655,10 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
         fbinID = data[0]["SerialNo_BinNum"];
       }
 
-      if (wereFId != data[0]["SerialNo_WareHouseCode"] &&
+      if (wereFId != data[0]["SerialNo_WareHouseCode"] ||
           fbinID != data[0]["SerialNo_BinNum"]) {
         throw Exception(
-            "Please scan valid serial nume from same Wharehouse and Bin");
+            "Please scan valid serial num from same Wharehouse and Bin");
       }
 
       //int productDuplicate = 0;
@@ -1294,6 +1299,10 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
       List<dynamic> serialBody = [];
       List<dynamic> serialMainBody = [];
 
+      if (txtReasonId == null || txtReasonId == "") {
+        throw Exception("Please select reason code");
+      }
+
       setState(() {
         isLoading = true;
       });
@@ -1314,7 +1323,7 @@ class _ScreenNcNewentry extends State<ScreenNcNewentry> {
         serialMainBody.add({
           "Company": company, //fixed
           "Quantity": item["qty"], //scanned
-          "ReasonCode": "SCR01", //fixed
+          "ReasonCode": txtReasonId, //fixed
           "PartNum": item["SerialNo_PartNum"],
           "RevisionNum": item["PartRev_RevisionNum"],
           "TrnTyp": "I", //fixed
