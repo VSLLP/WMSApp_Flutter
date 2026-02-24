@@ -9,6 +9,7 @@ import 'package:epicor/src/services/repository/spref_services.dart';
 import 'package:epicor/src/services/repository/transfer_services.dart';
 import 'package:epicor/src/services/repository/transfer_shipment_services.dart';
 import 'package:epicor/src/services/repository/util_services.dart';
+import 'package:epicor/src/services/repository/rma_services.dart';
 
 export 'dart:async';
 export 'dart:convert';
@@ -37,3 +38,4 @@ final IsnpDelegate isnpServices = IsnpDelegate();
 final JobToInvDelegate jobinvServices = JobToInvDelegate();
 final CustShipDelegate custShipServices = CustShipDelegate();
 final ScanDelegate scanServices = ScanDelegate();
+final RMADelegate rmaServices = RMADelegate();
