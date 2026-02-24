@@ -33,7 +33,7 @@
     </queries>
 
     <application
-        android:label="WMS"
+        android:label="WMS Pilot"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
