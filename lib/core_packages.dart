@@ -1,5 +1,6 @@
 import 'package:epicor/src/services/repository/auth_services.dart';
 import 'package:epicor/src/services/repository/custship_services.dart';
+import 'package:epicor/src/services/repository/insp_inv_services.dart';
 import 'package:epicor/src/services/repository/insp_services.dart';
 import 'package:epicor/src/services/repository/inventory_services.dart';
 import 'package:epicor/src/services/repository/jobtoinvServices.dart';
@@ -10,6 +11,7 @@ import 'package:epicor/src/services/repository/transfer_services.dart';
 import 'package:epicor/src/services/repository/transfer_shipment_services.dart';
 import 'package:epicor/src/services/repository/util_services.dart';
 import 'package:epicor/src/services/repository/rma_services.dart';
+import 'package:epicor/src/services/repository/nc_services.dart';
 
 export 'dart:async';
 export 'dart:convert';
@@ -39,3 +41,5 @@ final JobToInvDelegate jobinvServices = JobToInvDelegate();
 final CustShipDelegate custShipServices = CustShipDelegate();
 final ScanDelegate scanServices = ScanDelegate();
 final RMADelegate rmaServices = RMADelegate();
+final NonConfDelegate nonconfServices = NonConfDelegate();
+final InspInvDelegate inspinvServices = InspInvDelegate();

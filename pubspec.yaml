@@ -25,6 +25,7 @@ dependencies:
   calendar_date_picker2: ^2.0.1
   giffy_dialog: ^2.3.0
   mobile_scanner: ^7.0.1
+  package_info_plus: 9.0.0
 
 dev_dependencies:
   flutter_test:
