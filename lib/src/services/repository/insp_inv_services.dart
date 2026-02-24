@@ -86,7 +86,6 @@ class InspInvDelegate {
     String password = await sharedPref.getString("userPass");
 
     String company = await sharedPref.getString("userCompnay");
-
     Uri url = Uri.parse(
         "$apiUrl/BaqSvc/VSAPP_InspectionTranDocID?pr_Company=$company");
     String basicAuth =
