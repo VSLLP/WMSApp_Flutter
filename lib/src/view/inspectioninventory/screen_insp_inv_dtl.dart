@@ -2,6 +2,7 @@ import 'package:epicor/core_packages.dart';
 
 import 'package:epicor/src/view/core/screen_background.dart';
 import 'package:epicor/src/view/core/screen_network.dart';
+import 'package:http/http.dart';
 
 class ScreenInspInvDtl extends StatefulWidget {
   final dynamic item;
@@ -1135,7 +1136,7 @@ class _ScreenInspInvDtl extends State<ScreenInspInvDtl> {
                                 GestureDetector(
                                   onTap: () {
                                     if (!isLoading) {
-                                      //submit();
+                                      submit();
                                     }
                                   },
                                   child: Container(
@@ -1202,8 +1203,8 @@ class _ScreenInspInvDtl extends State<ScreenInspInvDtl> {
     txtPartNum.text = selItems['NonConf_PartNum'];
     txtQty.text = selItems['NonConf_Quantity'];
 
-    var resB =
-        await inspinvServices.getInspectors(widget.item['NonConf_TranID']);
+    var resB = await inspinvServices
+        .getInspectors(widget.item['NonConf_TranID'].toString());
     inspectors.clear();
     inspectors = resB['value'];
 
@@ -1223,9 +1224,9 @@ class _ScreenInspInvDtl extends State<ScreenInspInvDtl> {
     txtDocPass.text = docs[0]['TranDocType_Description'];
     trnDocIdPass = docs[0]['TranDocType_TranDocTypeID'];
 
-    // var resD = await isnpServices.getRemark();
-    // reasons.clear();
-    // reasons = resD['value'];
+    var resD = await inspinvServices.getRemark();
+    reasons.clear();
+    reasons = resD['value'];
 
     // var resE = await isnpServices.getIsnpSerMap(packSlip, txtLine.text);
     // serialMaps.clear();
@@ -1243,6 +1244,10 @@ class _ScreenInspInvDtl extends State<ScreenInspInvDtl> {
     serialItems.clear();
 
     nonconfid = widget.item["NonConf_TranID"].toString();
+
+    var resE = await inspinvServices.getIsnpSerMap(nonconfid);
+    serialMaps.clear();
+    serialMaps = resE['value'];
 
     setState(() {
       isLoading = false;
@@ -1581,7 +1586,7 @@ class _ScreenInspInvDtl extends State<ScreenInspInvDtl> {
 
       lotNum = partLot;
 
-      if (partNum == selItems['RcvDtl_PartNum']) {
+      if (partNum == selItems['NonConf_PartNum']) {
         int productIndex = serialItems.indexWhere(
           (item) => item["SerialNumber"] == serialNum,
         );
@@ -1594,20 +1599,18 @@ class _ScreenInspInvDtl extends State<ScreenInspInvDtl> {
           var serItem = {
             "Company": company,
             "SerialNumber": serialNum,
-            "Scrapped": false,
-            "Voided": false,
             "PartNum": partNum,
-            "SNBaseNumber": serialMaps[itemIndex]['SerialNo_SNBaseNumber'],
-            "SourceRowID": serialMaps[itemIndex]['RcvDtl_SysRowID'],
-            "TransType": "O",
-            "PassedInspection": scanType,
-            "Deselected": !scanType,
-            "RawSerialNum": serialMaps[itemIndex]['SerialNo_RawSerialNum'],
-            "PreventDeselect": false,
+            "SNBaseNumber": serialNum.substring(serialNum.length - 7),
+            "SourceRowID": serialMaps[itemIndex]['NonConf_SysRowID'],
+            "TransType": "I",
+            "PassedInspection": true,
+            "Deselected": false,
+            "RawSerialNum": serialNum,
             "PreDeselected": false,
-            "SNMask": serialMaps[itemIndex]['SerialNo_SNMask'],
+            "SNMask": "CFIL",
             "NotSavedToDB": false,
-            "SysRowID": serialMaps[itemIndex]['SerialNo_SysRowID'],
+            "RowSelected": false,
+            "AttributeSetID": 0,
             "RowMod": "U"
           };
           serialItems.add(serItem);
@@ -1630,6 +1633,154 @@ class _ScreenInspInvDtl extends State<ScreenInspInvDtl> {
       } else {
         txtScanFail.text = "";
       }
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  getType(item) {
+    if (item['Part_TrackLots'] && item['Part_TrackSerialNum']) {
+      return "1";
+    }
+    if (item['Part_TrackLots']) {
+      return "2";
+    }
+    if (item['Part_TrackSerialNum']) {
+      return "3";
+    }
+    return '4';
+  }
+
+  submit() async {
+    try {
+      if (_formInit.currentState!.validate()) {
+        double grnQTY = double.parse(selItems['NonConf_Quantity'].toString());
+        //String prdType = getType(selItems);
+        double totalQTY =
+            double.parse(passQty.toString()) + double.parse(failQty.toString());
+        if (grnQTY == totalQTY) {
+          setState(() {
+            isLoading = true;
+          });
+          DateTime customDate = DateTime.now();
+          String formattedDate =
+              "${customDate.year.toString().padLeft(4, '0')}-"
+              "${customDate.month.toString().padLeft(2, '0')}-"
+              "${customDate.day.toString().padLeft(2, '0')}T"
+              "00:00:00+05:30";
+          String time = "${customDate.hour.toString().padLeft(2, '0')}:"
+              "${customDate.minute.toString().padLeft(2, '0')}:"
+              "${customDate.second.toString().padLeft(2, '0')}";
+          var body = {};
+          body = {
+            "ds": {
+              "InspProcList": [
+                {
+                  "Company": company,
+                  "Quantity": selItems['NonConf_Quantity'],
+                  "ReasonCode": reasonCode,
+                  "PartNum": selItems['NonConf_PartNum'],
+                  "RevisionNum": selItems['NonConf_RevisionNum'],
+                  "TrnTyp": "I",
+                  "PassedQty": 0,
+                  "FailedQty": 0,
+                  "EntryPerson": selItems['NonConf_EntryPerson'],
+                  "WarehouseCode": selItems['NonConf_WarehouseCode'],
+                  "BinNum": selItems['NonConf_BinNum'],
+                  "EmpID": selItems['NonConf_EmpID'],
+                  "NonConfTranID": selItems['NonConf_TranID'],
+                  "NonConfRowIdent": selItems['NonConf_SysRowID'],
+                  "xID": selItems['NonConf_SysRowID'],
+                  "PartNumTrackSerialNum": true,
+                  "UOM": selItems['NonConf_ScrapUM'],
+                  "SysRowID": selItems['NonConf_SysRowID'],
+                  "RowMod": "A"
+                }
+              ],
+              "SelectedSerialNumbers": serialItems,
+              "InspNonConf": [
+                {
+                  "Company": company,
+                  "Quantity": totalQTY,
+                  "ReasonCode": reasonCode,
+                  "PartNum": selItems['NonConf_PartNum'],
+                  "RevisionNum": selItems['NonConf_RevisionNum'],
+                  "TrnTyp": "I",
+                  "EntryPerson": selItems['NonConf_EntryPerson'],
+                  "EmpID": selItems['NonConf_EmpID'],
+                  "InspectionPending": true,
+                  "ScrapUM": selItems['NonConf_ScrapUM'],
+                  "InspectedBy": inspectrId,
+                  "InspectorID": inspectrId,
+                  "PassedQty": double.parse(passQty.toString()),
+                  "FailedQty": double.parse(failQty.toString()),
+                  "SysDate": formattedDate,
+                  "SysTime": time,
+                  "WarehouseCode": selItems['NonConf_WarehouseCode'],
+                  "BinNum": selItems['NonConf_BinNum'],
+                  "TranID": nonconfid,
+                  "Plant": plant,
+                  "ToWarehouseCode": selItems['NonConf_ToWarehouseCode'],
+                  "ToBinNum": selItems['NonConf_ToBinNum'],
+                  "MoveCostsToDMR": false,
+                  "SysRowID": selItems['NonConf_SysRowID'],
+                  "PassedMove": false,
+                  "PassedWarehouseCode": passQty != 0 ? warePID : "",
+                  "PassedBin": passQty != 0 ? txtBinPass.text : "",
+                  "FailedMove": false,
+                  "FailedWarehouseCode": passQty != 0 ? wareFID : "",
+                  "FailedBin": passQty != 0 ? txtBinFail.text : "",
+                  "PassedIssueTo": "STK",
+                  "PassedIssuedComplete": false,
+                  "FailedReasonCode": reasonCode,
+                  "EnforceSerialNumCount": true,
+                  "xID": selItems['NonConf_SysRowID'],
+                  "DimQuantity": selItems['NonConf_Quantity'],
+                  "DimPassedQty": passQty,
+                  "DimFailedQty": failQty,
+                  "AcceptUM": selItems['NonConf_ScrapUM'],
+                  "TranQty": 0,
+                  "TranUOM": selItems['NonConf_ScrapUM'],
+                  "EnableSerialTracking": true,
+                  "InspDataEntered": true,
+                  "Done": false,
+                  "FailedTranDocTypeID": failQty != 0 ? trnDocIdFail : "",
+                  "PassedTranDocTypeID": passQty != 0 ? trnDocIdPass : "",
+                  "PartNumPricePerCode": "E",
+                  "PartNumSellingFactor": 1,
+                  "PartNumIUM": selItems['NonConf_ScrapUM'],
+                  "PartNumTrackSerialNum": true,
+                  "PartNumSalesUM": selItems['NonConf_ScrapUM'],
+                  "RowMod": "A"
+                }
+              ]
+            }
+          };
+
+          printLargeString(json.encode(body));
+          Response res = await isnpServices.postIsnp(body);
+          if (res.statusCode == 200) {
+            showSucess(
+              'Success: ',
+              "Material inspection successful for your receipt.",
+            );
+          } else {
+            showError(
+              'Error',
+              json.decode(res.body)['ErrorMessage'],
+            );
+          }
+        } else {
+          showError(
+            'Error',
+            "Total Pass QTY + Fail QTY Must be equal to GRN QTY.",
+          );
+        }
+      }
+    } catch (ex) {
+      showError('', ex.toString());
+    } finally {
       setState(() {
         isLoading = false;
       });
@@ -1706,7 +1857,7 @@ class _ScreenInspInvDtl extends State<ScreenInspInvDtl> {
 
     selItems = item;
 
-    packSlip = selItems['RcvHead_PackSlip'];
+    packSlip = selItems['NonConf_TranID'];
     txtLine.text = selItems['RcvDtl_PackLine'].toString();
     txtPartNum.text = selItems['RcvDtl_PartNum'];
 
@@ -1740,7 +1891,7 @@ class _ScreenInspInvDtl extends State<ScreenInspInvDtl> {
 
     serialItems.clear();
 
-    var resE = await isnpServices.getIsnpSerMap(packSlip, txtLine.text);
+    var resE = await inspinvServices.getIsnpSerMap(packSlip);
     serialMaps.clear();
     serialMaps = resE['value'];
 

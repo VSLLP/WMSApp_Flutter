@@ -102,6 +102,81 @@ class InspInvDelegate {
     );
     return json.decode(response.body);
   }
+
+  getRemark() async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    String company = await sharedPref.getString("userCompnay");
+
+    Uri url = Uri.parse(
+        "$apiUrl/BaqSvc/VSAPP_NonConformanceReasonCode/?pr_Company=$company");
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.get(
+      url,
+      headers: requestHeaders,
+    );
+    return json.decode(response.body);
+  }
+
+  getIsnpSerMap(String nonconfid) async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    String company = await sharedPref.getString("userCompnay");
+    String plant = await sharedPref.getString("userPlant");
+
+    Uri url = Uri.parse(
+        "$apiUrl/BaqSvc/VSAPP_InspectionInvValidSerial?pr_Company=$company&pr_Plant=$plant&pr_NonConf=$nonconfid");
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.get(
+      url,
+      headers: requestHeaders,
+    );
+    return json.decode(response.body);
+  }
+
+  postIsnp(body) async {
+    HttpOverrides.global = MyHttpOverrides();
+    String apiUrl = await sharedPref.getString("userUrl");
+    String userId = await sharedPref.getString("userName");
+    String password = await sharedPref.getString("userPass");
+
+    Uri url = Uri.parse("$apiUrl/Erp.BO.InspProcessingSvc/InspectInventory");
+
+    String basicAuth =
+        'Basic ${base64Encode(utf8.encode('$userId:$password'))}';
+    Map<String, String> requestHeaders = {
+      'Content-type': 'application/json',
+      'Accept': '*/*',
+      'Authorization': basicAuth,
+    };
+
+    var response = await http.post(
+      url,
+      headers: requestHeaders,
+      body: json.encode(body),
+    );
+    return response;
+  }
 }
 
 class MyHttpOverrides extends HttpOverrides {

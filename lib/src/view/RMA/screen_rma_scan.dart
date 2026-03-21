@@ -1326,7 +1326,7 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
               "UD16": [
                 {
                   "Company": company, //Company
-                  "Key1": "RMAOldQR", //hardcoded string
+                  "Key1": "RMARcpt", //hardcoded string
                   "Key2": txtRmaNo.text.toString(), //RMA num
                   "Key3": productDetails[productIndex]["RMADtl_RMALine"]
                       .toString(), //RMALineNum
@@ -1349,10 +1349,10 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
               ]
             }
           };
-
+          print(json.encode(oldqrbody));
           Response resOldQr = await rmaServices.postOldQRRMA(oldqrbody);
 
-          if (resOldQr.statusCode != 200) {
+          if (resOldQr.statusCode != 200 && resOldQr.statusCode != 409) {
             throw Exception(json.decode(resOldQr.body)['ErrorMessage']);
           } else {
             var resoldqrmatch = await rmaServices.getSerialNoRMAInvc(
@@ -1369,7 +1369,7 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                   "UD16": [
                     {
                       "Company": company, //Company
-                      "Key1": "RMAOldQR", //hardcoded string
+                      "Key1": "RMARcpt", //hardcoded string
                       "Key2": txtRmaNo.text.toString(), //RMA num
                       "Key3": productDetails[productIndex]["RMADtl_RMALine"]
                           .toString(), //RMALineNum
@@ -1397,12 +1397,26 @@ class _ScreenRmaScan extends State<ScreenRmaScan> {
                   ]
                 }
               };
-
+              print(json.encode(oldqrbody));
               Response resOldQr1 = await rmaServices.postOldQRRMA(oldqrbody);
 
               if (resOldQr1.statusCode != 200) {
                 throw Exception(json.decode(resOldQr1.body)['ErrorMessage']);
               } else {
+                for (var item in productDetails[productIndex]) {
+                  int indexDuplicate = item["serials"].indexWhere(
+                    (i) =>
+                        i["num"].toString().toLowerCase() ==
+                        tempqr[0]["SerialNo_SerialNumber"]
+                            .toString()
+                            .toLowerCase(),
+                  );
+
+                  if (indexDuplicate != -1) {
+                    throw Exception("$serialNum already scanned");
+                  }
+                }
+
                 productDetails[productIndex]["scanLot"] = partLot;
                 productDetails[productIndex]["isSelect"] = true;
                 productDetails[productIndex]
